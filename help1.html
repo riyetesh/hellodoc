@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center</title>
+    <link rel="stylesheet" href="styles1.css">
+    <style>
+        /* Basic reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav {
+            background-color: #444;
+            padding: 1em;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 1em;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 2em;
+        }
+
+        .section {
+            width: 48%;
+            margin-bottom: 2em;
+        }
+
+        .tile {
+            background-color: #f4f4f4;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 1em 0;
+            padding: 1.5em;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile img {
+            max-width: 50px;
+            margin-bottom: 1em;
+        }
+
+        .tile h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .panel {
+            display: none;
+            padding: 1em;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-top: 1em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 1em;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        .footer-img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="Asset/Logo.png" alt="Logo" class="logo">
+        <div>
+            <h1>Help Center</h1>
+        </div>
+    </header>
+
+    <nav>
+        <a href="#faq">FAQs</a>
+        <a href="#usage">How to Use</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#booking">Booking</a>
+        <a href="#doctor">For Doctors</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#legal">Legal</a>
+        <a href="#feedback">Feedback</a>
+    </nav>
+
+    <div class="container">
+        <div id="faq" class="section">
+            <div class="tile" onclick="togglePanel('faq-patient')">
+                <img src="Asset/faq-icon.png" alt="FAQ Icon">
+                <h3>For Patients</h3>
+            </div>
+            <div id="faq-patient" class="panel">
+                <p><strong>How do I create an account?</strong><br>Create an account by clicking the "Sign Up" button on the homepage. You can register using your email or Google account.</p>
+                <p><strong>How can I search for a doctor?</strong><br>Use the search bar on the homepage to look for doctors by symptom, location, or specialty.</p>
+                <p><strong>How do I book an appointment?</strong><br>Select a doctor from the search results, choose an available time slot, and confirm your appointment.</p>
+            </div>
+
+            <div class="tile" onclick="togglePanel('faq-doctor')">
+                <img src="Asset/doctor-icon.png" alt="Doctor Icon">
+                <h3>For Doctors</h3>
+            </div>
+            <div id="faq-doctor" class="panel">
+                <p><strong>How do I register as a doctor?</strong><br>Click on "Register as a Doctor" on the homepage. Provide your medical credentials and complete the verification process.</p>
+                <p><strong>What credentials are required?</strong><br>You need a valid medical license and proof of identity to register as an authorized doctor.</p>
+            </div>
+        </div>
+
+        <div id="usage" class="section">
+            <div class="tile" onclick="togglePanel('usage-patient')">
+                <img src="Asset/usage-icon.png" alt="Usage Icon">
+                <h3>For Patients</h3>
+            </div>
+            <div id="usage-patient" class="panel">
+                <p>Log in, search for doctors using filters, book appointments, and access your medical records in the dashboard. Utilize our messaging feature for follow-up queries.</p>
+            </div>
+
+            <div class="tile" onclick="togglePanel('usage-doctor')">
+                <img src="Asset/doctor-usage-icon.png" alt="Doctor Usage Icon">
+                <h3>For Doctors</h3>
+            </div>
+            <div id="usage-doctor" class="panel">
+                <p>Manage appointments, view patient details, and use our AI tools for diagnosis and prescription assistance. Communicate securely with patients.</p>
+            </div>
+        </div>
+
+        <!-- Repeat the same structure for other sections like Privacy, Booking, etc. -->
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 0px;">
+        <img src="Asset/Help page/footer.png" alt="Footer Image" class="footer-img" >
+    </div>
+
+    <footer>
+        <p>&copy; Hellodoc 2025. All Rights Reserved.</p>
+        <p>Contact us: hi@hellodoc.com  +91-7608093320</p>
+    </footer>
+
+    <script>
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
