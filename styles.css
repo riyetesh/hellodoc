@@ -1,22 +1,273 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Basic reset */
+* {
     margin: 0;
     padding: 0;
-    color: #000000;
-    background-image: url('https://www.transparenttextures.com/patterns/grid-noise.png'); /* Pattern image URL */
-    background-repeat: repeat;
-    background-size: 60px 60px; /* Adjust the pattern size */
+    box-sizing: border-box;
 }
 
-/* Container with a slight white overlay */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+}
+
+.navlogo {
+    height: 60px;
+    position: absolute;
+    left: 10px;
+}
+/* Search bar */
+/* Search Bar Styling */
+/* Search Container */
+.search-container {
+    margin: 20px auto; /* Centers the container horizontally */
+    position: relative; /* To position the icon inside the input */
+    width: 80%; /* Adjust to desired width or make it 100% */
+    max-width: 600px; /* Optionally set a max-width for better control */
+}
+
+/* Input Field Styling */
+#search-bar {
+    width: 100%; /* Ensure it takes up the full width of the container */
+    padding: 12px;
+    padding-left: 40px; /* Space for the icon */
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: border 0.3s ease;
+}
+
+/* Font Awesome Magnifying Glass Icon */
+.fa-magnifying-glass {
+    position: absolute;
+    left: 10px; /* Position the icon inside the search bar */
+    top: 50%;
+    transform: translateY(-50%); /* Vertically center the icon */
+    color: #888; /* Icon color */
+    font-size: 18px;
+}
+
+#search-bar:focus {
+    border-color: #4CAF50;
+}
+
+/* Font Awesome Magnifying Glass Icon */
+.fa-magnifying-glass {
+    position: absolute;
+    left: 10px; /* Position the icon inside the search bar */
+    top: 50%;
+    transform: translateY(-50%); /* Center the icon vertically */
+    color: #888; /* Icon color */
+    font-size: 18px;
+}
+
+/* Section Styling */
+.section, .faq {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.faq {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.accordion {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    font-size: 16px;
+}
+
+.accordion.active {
+    background-color: #388e3c;
+}
+
+.collapsible-content {
+    display: none;
+    padding: 15px;
+    background-color: #f4f4f4;
+}
+
+/* Highlight matched text */
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+    color: black;
+}
+
+/* Section Styling */
+.section {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.faq {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.accordion {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    font-size: 16px;
+}
+
+.accordion.active {
+    background-color: #388e3c;
+}
+
+.collapsible-content {
+    display: none;
+    padding: 15px;
+    background-color: #f4f4f4;
+}
+
+
+/* FAQ Section */
+.faq {
+    margin: 40px auto;
+    font-family: 'Arial', sans-serif;
+    max-width: 800px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.faq-title {
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Accordion and collapsible content styles remain unchanged */
+.accordion-item {
+    margin-bottom: 10px;
+}
+
+.accordion {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.accordion:hover {
+    background-color: #45a049;
+}
+
+.accordion.active {
+    background-color: #388e3c;
+}
+
+.collapsible-content {
+    display: none;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 5px;
+    transition: all 0.3s ease;
+}
+
+.collapsible-content p {
+    margin: 10px 0;
+}
+
+.collapsible-content.active {
+    display: block;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .container {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 20px auto;
     padding: 20px;
+    padding-top: 30px;
     background: rgba(255, 255, 255, 0.8); /* Slight white overlay to enhance readability */
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px; /* Adds spacing between items */
 }
+
+/* Child boxes inside the container */
+.container .box {
+    flex: 1 1 calc(33.333% - 20px); /* Each box takes up 1/3 of the row minus the gap */
+    max-width: calc(33.333% - 20px);
+    height: 200px; /* Fixed height for equal sizing */
+    background-color: #f4f4f4;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust for smaller screens */
+@media (max-width: 768px) {
+    .container .box {
+        flex: 1 1 calc(50% - 20px); /* Two items per row for medium screens */
+        max-width: calc(50% - 20px);
+    }
+}
+
+@media (max-width: 480px) {
+    .container .box {
+        flex: 1 1 100%; /* Full-width items for small screens */
+        max-width: 100%;
+    }
+}
+
 
 header {
     background: white;
@@ -30,24 +281,69 @@ header {
 }
 
 header h1 {
-    font-family: Ananda Black;
+    font-family: 'Ananda Black', cursive; /* Ensure the correct font is applied */
     font-weight: bold;
     font-size: 2.5rem;
     margin-bottom: 10px;
-    align-items: center;
+    text-align: center; /* Align text to the center */
+    background: linear-gradient(90deg, #007bff, #28a745); /* Blue to green gradient */
+    -webkit-background-clip: text; /* Clip the background to the text */
+    -webkit-text-fill-color: transparent; /* Make the text transparent to show gradient */
+    background-clip: text; /* For other browsers supporting background-clip */
+    color: transparent; /* Fallback color */
+    display: inline-block; /* Prevents clipping issues */
+    padding: 0.5em 1em; /* Adds space around the text */
+    line-height: 1.2; /* Adjusts line height to avoid clipping */
 }
+
+
 
 header p {
     font-size: 1.2rem;
     margin: 0;
 }
 
+/* Align the logo with the text */
 .logo {
-    height: 80px;
-    position: absolute;
-    left: 10px;
+    width: 30px; /* Adjust logo size */
+    height: 30px;
+    margin-right: 10px; /* Space between logo and text */
+    vertical-align: middle; /* Align with the text */
 }
 
+/* Hide modal content initially */
+.modal-content {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 80%; /* Adjust width */
+    max-width: 500px; /* Limit max width */
+}
+
+/* Close Button */
+.close-btn {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.close-btn:hover {
+    background-color: #555;
+}
+
+
+/* Navigation */
 nav {
     background: #ffffff;
     padding: 15px 20px;
@@ -72,82 +368,365 @@ nav a:hover {
     color: white;
 }
 
-.section {
-    margin-bottom: 40px;
+/* Section */
+/* Content Wrapper */
+.content-wrapper {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
+    display: grid; /* Use grid for better control over spacing */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Adjusts the number of columns */
+    gap: 30px; /* Equal horizontal and vertical spacing between cards */
 }
 
-.section h2 {
-    font-size: 1.8rem;
-    margin-bottom: 15px;
-    color: #185CC9;
-}
-
-.section p {
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 10px;
-}
-
-.accordion {
-    background: #f1f1f1;
-    color: #333;
-    border: none;
-    cursor: pointer;
-    padding: 15px;
-    width: 100%;
-    text-align: left;
-    font-size: 1.1rem;
-    transition: background-color 0.3s;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-.accordion:hover, .accordion.active {
-    background-color: #ddd;
-}
-
-.panel {
-    padding: 15px 20px;
-    display: none;
-    background-color: #fafafa;
-    border-left: 3px solid #185CC9;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-footer {
+/* Card */
+.card {
+    height: 200px; /* Set height */
+    background:white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
-    padding: 1em;
-    position: relative; /* Relative for stacking with the image */
-    z-index: 10; /* Ensures footer stays above the image */
+    flex-direction: column;
+    align-items: center; /* Center items horizontally */
+    justify-content: space-evenly; /* Evenly space items vertically */
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
 }
+
+/* Card Item */
+.card .card-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content inside each item */
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+}
+
+
+
+
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Collapsible Content */
+.collapsible-content {
+    display: none; /* Hidden by default */
+    margin-top: 10px;
+    background-color:white;
+    padding: 10px;
+    text-align: left;
+    border-radius: 0 0 8px 8px;
+}
+
+
+
+/* Image Styling */
+.card img {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+}
+
+/* Headings */
+.card h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Text */
+.card p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Active Collapsible */
+.card.active .collapsible-content {
+    display: block; /* Display content when active */
+}
+
+
+
+
+
+/* Faq */
+/* FAQ Section */
+.faq {
+    margin: 40px auto;
+    font-family: 'Arial', sans-serif;
+    max-width: 800px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.faq-title {
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Accordion Item */
+.accordion-item {
+    margin-bottom: 10px;
+}
+
+/* Accordion Button */
+.accordion {
+    background-color: #28b463; /* Modern Green */
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.accordion:hover {
+    background-color: #82e0aa; /* Slightly darker green on hover */
+}
+
+.accordion.active {
+    background-color: #2ecc71; /* Darker green when active */
+}
+
+/* Collapsible Panel */
+.collapsible-content {
+    display: none;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 5px;
+    transition: all 0.3s ease;
+}
+
+/* Add Smooth Transition for Expanding Panels */
+.collapsible-content p {
+    margin: 10px 0;
+}
+
+/* Active Panel Content */
+.collapsible-content.active {
+    display: block;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile Responsiveness */
+@media screen and (max-width: 768px) {
+    .faq {
+        padding: 15px;
+        margin: 20px;
+    }
+
+    .accordion {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    .faq-title {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+}
+
+
+
+/* Unique Container */
+.provider-container {
+    display: flex;
+    padding-top: 20rem;
+    justify-content: center; /* Horizontally center the content */
+    align-items: center; /* Vertically center the content */
+    height: 50vh; /* Make the container take the full height of the screen */
+    background: #FDFAEE;
+    padding: 20px;
+}
+
+/* Unique Content */
+.provider-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    width: 100%; /* Ensures the content flexes with screen width */
+    max-width: 600px; /* Maximum width for the container */
+}
+
+/* Unique Heading */
+.provider-heading {
+    font-size: 24px;
+    color: #333;
+    padding-bottom: 2rem;
+}
+
+/* Unique Button */
+.provider-contact-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.provider-contact-button:hover {
+    background-color: #84e47d;
+}
+
+/* Feedback Container */
+.feedback-container {
+    background-color:white;
+    padding: 30px;
+    margin: 40px auto;
+    max-width: 800px;
+    text-align: center;
+}
+
+/* Feedback Title */
+.feedback-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+/* Feedback Description */
+.feedback-description {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Email Link */
+.email-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.email-link:hover {
+    text-decoration: underline;
+}
+
+/* Feedback Button */
+.feedback-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.feedback-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* feedback */
+
+/* Language Selector Container */
+/* Language Selector */
+.language-selector {
+    position: absolute; /* Position it relative to the header */
+    top: 10px;  /* Adjust the distance from the top */
+    right: 20px;  /* Adjust the distance from the right */
+    padding: 5px;  /* Add some padding around the element */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between the icon and dropdown */
+    z-index: 1000; /* Ensure it's on top */
+    background-color: transparent; /* No background */
+    border: none; /* No border */
+}
+
+/* FontAwesome Icon */
+.language-selector i {
+    font-size: 15px;
+    color: #007bff; /* Color for the icon */
+}
+
+/* Language Dropdown */
+.language-dropdown {
+    padding: 8px;
+    font-size: 10px;
+    cursor: pointer;
+    border: none; /* No border */
+    background-color: transparent; /* No background */
+}
+
+/* Hover effect on the dropdown */
+.language-dropdown:hover {
+    color: #007bff; /* Highlight color when hovering */
+}
+
+
+/* Footer */
+/* Footer Styling */
+footer {
+    padding: 1em 2em; /* Space around content */
+    text-align: center; /* Center align the text */
+    font-family: 'Poppins', sans-serif; /* Modern font */
+    font-size: 14px; /* Slightly smaller font size */
+    color: #333; /* Neutral text color */
+}
+
+/* Footer Links */
+footer a {
+    text-decoration: none; /* Remove underline */
+    color: #007bff; /* Blue for links */
+    transition: color 0.3s ease; /* Smooth hover effect */
+}
+
+footer a:hover {
+    color: #0056b3; /* Darker blue on hover */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    footer {
+        padding: 1em; /* Reduce padding on smaller screens */
+        font-size: 12px; /* Adjust font size */
+    }
+}
+
 
 .footer-img {
-    height: 200px;
+    height: 350px;
     position: relative; /* Allows precise positioning */
-    right: 0px; /* Aligns the image on the right */
-    bottom: 0; /* Aligns the bottom of the image with the footer */
-    z-index: 5; /* Ensures it is behind the footer */
+padding-right: 30rem;    z-index: 0; /* Ensures it is behind the footer */
 }
 
 footer p {
     margin: 0;
-}
-
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 2rem;
-    }
-
-    nav {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    nav a {
-        font-size: 0.9rem;
-    }
 }
