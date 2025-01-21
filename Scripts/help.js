@@ -141,3 +141,16 @@ function highlightContent(id, query) {
     // Hide suggestions after selection
     document.getElementById("suggestions").style.display = 'none';
 }
+
+
+//Flip effect
+
+function openPopup(contentId) {
+    const content = document.getElementById(contentId).innerHTML; // Get the inner content
+    document.getElementById('modal-content-container').innerHTML = content; // Insert it into modal
+    document.getElementById('popup-modal').style.display = 'flex'; // Show the modal
+}
+
+function closePopup() {
+    document.getElementById('popup-modal').style.display = 'none'; // Hide the modal
+}

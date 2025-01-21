@@ -1,0 +1,203 @@
+body {
+  font-family: 'Poppins', Arial, sans-serif; /* Font style */
+  background-color: #ffffff; /* Fallback background color */
+  margin: 0;
+  padding: 0;
+  position: relative; /* For pseudo-element positioning */
+  min-height: 100vh; /* Ensure it covers full height of content */
+}
+
+body::before {
+  content: "";
+  position: fixed; /* Fixed to ensure it stays across all pages */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/Asset/Team/pattern.jpg'); /* Path to your image */
+  background-repeat: repeat; /* Repeat the pattern */
+  background-size: 50%; /* Use the image's original size */
+  opacity: 0.3; /* Set to 50% opacity */
+  z-index: -1; /* Place behind all content */
+  pointer-events: none; /* Prevent interference with clicks or interactions */
+}
+
+
+.navlogo {
+  height: 60px;
+  position: absolute;
+  left: 10px;
+}
+
+header {
+  background: white;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  padding:0rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+header h1 {
+  font-family: 'Ananda Black', cursive; /* Ensure the correct font is applied */
+  font-weight: bold;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-align: center; /* Align text to the center */
+  background: linear-gradient(90deg, #007bff, #28a745); /* Blue to green gradient */
+  -webkit-background-clip: text; /* Clip the background to the text */
+  -webkit-text-fill-color: transparent; /* Make the text transparent to show gradient */
+  background-clip: text; /* For other browsers supporting background-clip */
+  color: transparent; /* Fallback color */
+  display: inline-block; /* Prevents clipping issues */
+
+}
+
+
+
+header p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+
+.content-wrapper {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
+  display: grid; /* Use grid for better control over spacing */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Adjusts the number of columns */
+  gap: 30px; /* Equal horizontal and vertical spacing between cards */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.person {
+  /* border: 1px solid; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 250px;
+}
+.container {
+  height: 312px;
+  width: 400px;
+  cursor: pointer;
+  transform: scale(0.48);
+  transition: transform 250ms 
+    cubic-bezier(0.4, 0, 0.2, 1);
+}
+.circle {
+  position: absolute;
+  background: var(--color);
+  height: 380px;
+  width: 380px;
+  top: 210px;
+  left: 10px;
+  border-radius: 50%;
+}
+.person img {
+  position: relative;
+  width: 340px;
+  top: 164px;
+  left: 22px;
+  transform: translateY(20px) scale(1.15);
+  transition: transform 250ms 
+    cubic-bezier(0.4, 0, 0.2, 1);
+}
+.conianer-inner {
+  position: relative;
+  clip-path: path("M 390,400 C 390,504.9341 304.9341,590 200,590 95.065898,590 10,504.9341 10,400 V 10 H 200 390 Z");
+  top: -200px;
+}
+.divider {
+  height: 3px;
+  width: 130px;
+  border-radius: 5px;
+  background: var(--color);
+}
+.person h1 {
+  color: #464646;
+  margin: 16px 0 0 0;
+}
+.person p {
+  font-family: arial;
+  color: #6e6e6e;
+  font-size: 14px;
+  margin-top: 5px;
+}
+/* hover */
+.container:hover {
+  transform: scale(0.54);
+} 
+.container:hover img {
+  transform: translateY(0) scale(1.3);
+}
+
+
+footer {
+  padding: 1em 2em; /* Space around content */
+  text-align: center; /* Center align the text */
+  font-family: 'Poppins', sans-serif; /* Modern font */
+  font-size: 14px; /* Slightly smaller font size */
+  color: #333; /* Neutral text color */
+}
+
+/* Footer Links */
+footer a {
+  text-decoration: none; /* Remove underline */
+  color: #007bff; /* Blue for links */
+  transition: color 0.3s ease; /* Smooth hover effect */
+}
+
+footer a:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+.footer-img {
+  height: 350px;
+  position: relative; /* Allows precise positioning */
+padding-right: 30rem;    z-index: 0; /* Ensures it is behind the footer */
+}
+
+footer p {
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  footer {
+      padding: 1em; /* Reduce padding on smaller screens */
+      font-size: 12px; /* Adjust font size */
+  }
+}
+
+.socials {
+  margin: 1rem 0; /* Space above and below the social links */
+  display: flex; /* Arrange links in a row */
+  justify-content: center; /* Center-align the links */
+}
+
+.socials a {
+  display: flex; /* Ensures the icon stays centered */
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  margin: 0 0.5rem; /* Spacing between icons */
+  font-size: 1.2rem; /* Icon size */
+  text-decoration: none; /* Remove underline */
+  width: 40px; /* Set a fixed width for circular shape */
+  height: 40px; /* Set a fixed height for circular shape */
+  border-radius: 50%; /* Makes the element circular */
+  transition: all 0.3s ease; /* Smooth hover effect for all properties */
+}
+
+.socials a:hover {
+  color: var(--color-secondary); /* Highlight color on hover */
+  transform: translateY(-3px); /* Lift effect on hover */
+}
+
