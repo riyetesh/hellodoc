@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc UI</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #fffaf0;
+        text-align: center;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: white;
+      }
+
+      .logo {
+        width: 50px;
+        height: 50px;
+        color: black;
+        margin-top: 0;
+        margin-left: 2px;
+      }
+
+      .myimg {
+        width: 50px;
+        height: 50px;
+        border: 2px solid rgb(0, 116, 188);
+        border-radius: 30px;
+      }
+
+      .logo1 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #0077ff;
+        margin-right: 850px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .btn {
+        background: #0077ff;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
+      }
+      .hero {
+        margin-top: 50px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .search-container {
+        text-align: center;
+      }
+      .search-bar {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .search-bar input,
+      .search-bar button {
+        padding: 10px;
+        border-radius: 30px;
+        border: 1px solid #ccc;
+      }
+      .search-bar button {
+        background: #0077ff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .left-image,
+      .right-image {
+        position: absolute;
+        width: 150px;
+        height: 30;
+      }
+      .left-image {
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      .right-image {
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="logo">
+        <img
+          class="myimg"
+          src="C:\Users\KIIT01\Desktop\8th_sem_final_project\project\static\img3.png"
+          alt="image"
+        />
+      </div>
+      <div class="logo1">helloDoc</div>
+
+      <div class="nav-links">
+        <a href="#">Help</a>
+        <a href="#">Log in</a>
+        <a href="#" class="btn">Sign up</a>
+      </div>
+    </div>
+    <div class="hero">
+      <img
+        src="C:\Users\KIIT01\Desktop\8th_sem_final_project\project\static\left_side.png"
+        alt="Medical Items"
+        class="left-image"
+      />
+
+      
+        <h1>Look for your perfect doc,</h1>
+        <br/>
+
+        
+          <form action="/predict" method="post">
+            <div class="form-group">
+
+                <div class="search-bar">
+                    <input type="text" placeholder="Patia, OD" />
+                    <input type="text" placeholder="Symptom, doctor" />
+
+
+              <label for="symptoms">Select Symptoms:</label>
+              <input
+                type="text"
+                class="form-control"
+                ,
+                id="symptoms"
+                name="symptoms"
+                placeholder="type 4 symtomps"
+              />
+            </div>
+            <br />
+
+            <button
+              type="submit"
+              class="btn btn-danger btn-lg"
+              style="width: 100%; padding: 14px; margin-bottom: 5px"
+            >
+              Predict
+            </button>
+          </form>
+        
+
+        <div class="search-bar">
+          <input type="text" placeholder="Patia, OD" />
+          <input type="text" placeholder="Symptom, doctor" />
+          <button class="btn btn-outline-success" type="submit">
+            <i class="fas fa-search"></i>Search
+          </button>
+        </div>
+      </div>
+
+      <img
+        src="C:\Users\KIIT01\Desktop\8th_sem_final_project\project\static\right_side.png"
+        alt="Medical Tools"
+        class="right-image"
+      />
+    </div>
+  </body>
+</html>
