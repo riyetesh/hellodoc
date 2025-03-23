@@ -14,8 +14,8 @@ sym_des = pd.read_csv("datasets/symtoms_df.csv")
 precautions = pd.read_csv("datasets/precautions_df.csv")
 workout = pd.read_csv("datasets/workout_df.csv")
 description = pd.read_csv("datasets/description.csv")
-medications = pd.read_csv('datasets/medications.csv')
-diets = pd.read_csv("datasets/diets.csv")
+medications = pd.read_csv('datasets/new_medications.csv')
+diets = pd.read_csv("datasets/new_diets.csv")
 
 
 # load model===========================================
@@ -57,38 +57,53 @@ def get_predicted_value(patient_symptoms):
 
 
 # creating routes========================================
+from flask import Flask, render_template, request
 
+app = Flask(__name__)
 
+# Home Route (Landing Page)
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# Define a route for the home page
+# Prediction Route (Separate Results Page)
 @app.route('/predict', methods=['POST'])
-def home():
+def predict():
     if request.method == 'POST':
-        symptoms = request.form.get('symptoms')
-        print(symptoms)
+        symptoms = request.form.get('symptoms', '').strip()
 
-        if symptoms == "Symptoms":
-            message = "Please either write symptoms or you have written misspelled symptoms"
+        if not symptoms or symptoms.lower() == "symptoms":
+            message = "Please provide valid symptoms."
             return render_template('index.html', message=message)
-        else:
-            user_symptoms = [s.strip() for s in symptoms.split(',')]
-            user_symptoms = [symptom.strip("[]' ") for symptom in user_symptoms]
+
+        # Process symptoms
+        user_symptoms = [s.strip() for s in symptoms.split(',') if s.strip()]
+        
+        if not user_symptoms:
+            message = "Invalid symptoms provided."
+            return render_template('index.html', message=message)
+
+        try:
+            # Predict disease
             predicted_disease = get_predicted_value(user_symptoms)
             dis_des, precautions, medications, rec_diet, workout = helper(predicted_disease)
 
-            # Flatten medications and diet lists
-            medications = [med for sublist in medications for med in sublist]
-            rec_diet = [diet for sublist in rec_diet for diet in sublist]
+            my_precautions = precautions[0] if precautions else []  # This maintains the old functionality
 
-            my_precautions = [i for i in precautions[0]]
+            return render_template(
+                'results.html',  
+                predicted_disease=predicted_disease,
+                dis_des=dis_des,
+                my_precautions=my_precautions,  # Now works as before
+                medications=medications,
+                my_diet=rec_diet,
+                workout=workout
+            )
 
-            return render_template('results.html', predicted_disease=predicted_disease, dis_des=dis_des,
-                                   my_precautions=my_precautions, medications=medications, my_diet=rec_diet,
-                                   workout=workout)
+        except Exception as e:
+            return render_template('index.html', message=f"An error occurred: {str(e)}")
 
+    return render_template('index.html')
 
 
 if __name__ == '__main__':
