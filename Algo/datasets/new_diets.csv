@@ -1,0 +1,206 @@
+Disease,Diet
+Fungal infection,Antifungal Diet
+Fungal infection,Probiotics
+Fungal infection,Garlic
+Fungal infection,Coconut oil
+Fungal infection,Turmeric
+Allergy,Elimination Diet
+Allergy,Omega-3-rich foods
+Allergy,Vitamin C-rich foods
+Allergy,Quercetin-rich foods
+Allergy,Probiotics
+GERD,Low-Acid Diet
+GERD,Fiber-rich foods
+GERD,Ginger
+GERD,Licorice
+GERD,Aloe vera juice
+Chronic cholestasis,Low-Fat Diet
+Chronic cholestasis,High-Fiber Diet
+Chronic cholestasis,Lean proteins
+Chronic cholestasis,Whole grains
+Chronic cholestasis,Fresh fruits and vegetables
+Drug Reaction,Antihistamine Diet
+Drug Reaction,Omega-3-rich foods
+Drug Reaction,Vitamin C-rich foods
+Drug Reaction,Quercetin-rich foods
+Drug Reaction,Probiotics
+Peptic ulcer disease,Low-Acid Diet
+Peptic ulcer disease,Fiber-rich foods
+Peptic ulcer disease,Ginger
+Peptic ulcer disease,Licorice
+Peptic ulcer disease,Aloe vera juice
+AIDS,Balanced Diet
+AIDS,Protein-rich foods
+AIDS,Fruits and vegetables
+AIDS,Whole grains
+AIDS,Healthy fats
+Diabetes,Low-Glycemic Diet
+Diabetes,Fiber-rich foods
+Diabetes,Lean proteins
+Diabetes,Healthy fats
+Diabetes,Low-fat dairy
+Gastroenteritis,Bland Diet
+Gastroenteritis,Bananas
+Gastroenteritis,Rice
+Gastroenteritis,Applesauce
+Gastroenteritis,Toast
+Bronchial Asthma,Anti-Inflammatory Diet
+Bronchial Asthma,Omega-3-rich foods
+Bronchial Asthma,Fruits and vegetables
+Bronchial Asthma,Whole grains
+Bronchial Asthma,Lean proteins
+Hypertension,DASH Diet
+Hypertension,Low-sodium foods
+Hypertension,Fruits and vegetables
+Hypertension,Whole grains
+Hypertension,Lean proteins
+Migraine,Migraine Diet
+Migraine,Low-Tyramine Diet
+Migraine,Caffeine withdrawal
+Migraine,Hydration
+Migraine,Magnesium-rich foods
+Cervical spondylosis,Arthritis Diet
+Cervical spondylosis,Anti-Inflammatory Diet
+Cervical spondylosis,Omega-3-rich foods
+Cervical spondylosis,Fruits and vegetables
+Cervical spondylosis,Whole grains
+Paralysis (brain hemorrhage),Heart-Healthy Diet
+Paralysis (brain hemorrhage),Low-sodium foods
+Paralysis (brain hemorrhage),Fruits and vegetables
+Paralysis (brain hemorrhage),Whole grains
+Paralysis (brain hemorrhage),Lean proteins
+Jaundice,Liver-Healthy Diet
+Jaundice,Low-fat Diet
+Jaundice,Fruits and vegetables
+Jaundice,Whole grains
+Jaundice,Lean proteins
+Malaria,Malaria Diet
+Malaria,Hydration
+Malaria,High-Calorie Diet
+Malaria,Soft and bland foods
+Malaria,Oral rehydration solutions
+Chicken pox,Chicken Pox Diet
+Chicken pox,High-Calorie Diet
+Chicken pox,Soft and bland foods
+Chicken pox,Hydration
+Chicken pox,Protein-rich foods
+Dengue,Dengue Diet
+Dengue,Hydration
+Dengue,High-Calorie Diet
+Dengue,Soft and bland foods
+Dengue,Protein-rich foods
+Typhoid,Typhoid Diet
+Typhoid,High-Calorie Diet
+Typhoid,Soft and bland foods
+Typhoid,Hydration
+Typhoid,Protein-rich foods
+hepatitis A,Hepatitis A Diet
+hepatitis A,High-Calorie Diet
+hepatitis A,Soft and bland foods
+hepatitis A,Hydration
+hepatitis A,Protein-rich foods
+Hepatitis B,Hepatitis B Diet
+Hepatitis B,High-Calorie Diet
+Hepatitis B,Soft and bland foods
+Hepatitis B,Hydration
+Hepatitis B,Protein-rich foods
+Hepatitis C,Hepatitis C Diet
+Hepatitis C,High-Calorie Diet
+Hepatitis C,Soft and bland foods
+Hepatitis C,Hydration
+Hepatitis C,Protein-rich foods
+Hepatitis D,Hepatitis D Diet
+Hepatitis D,High-Calorie Diet
+Hepatitis D,Soft and bland foods
+Hepatitis D,Hydration
+Hepatitis D,Protein-rich foods
+Hepatitis E,Hepatitis E Diet
+Hepatitis E,High-Calorie Diet
+Hepatitis E,Soft and bland foods
+Hepatitis E,Hydration
+Hepatitis E,Protein-rich foods
+Alcoholic hepatitis,Liver-Healthy Diet
+Alcoholic hepatitis,Low-fat Diet
+Alcoholic hepatitis,Fruits and vegetables
+Alcoholic hepatitis,Whole grains
+Alcoholic hepatitis,Lean proteins
+Tuberculosis,TB Diet
+Tuberculosis,High-Calorie Diet
+Tuberculosis,Soft and bland foods
+Tuberculosis,Hydration
+Tuberculosis,Protein-rich foods
+Common Cold,Cold Diet
+Common Cold,Hydration
+Common Cold,Warm fluids
+Common Cold,Rest
+Common Cold,Honey and lemon tea
+Pneumonia,Pneumonia Diet
+Pneumonia,High-Calorie Diet
+Pneumonia,Soft and bland foods
+Pneumonia,Hydration
+Pneumonia,Protein-rich foods
+Dimorphic hemmorhoids(piles),Hemorrhoids Diet
+Dimorphic hemmorhoids(piles),High-Fiber Diet
+Dimorphic hemmorhoids(piles),Hydration
+Dimorphic hemmorhoids(piles),Warm baths
+Dimorphic hemmorhoids(piles),Stool softeners
+Heart attack,Heart-Healthy Diet
+Heart attack,Low-sodium foods
+Heart attack,Fruits and vegetables
+Heart attack,Whole grains
+Heart attack,Lean proteins
+Varicose veins,Varicose Veins Diet
+Varicose veins,High-Fiber Diet
+Varicose veins,Fruits and vegetables
+Varicose veins,Whole grains
+Varicose veins,Low-sodium foods
+Hypothyroidism,Hypothyroidism Diet
+Hypothyroidism,Iodine-rich foods
+Hypothyroidism,Selenium-rich foods
+Hypothyroidism,Fruits and vegetables
+Hypothyroidism,Whole grains
+Hyperthyroidism,Hyperthyroidism Diet
+Hyperthyroidism,Low-Iodine Diet
+Hyperthyroidism,Calcium-rich foods
+Hyperthyroidism,Selenium-rich foods
+Hyperthyroidism,Fruits and vegetables
+Hypoglycemia,Hypoglycemia Diet
+Hypoglycemia,Complex carbohydrates
+Hypoglycemia,Protein-rich snacks
+Hypoglycemia,Fiber-rich foods
+Hypoglycemia,Healthy fats
+Osteoarthristis,Arthritis Diet
+Osteoarthristis,Anti-Inflammatory Diet
+Osteoarthristis,Omega-3-rich foods
+Osteoarthristis,Fruits and vegetables
+Osteoarthristis,Whole grains
+Arthritis,Arthritis Diet
+Arthritis,Anti-Inflammatory Diet
+Arthritis,Omega-3-rich foods
+Arthritis,Fruits and vegetables
+Arthritis,Whole grains
+(vertigo) Paroymsal Positional Vertigo,Vertigo Diet
+(vertigo) Paroymsal Positional Vertigo,Low-Salt Diet
+(vertigo) Paroymsal Positional Vertigo,Hydration
+(vertigo) Paroymsal Positional Vertigo,Ginger tea
+(vertigo) Paroymsal Positional Vertigo,Vitamin D-rich foods
+Acne,Acne Diet
+Acne,Low-Glycemic Diet
+Acne,Hydration
+Acne,Fruits and vegetables
+Acne,Probiotics
+Urinary tract infection,UTI Diet
+Urinary tract infection,Hydration
+Urinary tract infection,Cranberry juice
+Urinary tract infection,Probiotics
+Urinary tract infection,Vitamin C-rich foods
+Psoriasis,Psoriasis Diet
+Psoriasis,Anti-Inflammatory Diet
+Psoriasis,Omega-3-rich foods
+Psoriasis,Fruits and vegetables
+Psoriasis,Whole grains
+Impetigo,Impetigo Diet
+Impetigo,Antibiotic treatment
+Impetigo,Fruits and vegetables
+Impetigo,Hydration
+Impetigo,Protein-rich foods
