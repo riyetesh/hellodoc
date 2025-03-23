@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='results.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="navlogo">
+        <div>
+            <h1>Results</h1>
+        </div>
+    </header>
+
+
+    <div class="backbutton-wrapper">
+        <button class="backbutton" onclick="goBack()">Go Back</button>
+    </div>
+    
+    <div class="patient-wrapper">
+        <div class="patient-container">
+            <div class="patient-header">
+                <h2>Patient Information</h2>
+            </div>
+            <div class="patient-info">
+                <h3>John Doe</h3>
+            </div>
+            <div class="patient-data">
+                <table>
+                    <tr>
+                        <th>Age</th>
+                        <td>35</td>
+                    </tr>
+                    <tr>
+                        <th>Blood Type</th>
+                        <td>O+</td>
+                    </tr>
+                    <tr>
+                        <th>Allergies</th>
+                        <td>None</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <h1>Predicted Disease: {{ predicted_disease }}</h1>
+    <p>Description: {{ dis_des }}</p>
+
+    
+    <div class="grid-container">
+        <button onclick="openModal('precautionsModal')">
+            <i class="fas fa-shield-alt"></i> Precautions
+        </button>
+
+        <button onclick="openModal('medicationsModal')">
+            <i class="fas fa-pills"></i> Medications
+        </button>
+
+        <button onclick="openModal('dietModal')">
+            <i class="fas fa-utensils"></i> Diet
+        </button>
+
+        <button onclick="openModal('workoutsModal')">
+            <i class="fas fa-dumbbell"></i> Workouts
+        </button>
+    </div>
+
+    <!-- Precautions Modal -->
+    <div id="precautionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('precautionsModal')">&times;</span>
+            <h2>Precautions</h2>
+            <ul>
+                {% for precaution in my_precautions %}
+                <li>{{ precaution }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+   <!-- Medications Modal -->
+<div id="medicationsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('medicationsModal')">&times;</span>
+        <h2>Medications</h2>
+        <ul>
+            {% for med in medications %}
+            <li>{{ med }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Diet Modal -->
+<div id="dietModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('dietModal')">&times;</span>
+        <h2>Recommended Diet</h2>
+        <ul>
+            {% for diet in my_diet %}
+            <li>{{ diet }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+    </div>
+
+    <!-- Workouts Modal -->
+    <div id="workoutsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('workoutsModal')">&times;</span>
+            <h2>Suggested Workouts</h2>
+            <ul>
+                {% for wrk in workout %}
+                <li>{{ wrk }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 0px;">
+
+
+        <img src="{{ url_for('static', filename='res_foot.svg') }}" alt="Footer Image" class="footer-img">
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <Contact>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+        </div>
+    </footer>
+    
+
+
+
+    <div class="appointment-timer">
+        <h3>Appointment Starts In:</h3>
+        <div class="timer">
+            <span id="minutes">10</span>:<span id="seconds">00</span>
+        </div>
+        <div class="timer-buttons">
+            <button id="playPauseBtn">▶</button>
+            <button id="resetBtn">⟳</button>
+        </div>
+    </div>
+
+
+
+    <script>
+
+
+
+        
+      // Open Modal
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add("show");
+}
+
+// Close Modal
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove("show");
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    document.querySelectorAll(".modal").forEach(modal => {
+        if (event.target === modal) {
+            modal.classList.remove("show");
+        }
+    });
+};
+
+function goBack() {
+    window.history.back();
+  }
+
+
+
+
+
+
+//Timer
+
+let timer;
+    let timeLeft = 1200; // 20 minutes in seconds
+    let running = false;
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function updateTimerDisplay() {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+
+    function toggleTimer() {
+        if (running) {
+            clearInterval(timer);
+            playPauseBtn.textContent = '▶'; // Change to play icon
+        } else {
+            timer = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timer);
+                    playPauseBtn.textContent = '▶';
+                    running = false;
+                }
+            }, 1000);
+            playPauseBtn.textContent = '❚❚'; // Change to pause icon
+        }
+        running = !running;
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        timeLeft = 600; // Reset to 10:00
+        running = false;
+        playPauseBtn.textContent = '▶'; // Change back to play icon
+        updateTimerDisplay();
+    }
+
+    playPauseBtn.addEventListener('click', toggleTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    updateTimerDisplay(); // Initialize display
+
+
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>
