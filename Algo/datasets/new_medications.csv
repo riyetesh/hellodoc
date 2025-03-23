@@ -1,0 +1,206 @@
+Disease,Medication
+Fungal infection,Antifungal Cream
+Fungal infection,Fluconazole
+Fungal infection,Terbinafine
+Fungal infection,Clotrimazole
+Fungal infection,Ketoconazole
+Allergy,Antihistamines
+Allergy,Decongestants
+Allergy,Epinephrine
+Allergy,Corticosteroids
+Allergy,Immunotherapy
+GERD,Proton Pump Inhibitors (PPIs)
+GERD,H2 Blockers
+GERD,Antacids
+GERD,Prokinetics
+GERD,Antibiotics
+Chronic cholestasis,Ursodeoxycholic acid
+Chronic cholestasis,Cholestyramine
+Chronic cholestasis,Methotrexate
+Chronic cholestasis,Corticosteroids
+Chronic cholestasis,Liver transplant
+Drug Reaction,Antihistamines
+Drug Reaction,Epinephrine
+Drug Reaction,Corticosteroids
+Drug Reaction,Antibiotics
+Drug Reaction,Antifungal Cream
+Peptic ulcer disease,Antibiotics
+Peptic ulcer disease,Proton Pump Inhibitors (PPIs)
+Peptic ulcer disease,H2 Blockers
+Peptic ulcer disease,Antacids
+Peptic ulcer disease,Cytoprotective agents
+AIDS,Antiretroviral drugs
+AIDS,Protease inhibitors
+AIDS,Integrase inhibitors
+AIDS,Entry inhibitors
+AIDS,Fusion inhibitors
+Diabetes,Insulin
+Diabetes,Metformin
+Diabetes,Sulfonylureas
+Diabetes,DPP-4 inhibitors
+Diabetes,GLP-1 receptor agonists
+Gastroenteritis,Antibiotics
+Gastroenteritis,Antiemetic drugs
+Gastroenteritis,Antidiarrheal drugs
+Gastroenteritis,IV fluids
+Gastroenteritis,Probiotics
+Bronchial Asthma,Bronchodilators
+Bronchial Asthma,Inhaled corticosteroids
+Bronchial Asthma,Leukotriene modifiers
+Bronchial Asthma,Mast cell stabilizers
+Bronchial Asthma,Anticholinergics
+Hypertension,Antihypertensive medications
+Hypertension,Diuretics
+Hypertension,Beta-blockers
+Hypertension,ACE inhibitors
+Hypertension,Calcium channel blockers
+Migraine,Analgesics
+Migraine,Triptans
+Migraine,Ergotamine derivatives
+Migraine,Preventive medications
+Migraine,Biofeedback
+Cervical spondylosis,Pain relievers
+Cervical spondylosis,Muscle relaxants
+Cervical spondylosis,Physical therapy
+Cervical spondylosis,Neck braces
+Cervical spondylosis,Corticosteroids
+Paralysis (brain hemorrhage),Blood thinners
+Paralysis (brain hemorrhage),Clot-dissolving medications
+Paralysis (brain hemorrhage),Anticonvulsants
+Paralysis (brain hemorrhage),Physical therapy
+Paralysis (brain hemorrhage),Occupational therapy
+Jaundice,IV fluids
+Jaundice,Blood transfusions
+Jaundice,Liver transplant
+Jaundice,Medications for itching
+Jaundice,Antiviral medications
+Malaria,Antimalarial drugs
+Malaria,Antipyretics
+Malaria,Antiemetic drugs
+Malaria,IV fluids
+Malaria,Blood transfusions
+Chicken pox,Antiviral drugs
+Chicken pox,Pain relievers
+Chicken pox,IV fluids
+Chicken pox,Blood transfusions
+Chicken pox,Platelet transfusions
+Dengue,Antibiotics
+Dengue,Antipyretics
+Dengue,Analgesics
+Dengue,IV fluids
+Dengue,Corticosteroids
+Typhoid,Vaccination
+Typhoid,Antiviral drugs
+Typhoid,IV fluids
+Typhoid,Blood transfusions
+Typhoid,Liver transplant
+hepatitis A,Vaccination
+hepatitis A,Antiviral drugs
+hepatitis A,IV fluids
+hepatitis A,Blood transfusions
+hepatitis A,Liver transplant
+Hepatitis B,Antiviral drugs
+Hepatitis B,IV fluids
+Hepatitis B,Blood transfusions
+Hepatitis B,Platelet transfusions
+Hepatitis B,Liver transplant
+Hepatitis C,Antiviral drugs
+Hepatitis C,IV fluids
+Hepatitis C,Blood transfusions
+Hepatitis C,Platelet transfusions
+Hepatitis C,Liver transplant
+Hepatitis D,Antiviral drugs
+Hepatitis D,IV fluids
+Hepatitis D,Blood transfusions
+Hepatitis D,Platelet transfusions
+Hepatitis D,Liver transplant
+Hepatitis E,Alcohol cessation
+Hepatitis E,Corticosteroids
+Hepatitis E,IV fluids
+Hepatitis E,Liver transplant
+Hepatitis E,Nutritional support
+Alcoholic hepatitis,Antibiotics
+Alcoholic hepatitis,Isoniazid
+Alcoholic hepatitis,Rifampin
+Alcoholic hepatitis,Ethambutol
+Alcoholic hepatitis,Pyrazinamide
+Tuberculosis,Antipyretics
+Tuberculosis,Decongestants
+Tuberculosis,Cough suppressants
+Tuberculosis,Antihistamines
+Tuberculosis,Pain relievers
+Common Cold,Antibiotics
+Common Cold,Antiviral drugs
+Common Cold,Antifungal drugs
+Common Cold,IV fluids
+Common Cold,Oxygen therapy
+Pneumonia,Laxatives
+Pneumonia,Pain relievers
+Pneumonia,Warm baths
+Pneumonia,Cold compresses
+Pneumonia,High-fiber diet
+Dimorphic hemmorhoids(piles),Nitroglycerin
+Dimorphic hemmorhoids(piles),Aspirin
+Dimorphic hemmorhoids(piles),Beta-blockers
+Dimorphic hemmorhoids(piles),Calcium channel blockers
+Dimorphic hemmorhoids(piles),Thrombolytic drugs
+Heart attack,Compression stockings
+Heart attack,Exercise
+Heart attack,Elevating the legs
+Heart attack,Sclerotherapy
+Heart attack,Laser treatments
+Varicose veins,Levothyroxine
+Varicose veins,Antithyroid medications
+Varicose veins,Beta-blockers
+Varicose veins,Radioactive iodine
+Varicose veins,Thyroid surgery
+Hypothyroidism,Antithyroid medications
+Hypothyroidism,Radioactive iodine
+Hypothyroidism,Thyroid surgery
+Hypothyroidism,Beta-blockers
+Hypothyroidism,Corticosteroids
+Hyperthyroidism,Glucose tablets
+Hyperthyroidism,Candy or juice
+Hyperthyroidism,Glucagon injection
+Hyperthyroidism,IV dextrose
+Hyperthyroidism,Diazoxide
+Hypoglycemia,Pain relievers
+Hypoglycemia,Exercise
+Hypoglycemia,Hot and cold packs
+Hypoglycemia,Joint protection
+Hypoglycemia,Physical therapy
+Osteoarthristis,NSAIDs
+Osteoarthristis,Disease-modifying antirheumatic drugs (DMARDs)
+Osteoarthristis,Biologics
+Osteoarthristis,Corticosteroids
+Osteoarthristis,Joint replacement surgery
+Arthritis,Vestibular rehabilitation
+Arthritis,Canalith repositioning
+Arthritis,Medications for nausea
+Arthritis,Surgery
+Arthritis,Home exercises
+(vertigo) Paroymsal Positional Vertigo,Topical treatments
+(vertigo) Paroymsal Positional Vertigo,Antibiotics
+(vertigo) Paroymsal Positional Vertigo,Oral medications
+(vertigo) Paroymsal Positional Vertigo,Hormonal treatments
+(vertigo) Paroymsal Positional Vertigo,Isotretinoin
+Acne,Antibiotics
+Acne,Pain relievers
+Acne,Antihistamines
+Acne,Corticosteroids
+Acne,Topical treatments
+Urinary tract infection,Antibiotics
+Urinary tract infection,Urinary analgesics
+Urinary tract infection,Phenazopyridine
+Urinary tract infection,Antispasmodics
+Urinary tract infection,Probiotics
+Psoriasis,Topical treatments
+Psoriasis,Phototherapy
+Psoriasis,Systemic medications
+Psoriasis,Biologics
+Psoriasis,Coal tar
+Impetigo,Topical antibiotics
+Impetigo,Oral antibiotics
+Impetigo,Antiseptics
+Impetigo,Ointments
+Impetigo,Warm compresses
