@@ -6,6 +6,10 @@
     <title>Results</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='results.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+
 </head>
 <body>
     <header>
@@ -26,13 +30,13 @@
                 <h2>Patient Information</h2>
             </div>
             <div class="patient-info">
-                <h3>John Doe</h3>
+                <h3>Ritesh Yadav</h3>
             </div>
             <div class="patient-data">
                 <table>
                     <tr>
                         <th>Age</th>
-                        <td>35</td>
+                        <td>24</td>
                     </tr>
                     <tr>
                         <th>Blood Type</th>
@@ -46,28 +50,29 @@
             </div>
         </div>
     </div>
-    
+    <br>
     <h1>Predicted Disease: {{ predicted_disease }}</h1>
-    <p>Description: {{ dis_des }}</p>
+    <p>Description: {{ dis_des }}</p> <br><br>
 
     
     <div class="grid-container">
         <button onclick="openModal('precautionsModal')">
-            <i class="fas fa-shield-alt"></i> Precautions
+            <img src="{{ url_for('static', filename='Precautions.png') }}" alt="Precautions" class="button-icon"> Precautions
         </button>
-
+    
         <button onclick="openModal('medicationsModal')">
-            <i class="fas fa-pills"></i> Medications
+            <img src="{{ url_for('static', filename='medicine.png') }}" alt="Medications" class="button-icon"> Medications
         </button>
-
+    
         <button onclick="openModal('dietModal')">
-            <i class="fas fa-utensils"></i> Diet
+            <img src="{{ url_for('static', filename='diet.png') }}" alt="Diet" class="button-icon"> Diet
         </button>
-
+    
         <button onclick="openModal('workoutsModal')">
-            <i class="fas fa-dumbbell"></i> Workouts
+            <img src="{{ url_for('static', filename='workout.png') }}" alt="Workouts" class="button-icon"> Workouts
         </button>
     </div>
+    
 
     <!-- Precautions Modal -->
     <div id="precautionsModal" class="modal">
@@ -123,6 +128,14 @@
         </div>
     </div>
 
+    <div class="download-report-wrapper">
+        <button id="downloadPdfBtn" class="btn report-download-btn">
+            <i class="fas fa-file-pdf"></i> Download Report
+        </button>
+    </div>
+    
+    
+
 
     <div style="display: flex; justify-content: flex-end; margin-bottom: 0px;">
 
@@ -150,7 +163,8 @@
         </div>
     </div>
 
-
+   
+    
 
     <script>
 
@@ -234,6 +248,122 @@ let timer;
     updateTimerDisplay(); // Initialize display
 
 
+
+
+
+    document.getElementById("downloadPdfBtn").addEventListener("click", function () {
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF();
+        let pageHeight = doc.internal.pageSize.height;
+        let y = 40; // **More gap after the header**
+        let lastPage = 1;
+    
+        function addHeaderFooter(doc, pageNumber) {
+            let img = new Image();
+            img.src = "/static/Logo.png";
+            doc.addImage(img, "PNG", 10, 15, 35, 14.5);
+    
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(0, 102, 204);
+            doc.text("Hellodoc Private Limited", 50, 20);
+    
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+            doc.text("KIIT, Bhubaneswar, Odisha | Ph: +91 7608093320", 50, 27);
+            doc.text("Email: contact@hellodoc.com | Website: www.hellodoc.com", 50, 33);
+            doc.line(10, 40, 200, 40);
+        }
+    
+        function addTable(doc, title, dataArray, titleColor, rowColor) {
+            y += 5; // **Reduced gap before each table**
+            if (y > pageHeight - 50) {
+                doc.addPage();
+                y = 40;
+                lastPage = doc.internal.getNumberOfPages();
+                addHeaderFooter(doc, lastPage);
+            }
+    
+            doc.autoTable({
+                startY: y,
+                head: [[title]],
+                body: dataArray.map(item => [item]),
+                theme: "grid",
+                headStyles: { fillColor: titleColor, textColor: 255, fontSize: 14, fontStyle: "bold" },
+                bodyStyles: { textColor: 0 },
+                alternateRowStyles: { fillColor: rowColor },
+                columnStyles: { 0: { fontStyle: "normal", cellWidth: 180 } }
+            });
+    
+            y = doc.lastAutoTable.finalY + 5; // **Less space between tables**
+            if (y > pageHeight - 50) {
+                doc.addPage();
+                y = 40;
+                lastPage = doc.internal.getNumberOfPages();
+                addHeaderFooter(doc, lastPage);
+            }
+        }
+    
+        addHeaderFooter(doc, 1);
+        y += 5; // **More space after header**
+    
+        addTable(doc, "Doctor Details", ["Dr. {{ doctor_name }}"], [255, 0, 0], [255, 230, 230]);
+        addTable(doc, "Patient Details", [
+            "Name: {{ patient_name }}",
+            "Age: {{ patient_age }}",
+            "Gender: {{ patient_gender }}",
+            "Date: {{ current_date }}",
+            "Contact: {{ patient_contact }}"
+        ], [0, 128, 0], [230, 255, 230]);
+    
+        addTable(doc, "Predicted Disease", [
+            "{{ predicted_disease }}",
+            "Description: {{ dis_des }}"
+        ], [0, 51, 153], [230, 230, 255]);
+    
+        addTable(doc, "Precautions", [
+            {% for precaution in my_precautions %}
+            "{{ precaution }}",
+            {% endfor %}
+        ], [255, 102, 0], [255, 235, 215]);
+    
+        addTable(doc, "Medications", [
+            {% for med in medications %}
+            "{{ med }}",
+            {% endfor %}
+        ], [153, 51, 255], [245, 230, 255]);
+    
+        addTable(doc, "Recommended Diet", [
+            {% for food in my_diet %}
+            "{{ food }}",
+            {% endfor %}
+        ], [0, 153, 76], [230, 255, 240]);
+    
+        addTable(doc, "Suggested Workouts", [
+            {% for wrk in workout %}
+            "{{ wrk }}",
+            {% endfor %}
+        ], [0, 102, 204], [230, 240, 255]);
+    
+        if (doc.internal.getNumberOfPages() === 1) {
+            doc.addPage();
+            lastPage = 2;
+            addHeaderFooter(doc, 2);
+        }
+    
+        lastPage = doc.internal.getNumberOfPages();
+        doc.setPage(lastPage);
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(12);
+        doc.text("Doctor's Signature:_________________", 120, pageHeight - 30);
+    
+        doc.save("Patient_Report.pdf");
+    });
+    
+    
+    
+    
 </script>
 
 
