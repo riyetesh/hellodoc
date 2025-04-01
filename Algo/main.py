@@ -2,6 +2,10 @@ from flask import Flask, request, render_template, jsonify  # Import jsonify
 import numpy as np
 import pandas as pd
 import pickle
+from flask import    redirect, url_for, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 
 # flask app
@@ -38,7 +42,7 @@ def helper(dis):
     die = diets[diets['Disease'] == dis]['Diet']
     die = [die for die in die.values]
 
-    wrkout = workout[workout['disease'] == dis] ['workout']
+    wrkout = workout[workout['disease'] == dis]['workout'].values if dis in workout['disease'].values else []
 
 
     return desc,pre,med,die,wrkout
@@ -88,7 +92,7 @@ def predict():
             predicted_disease = get_predicted_value(user_symptoms)
             dis_des, precautions, medications, rec_diet, workout = helper(predicted_disease)
 
-            my_precautions = precautions[0] if precautions else []  # This maintains the old functionality
+            my_precautions = precautions[0] if len(precautions) > 0 else []  # This maintains the old functionality
 
             return render_template(
                 'results.html',  
