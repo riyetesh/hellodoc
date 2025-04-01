@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teams</title>
+
+    <!-- Linking CSS -->
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body>
+    <!-- Modern Navigation Bar -->
+<nav class="navbar">
+  <!-- Logo with hover effect -->
+  <div class="navbar-brand">
+    <a href="#">
+      <img src="./images/Logo.png" alt="Medical Clinic Logo" class="logo hover-scale">
+    </a>
+  </div>
+
+  <!-- Mobile menu button (hidden on desktop) -->
+  <button class="mobile-menu-button" aria-label="Toggle navigation">
+    <span class="menu-icon"></span>
+    <span class="menu-icon"></span>
+    <span class="menu-icon"></span>
+  </button>
+
+  <!-- Navigation Links -->
+  <ul class="nav-links">
+    <li><a href="#" class="nav-link hover-underline">Home</a></li>
+    <li><a href="#" class="nav-link hover-underline">Doctors</a></li>
+    <li><a href="#" class="nav-link hover-underline">Services</a></li>
+    <li><a href="#" class="nav-link hover-underline">Appointments</a></li>
+    <li><a href="#" class="nav-link hover-underline">Contact</a></li>
+  </ul>
+
+  <!-- User Actions -->
+  <div class="user-actions">
+    <button class="btn btn-outline">Login</button>
+    <button class="btn btn-primary">Sign Up</button>
+  </div>
+</nav>
+
+    <!-- Search, Sort, and Filter -->
+<div class="search-sort">
+  <!-- Search Bar -->
+  <div class="search">
+    <form action="">
+      <input type="text" id="search" placeholder="Search by name" />
+    </form>
+    <div class="image">
+      <!-- Search Icon -->
+      <img src="./images/search.png" alt="search icon" />
+    </div>
+  </div>
+
+  <!-- Sort - 'Experience, High-Low, Low-High'-->
+  <div class="sort">
+    <label for="sort"></label>
+    <div class="dropdown">
+      <button class="dropbtn">Sort</button>
+      <div class="dropdown-content">
+        <a href="#" class="sort-option" data-value="all">All</a>
+        <a href="#" class="sort-option" data-value="experience">Experience</a>
+        <a href="#" class="sort-option" data-value="hourlyFeeHighLow">Hourly Fee - High to Low</a>
+        <a href="#" class="sort-option" data-value="hourlyFeeLowHigh">Hourly Fee - Low to High</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter by 'Speciality' -->
+  <div class="filter">
+    <label for="filter">Speciality</label>
+    <div class="checkbox-container">
+      <input type="checkbox" id="generalPhysician" value="General Physician" /> General Physician<br>
+      <input type="checkbox" id="pediatrician" value="Pediatrician" /> Pediatrician<br>
+      <input type="checkbox" id="gynecologist" value="Gynecologist & Obstetrician" /> Gynecologist & Obstetrician<br>
+      <input type="checkbox" id="dermatologist" value="Dermatologist" /> Dermatologist<br>
+      <input type="checkbox" id="cardiologist" value="Cardiologist" /> Cardiologist<br>
+      <input type="checkbox" id="neurologist" value="Neurologist" /> Neurologist<br>
+      <input type="checkbox" id="orthopedic" value="Orthopedic Surgeon" /> Orthopedic Surgeon<br>
+      <input type="checkbox" id="ent" value="ENT Specialist" /> ENT Specialist<br>
+      <input type="checkbox" id="ophthalmologist" value="Ophthalmologist" /> Ophthalmologist<br>
+      <input type="checkbox" id="psychiatrist" value="Psychiatrist" /> Psychiatrist<br>
+      <input type="checkbox" id="endocrinologist" value="Endocrinologist" /> Endocrinologist<br>
+      <input type="checkbox" id="pulmonologist" value="Pulmonologist" /> Pulmonologist<br>
+      <input type="checkbox" id="nephrologist" value="Nephrologist" /> Nephrologist<br>
+      <input type="checkbox" id="gastroenterologist" value="Gastroenterologist" /> Gastroenterologist<br>
+      <input type="checkbox" id="urologist" value="Urologist" /> Urologist<br>
+      <input type="checkbox" id="oncologist" value="Oncologist" /> Oncologist<br>
+      <input type="checkbox" id="hematologist" value="Hematologist" /> Hematologist<br>
+      <input type="checkbox" id="rheumatologist" value="Rheumatologist" /> Rheumatologist<br>
+      <input type="checkbox" id="infectiousDisease" value="Infectious Disease Specialist" /> Infectious Disease Specialist<br>
+      <input type="checkbox" id="allergist" value="Allergist/Immunologist" /> Allergist/Immunologist<br>
+      <input type="checkbox" id="plasticSurgeon" value="Plastic Surgeon" /> Plastic Surgeon<br>
+      <input type="checkbox" id="anesthesiologist" value="Anesthesiologist" /> Anesthesiologist<br>
+      <input type="checkbox" id="radiologist" value="Radiologist" /> Radiologist<br>
+      <input type="checkbox" id="pathologist" value="Pathologist" /> Pathologist<br>
+      <input type="checkbox" id="emergencyMedicine" value="Emergency Medicine Specialist" /> Emergency Medicine Specialist<br>
+    </div>
+  </div>
+</div>
+
+    <!-- Doctors -->
+    <div class="team-container">
+      <!-- Doctor cards will be dynamically inserted here by JavaScript -->
+    </div>
+
+    <!-- Javascript -->
+    <script src="./script.js"></script>
+  </body>
+</html>
