@@ -322,29 +322,14 @@ let timer;
             "Description: {{ dis_des }}"
         ], [0, 51, 153], [230, 230, 255]);
     
-        addTable(doc, "Precautions", [
-            {% for precaution in my_precautions %}
-            "{{ precaution }}",
-            {% endfor %}
-        ], [255, 102, 0], [255, 235, 215]);
-    
-        addTable(doc, "Medications", [
-            {% for med in medications %}
-            "{{ med }}",
-            {% endfor %}
-        ], [153, 51, 255], [245, 230, 255]);
-    
-        addTable(doc, "Recommended Diet", [
-            {% for food in my_diet %}
-            "{{ food }}",
-            {% endfor %}
-        ], [0, 153, 76], [230, 255, 240]);
-    
-        addTable(doc, "Suggested Workouts", [
-            {% for wrk in workout %}
-            "{{ wrk }}",
-            {% endfor %}
-        ], [0, 102, 204], [230, 240, 255]);
+        addTable(doc, "Precautions", my_precautions.map(precaution => `"${precaution}"`), [255, 102, 0], [255, 235, 215]);
+
+        addTable(doc, "Medications", medications.map(med => `"${med}"`), [153, 51, 255], [245, 230, 255]);
+
+        addTable(doc, "Recommended Diet", my_diet.map(food => `"${food}"`), [0, 153, 76], [230, 255, 240]);
+
+        addTable(doc, "Suggested Workouts", workout.map(wrk => `"${wrk}"`), [0, 102, 204], [230, 240, 255]);
+
     
         if (doc.internal.getNumberOfPages() === 1) {
             doc.addPage();

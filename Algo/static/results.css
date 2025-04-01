@@ -17,6 +17,59 @@ p {
     color: #555;
 }
 
+/* Floating Chatbot Button */
+.chatbot-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #6d4fc2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 65px;
+    height: 65px;
+    font-size: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999; /* Ensures it stays above other elements */
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.chatbot-button:hover {
+    background-color: #563d99; /* Darker shade for hover */
+    transform: scale(1.15); /* Slightly enlarges button */
+    box-shadow: 0 0 20px rgba(109, 79, 194, 0.8); /* Glowing effect */
+}
+
+/* Chatbot Container */
+.chatbot-container {
+    position: fixed;
+    bottom: 90px; /* Slightly above button */
+    right: 20px;
+    width: 360px;
+    height: 520px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    display: none;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    z-index: 9999;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Chatbot Iframe */
+.chatbot-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+
 /* Grid Layout for Buttons */
 .grid-container {
     display: grid;
