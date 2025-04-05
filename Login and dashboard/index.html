@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <link rel="stylesheet" href="styles.css" alt="error" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+
+    <script src="signup.js" defer></script>
+    <script src="login.js" defer></script>
+  </head>
+  <body>
+   <!-- Modern Navigation Bar -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="logo-container">
+      <img src="./hello-doc.png" alt="Hello Doc Logo" class="logo" />
+    </div>
+    
+    <div class="nav-actions">
+      <button class="nav-btn help-btn">
+        <i class="fas fa-question-circle"></i>
+        <span>Help</span>
+      </button>
+      <a href="./login.html" class="nav-btn login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+    <div class="container">
+      <main>
+        <form class="signup-form">
+          <h2>Create an account</h2>
+
+          <div class="lower">
+            <div class="name">
+              <div>
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" required />
+              </div>
+
+              <div>
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required />
+              </div>
+            </div>
+
+            <div class="form-grp">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required />
+            </div>
+
+            <div class="form-grp">
+              <label for="password">password</label>
+              <input type="password" id="password" name="password" required />
+            </div>
+
+            <div class="form-grp">
+              <label for="dob">Date of Birth</label>
+              <input type="date" id="dob" name="dob" required />
+            </div>
+
+            <div class="form-grp">
+              <label>Sex</label>
+              <div class="radio-group">
+                <div class="radio-left">
+                  <div class="radio-btns">
+                    <input
+                      type="radio"
+                      id="male"
+                      name="sex"
+                      value="male"
+                      required
+                    />
+                    <label for="male">Male</label>
+                  </div>
+
+                  <div class="radio-btns">
+                    <input
+                      type="radio"
+                      id="female"
+                      name="sex"
+                      value="female"
+                      required
+                    />
+                    <label for="female">Female</label>
+                  </div>
+                </div>
+
+                <div class="others">
+                  <input
+                    type="radio"
+                    id="other"
+                    name="sex"
+                    value="other"
+                    required
+                  />
+                  <label for="other">Others</label>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Continue</button>
+            <div class="line-container">
+              <div class="line"></div>
+              <p>or</p>
+              <div class="line"></div>
+            </div>
+
+            <button type="button" class="btn-google">
+              <i class="fa-brands fa-google" style="color: #FFD43B;"></i> Continue with Google
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          const form = document.querySelector(".signup-form");
+      
+          form.addEventListener("submit", async function (event) {
+              event.preventDefault();
+      
+              const firstName = document.getElementById("firstName").value;
+              const lastName = document.getElementById("lastName").value;
+              const email = document.getElementById("email").value;
+              const password = document.getElementById("password").value;
+              const dob = document.getElementById("dob").value;
+              const sex = document.querySelector("input[name='sex']:checked").value;
+      
+              const requestData = { firstName, lastName, email, password, dob, sex };
+      
+              try {
+                  const response = await fetch("http://localhost:5000/auth/signup", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(requestData),
+                  });
+      
+                  const data = await response.json();
+                  if (response.ok) {
+                      alert("Signup successful! ✅");
+                      window.location.href = "login.html";
+                  } else {
+                      alert("Error: " + data.message);
+                  }
+              } catch (error) {
+                  console.error("Error:", error);
+                  alert("Signup failed. Please try again.");
+              }
+          });
+      });
+      </script>
+      
+  </body>
+</html>

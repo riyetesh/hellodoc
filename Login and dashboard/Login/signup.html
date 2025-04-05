@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="signup.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Create an Account</h1>
+        <form id="signupForm">
+            <div class="name-fields">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" required>
+            </div>
+
+            <div class="form-group">
+                <label>Sex</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="sex" value="Male" checked> Male
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="sex" value="Female"> Female
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="sex" value="Others"> Others
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="continue-btn">Continue</button>
+        </form>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <button class="google-btn">
+            <span class="material-icons">account_circle</span>
+            Continue with Google
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
