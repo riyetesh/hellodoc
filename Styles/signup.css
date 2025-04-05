@@ -9,7 +9,7 @@
 
 body {
   background-image: 
-    url('background.png');
+    url('../Asset/Login/background.png');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
