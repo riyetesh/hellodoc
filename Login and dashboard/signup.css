@@ -2,6 +2,8 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 
@@ -32,71 +34,43 @@ body {
 /* Import Font Awesome for icons */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
-.navbar {
-  background: white;
-  position:relative;
-  top: 0;
-  z-index: 1000;
-  padding: 0.8rem 2rem;
-}
-
-.navbar-container {
+nav {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Pushes logo left and links right */
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  gap: 20px;
+  width: 95%; /* Ensures full width */
+  padding: 10px;
 }
+  
+  nav a {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  
+  nav a:hover {
+    color: #2a7fba;
+  }
+  
+  .login-btn {
+    background-color: #2a7fba;
+    color: white !important;
+    padding: 8px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  .nav-logo {
+    height: 50px; /* Adjust based on your logo */
+    margin-right: auto; /* Pushes everything else to the right */
+  }
 
-.logo-container img {
-  height: 60px;
-  transition: var(--transition);
-}
+  .login:hover {
+    background-color: #1e6fa3;
+  }
 
-.logo-container img:hover {
-  transform: scale(1.05);
-}
-
-.nav-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-  border: none;
-  font-size: 0.95rem;
-}
-
-.help-btn {
-  background: var(--light-gray);
-  color: var(--text-color);
-}
-
-.help-btn:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
-}
-
-.login-btn {
-  background: var(--primary-color);
-  color: white;
-}
-
-.login-btn:hover {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
-}
-
+  
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .navbar {

@@ -1,223 +1,441 @@
-/* General Reset */
+/* ====== BASE STYLES ====== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background-color: #f9f9f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    background-color: #ffffff;
     color: #333;
-    position: relative;
-}
-
-/* Header */
-header {
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  
+  /* ====== HEADER STYLES ====== */
+  header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 50px;
-    background: #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px 50px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+ nav {
+  display: flex;
+  justify-content: space-between; /* Pushes logo left and links right */
+  align-items: center;
+  gap: 20px;
+  width: 100%; /* Ensures full width */
 }
-
-.logo {
-    display: flex;
-    align-items: center;
-}
-
-.logo img {
-    height: 70px;
-    margin-right: 10px;
-}
-
-nav {
-    display: flex;
-    align-items: center;
-}
-
-nav a {
-    margin-right: 20px;
+  
+  nav a {
     text-decoration: none;
-    color: #333;
-    font-weight: bold;
-}
-
-.signup-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 15px;
-    border: none;
+    color: #555;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  
+  nav a:hover {
+    color: #2a7fba;
+  }
+  
+  .signup-btn {
+    background-color: #2a7fba;
+    color: white !important;
+    padding: 8px 20px;
     border-radius: 5px;
-    cursor: pointer;
-}
+    transition: background-color 0.3s;
+  }
+  .nav-logo {
+    height: 50px; /* Adjust based on your logo */
+    margin-right: auto; /* Pushes everything else to the right */
+  }
 
-.signup-btn:hover {
-    background-color: #0056b3;
-}
-
-/* Main Content */
-main {
+  .signup-btn:hover {
+    background-color: #1e6fa3;
+  }
+  
+  /* ====== MAIN CONTENT STYLES ====== */
+  main {
+    padding: 20px 20px;
+    position: relative;
+    min-height: 50vh;
+    background-color: #FDFAEE; /* Classic beige color */
+  
+  }
+  
+  /* Centered Hero Section */
+.hero-section {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 80vh;
-    padding: 50px;
-}
-
-.content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 80%;
-}
-
-.left-content {
+    text-align: center;
+    margin: 50px auto;
+    max-width: 1200px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .hero-content {
     width: 100%;
-}
-
-.left-content h2 {
-    font-size: 35px;
-    color: #222;
-}
-
-.left-content p {
-    font-size: 18px;
-    color: #535353;
-    margin-top: 10px;
-}
-
-.right-content img {
-    width: 300px;
+    max-width: 800px;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px;
+  }
+  
+  .hero-content h1 {
+    font-size: 2.8rem;
+    color: #2a7fba;
+    line-height: 1.2;
+    margin-bottom: 0px;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .hero-section {
+      margin: 30px auto;
+    }
+    
+    .hero-content h1 {
+      font-size: 2.2rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .hero-content h1 {
+      font-size: 1.8rem;
+    }
+  }
+  
+  .hero-description {
+    padding-top: 50px;
+    font-size: 1.4rem;
+    color: #3b3b3b;
+    margin-bottom: 0px;
+    max-width: 850px;
+    padding-left: 10px;
+  }
+  
+  /* ====== IMAGE POSITIONING ====== */
+  .med-right {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 150px;
+    z-index: 1;
+  }
+  
+  .med-left {
+    position: absolute;
+    right: 50px;
+    top: 20%;
+    width: 150px;
+    z-index: 1;
+  }
+  
+  .doc-bottom {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
-}
-
-/* Login Popup Modal */
-.modal {
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 25%;
+    z-index: 1;
+  }
+  
+  /* ====== CONTACT INFO STYLES ====== */
+.contact-info {
+    margin-top: 50px;
+    padding-top: 10px;
+    padding-left: 20px;
+    display: flex;
+    gap: 40px; /* Proper spacing between items */
+    color: #666;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Remove &nbsp; from HTML and use CSS for spacing instead */
+  .contact-info div {
+    white-space: nowrap; /* Prevent line breaks */
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .contact-info {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start; /* Align left on mobile */
+    }
+  }
+  
+  /* ====== MODAL STYLES ====== */
+  .modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 20px;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: white;
+    padding: 30px;
     border-radius: 10px;
-    width: 450px;
-    height: 500px;
-    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     position: relative;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .close-btn:hover {
+    color: #333;
+  }
+  
+  .modal-content h2 {
+    margin-bottom: 25px;
+    color: #2a7fba;
+    text-align: center;
+  }
+  
+  form {
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-}
-
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.modal-content h2 {
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.modal-content label {
-    display: block;
-    text-align: left;
-    margin: 10px 0 5px;
-    font-size: 14px;
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
+    gap: 20px;
+  }
+  
+  label {
+    font-weight: 500;
+    color: #555;
+  }
+  
+  input {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
     border-radius: 5px;
-}
-
-.continue-btn {
-    width: 100%;
-    padding: 10px;
-    background: #28a745;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: #2a7fba;
+  }
+  
+  .continue-btn {
+    background-color: #2a7fba;
     color: white;
     border: none;
+    padding: 12px;
     border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
     cursor: pointer;
-    margin-top: 10px;
-}
-
-.continue-btn:hover {
-    background: #218838;
-}
-
-.forgot-password {
-    display: block;
-    margin-top: 10px;
-    color: #007bff;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.divider {
-    margin: 15px 0;
+    transition: background-color 0.3s;
+  }
+  
+  .continue-btn:hover {
+    background-color: #1e6fa3;
+  }
+  
+  .forgot-password {
     text-align: center;
-    font-size: 12px;
-    color: #666;
-    position: relative;
-}
-
-.divider::before,
-.divider::after {
-    content: "";
-    width: 40%;
-    height: 1px;
-    background: #ccc;
-    display: inline-block;
-    position: absolute;
-    top: 50%;
-}
-
-.divider::before {
-    left: 0;
-}
-
-.divider::after {
-    right: 0;
-}
-
-
-.google-login {
-    width: 100%;
-    padding: 10px;
-    background: white;
-    border:none;
-    border-radius: 30px;
-    cursor: pointer;
+    color: #2a7fba;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .forgot-password:hover {
+    text-decoration: underline;
+  }
+  
+  .divider {
     display: flex;
     align-items: center;
-    justify-content: center;
-}
-
- .google-login img {
-    width: 100%;
+    color: #777;
+    font-size: 14px;
+    margin: 10px 0;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .divider::before {
+    margin-right: 10px;
+  }
+  
+  .divider::after {
+    margin-left: 10px;
+  }
+  
+  .google-login {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .google-login:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .google {
+    height: 24px;
+  }
+  
+  /* ====== RESPONSIVE STYLES ====== */
+  @media (max-width: 1024px) {
+    .hero-section {
+      flex-direction: column;
+    }
+  
+    .hero-content {
+      width: 100%;
+      text-align: center;
+    }
+  
+    .search-container {
+      justify-content: center;
+    }
+  
+
+  }
+  
+  @media (max-width: 768px) {
+    header {
+      padding: 15px 20px;
+    }
+  
+    main {
+      padding: 30px 20px;
+    }
+  
+    .hero-content h1 {
+      font-size: 2.2rem;
+    }
+  
+    .search-container {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .search-container input {
+      width: 100%;
+      max-width: 300px;
+    }
+  
+    .contact-info {
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    nav {
+      gap: 15px;
+    }
+  
+    .hero-content h1 {
+      font-size: 1.8rem;
+    }
+  
+    .modal-content {
+      padding: 20px;
+      margin: 0 15px;
+    }
+  
+    .modal-content h2 {
+      font-size: 1.3rem;
+    }
+  }
+
+
+/* Add this to your CSS */
+.contact-btn-container {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+  }
+  
+  .contact-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #2a7fba 0%, #1e6fa3 100%);
+    color: white;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    min-width: 250px;
+    box-shadow: 0 4px 15px rgba(42, 127, 186, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
     border: none;
-
-} 
-
-
+    cursor: pointer;
+  }
+  
+  .contact-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(42, 127, 186, 0.4);
+  }
+  
+  .contact-btn:active {
+    transform: translateY(1px);
+  }
+  
+  .contact-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+    transition: all 0.3s;
+  }
+  
+  .contact-btn:hover::after {
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+  }
+  
+  /* For the arrow icon */
+  .contact-btn i {
+    margin-left: 8px;
+    transition: transform 0.3s;
+  }
+  
+  .contact-btn:hover i {
+    transform: translateX(4px);
+  }
