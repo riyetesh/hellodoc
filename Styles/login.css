@@ -201,7 +201,7 @@
   
   .close-btn {
     position: absolute;
-    top: 20px;
+    top: 5px;
     right: 20px;
     font-size: 24px;
     cursor: pointer;
@@ -209,7 +209,7 @@
   }
   
   .close-btn:hover {
-    color: #333;
+    color: #a90505;
   }
   
   .modal-content h2 {
