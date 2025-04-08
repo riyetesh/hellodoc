@@ -52,6 +52,7 @@ app.post("/auth/login", (req, res) => {
 
   const sql = "SELECT * FROM users WHERE email = ?";
   db.query(sql, [email], async (err, results) => {
+    console.log(results);
     if (err) {
       return res.status(500).json({ message: "Error checking user" });
     }

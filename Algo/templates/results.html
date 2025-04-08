@@ -7,22 +7,38 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='results.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+        <!-- jsPDF Core -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- jsPDF AutoTable Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+
 
 
 </head>
 <body>
+    <nav>
+        <img
+        class="nav-logo"
+        src="{{ url_for('static', filename='img.png') }}"
+        alt="Logo"
+      />      <div class="nav-spacer"></div> <!-- New spacer element -->
+      <div class="nav-items">
+        <a href="#">Help</a>
+        <a href="../../dashboard.html" id="open-login">Dashboard</a>
+        <a href="signup.html" class="signup-btn">Profile</a>
+      </div>
+      </nav>
+
     <header>
-        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="navlogo">
         <div>
             <h1>Results</h1>
-        </div>
+      
     </header>
 
 
-    <div class="backbutton-wrapper">
-        <button class="backbutton" onclick="goBack()">Go Back</button>
-    </div>
+    
     
     <div class="patient-wrapper">
         <div class="patient-container">
@@ -322,13 +338,29 @@ let timer;
             "Description: {{ dis_des }}"
         ], [0, 51, 153], [230, 230, 255]);
     
-        addTable(doc, "Precautions", my_precautions.map(precaution => `"${precaution}"`), [255, 102, 0], [255, 235, 215]);
-
-        addTable(doc, "Medications", medications.map(med => `"${med}"`), [153, 51, 255], [245, 230, 255]);
-
-        addTable(doc, "Recommended Diet", my_diet.map(food => `"${food}"`), [0, 153, 76], [230, 255, 240]);
-
-        addTable(doc, "Suggested Workouts", workout.map(wrk => `"${wrk}"`), [0, 102, 204], [230, 240, 255]);
+        addTable(doc, "Precautions", [
+             {% for precaution in my_precautions %}
+             "{{ precaution }}",
+             {% endfor %}
+         ], [255, 102, 0], [255, 235, 215]);
+     
+         addTable(doc, "Medications", [
+             {% for med in medications %}
+             "{{ med }}",
+             {% endfor %}
+         ], [153, 51, 255], [245, 230, 255]);
+     
+         addTable(doc, "Recommended Diet", [
+             {% for food in my_diet %}
+             "{{ food }}",
+             {% endfor %}
+         ], [0, 153, 76], [230, 255, 240]);
+     
+         addTable(doc, "Suggested Workouts", [
+             {% for wrk in workout %}
+             "{{ wrk }}",
+             {% endfor %}
+         ], [0, 102, 204], [230, 240, 255]);
 
     
         if (doc.internal.getNumberOfPages() === 1) {

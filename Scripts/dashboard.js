@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
       speciality: "Psychiatrist",
       hourlyFee: 3800,
       image: "./images/Dr. Shalini Agarwal.jpeg",
+      
     },
     {
       name: "Dr. Prakash Reddy",

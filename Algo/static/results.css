@@ -1,3 +1,64 @@
+
+nav {
+    display: flex;
+    width: 90%;
+    margin: 0 auto;
+    padding: 0px 0;
+  }
+  
+  .nav-logo {
+    height: 100px;
+    /* Will automatically align left */
+  }
+  
+  .nav-items {
+    display: flex;
+    margin-left: auto; /* This pushes everything to the right */
+    gap: 15px;
+    align-items: center;
+  }
+  
+  /* Your existing link styles */
+  .nav-items a {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: color 0.3s;
+    padding: 5px 8px;
+  }
+  
+  .nav-items a:hover {
+    color: #2a7fba;
+  }
+  
+  .signup-btn {
+    background-color: #2a7fba;
+    color: white !important;
+    padding: 6px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  .signup-btn:hover {
+    background-color: #1e6fa3;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    
+    
+    .nav-items {
+      gap: 10px;
+    }
+    
+    .nav-items a {
+      padding: 4px 6px;
+      font-size: 0.9rem;
+    }
+  }
+
+
+
 /* General Styles */
 body {
     font-family: Arial, sans-serif;
@@ -157,24 +218,7 @@ button:not(.report-download-btn):not(.backbutton):not(.timer-buttons button):hov
     transition: none;
 }
 
-/* Back Button - Keep it distinct */
-.backbutton {
-    width: auto;
-    height: auto;
-    padding: 12px 18px;
-    border-radius: 5px;
-    font-size: 10px;
-    color: white;
-    background: #dc3545;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease-in-out;
-}
 
-/* Hover Effect for Back Button */
-.backbutton:hover {
-    background: #c82333;
-}
 
 /* Ensure Timer Buttons Have Unique Styling */
 /* Ensure Timer Buttons are Displayed Horizontally */

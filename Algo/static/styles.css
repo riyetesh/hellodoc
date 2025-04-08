@@ -1,152 +1,392 @@
+/* ====================
+   Bootstrap CSS (partial) copied
+   ==================== */
 
-/* Logo */
-.logo {
-    width: 50px;
-    height: 50px;
+/* Reset some default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: white;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.container-fluid {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+}
+
+.col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.col-md-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+.col-lg-4 {
+  flex: 0 0 33.3333%;
+  max-width: 33.3333%;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"],
+textarea,
+select,
+button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  font-size: 16px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+select {
+  background-color: #fff;
+}
+
+button {
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+button.btn {
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+button.btn:hover {
+  opacity: 0.8;
+}
+
+button.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+button.btn-danger:hover {
+  background-color: #c82333;
+}
+
+button.btn-success {
+  background-color: #31C975;
+  color: white;
+}
+
+button.btn-success:hover {
+  background-color: #30ad4b;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+/* ====================
+   Custom Styles (Your existing styles)
+   ==================== */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  margin: 0 auto;
+  padding: 15px 0px;
+  position: relative;
+}
+
+.nav-logo {
+  height: 40px;
+  margin: 10px 0px 0px 10px;
+}
+
+.nav-items {
+  display: flex;
+  margin-left: auto;
+  gap: 15px;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+/* Your existing link styles */
+.nav-items a {
+  text-decoration: none;
+  color: #555;
+  font-weight: 500;
+  transition: color 0.3s;
+  padding: 5px 8px;
+}
+
+.nav-items a:hover {
+  color: #2a7fba;
+}
+
+.signup-btn {
+  background-color: #2a7fba;
+  color: white !important;
+  padding: 6px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.signup-btn:hover {
+  background-color: #1e6fa3;
+}
+
+.nav-links{
+  display: flex;
+  gap: 15px;
+  justify-content: right;
+  align-items: end;
+}
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .nav-logo {
+    height: 32px;
+  }
+
+  .nav-items {
+    gap: 10px;
+    right: 0;
+  }
+
+  .nav-items a {
+    padding: 4px 6px;
+    font-size: 0.9rem;
+  }
 }
 
 .myimg {
-    width: 50px;
-    height: 50px;
-    border: 2px solid black;
-    border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border: 2px solid black;
+  border-radius: 50%;
 }
+
 /* General Styles */
 body {
-    font-family: 'Poppins', sans-serif;
-    background: white;
-    color: #333;
-    margin: 0;
-    padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: white;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
 /* Heading */
 h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #2ecc71;
-    text-shadow: 2px 2px 4px rgba(153, 15, 15, 0.1);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2ecc71;
+  text-shadow: 2px 2px 4px rgba(153, 15, 15, 0.1);
 }
-
-
-
 
 .container-wrapper {
-    display: flex;
-    flex-direction: column; /* Stack text above image + form */
-    align-items: flex-start; /* Align everything to the left */
-    padding-left: 100px; /* Adjust spacing from the left */
+  display: flex;
+  flex-direction: column; /* Stack text above image + form */
+  align-items: flex-start; /* Align everything to the left */
+  padding-left: 100px; /* Adjust spacing from the left */
 }
 
-
 .content {
-    display: flex;
-    align-items: center; /* Align image and form vertically */
-    justify-content: flex-start; /* Reduce gap between image and form */
-    width: 100%; /* Ensure it spans full width */
-    gap: 100px; /* Adjust spacing between image and form */
+  display: flex;
+  align-items: center; /* Align image and form vertically */
+  justify-content: flex-start; /* Reduce gap between image and form */
+  width: 100%; /* Ensure it spans full width */
+  gap: 100px; /* Adjust spacing between image and form */
 }
 
 .leftmain {
-    max-width: 35%;
-    height: auto;
-    padding-top: 40px;
+  max-width: 35%;
+  height: auto;
+  padding-top: 40px;
 }
 
 .form-container {
-    background: white;
-    max-width: 650px; /* Slightly increased width */
-    width: 100%; /* Ensures responsiveness */
-    padding: 25px; /* Slightly more padding for better spacing */
-    display: flex;
-    flex-direction: column;
-    padding-right: 50px;
-    position:relative;
+  background: white;
+  max-width: 650px; /* Slightly increased width */
+  width: 100%; /* Ensures responsiveness */
+  padding: 25px; /* Slightly more padding for better spacing */
+  display: flex;
+  flex-direction: column;
+  padding-right: 50px;
+  position: relative;
 }
 
 .form-group {
-    margin-bottom: 15px; /* Reduced gap slightly for better spacing */
+  margin-bottom: 15px; /* Reduced gap slightly for better spacing */
 }
 
-
 label {
-    font-weight: bold;
-    display: block; /* Ensures label is on a new line */
-    margin-bottom: 5px; /* Adds space below the label */
+  font-weight: bold;
+  display: block; /* Ensures label is on a new line */
+  margin-bottom: 5px; /* Adds space below the label */
 }
 
 .submit-btn {
-    background-color: #31C975; /* Green color */
-    color: white;
-    font-size: 20px; /* Make text larger */
-    padding: 12px 20px; /* Increase padding */
-    border-radius: 8px; /* Rounded edges */
-    border: none;
-    cursor: pointer;
-    width: 100%; /* Make it stretch to full width */
-    height: 100px;
-    font-weight: bold;
-    transition: background 0.3s ease-in-out, transform 0.2s;
+  background-color: #31C975; /* Green color */
+  color: white;
+  font-size: 20px; /* Make text larger */
+  padding: 12px 20px; /* Increase padding */
+  border-radius: 8px; /* Rounded edges */
+  border: none;
+  cursor: pointer;
+  width: 100%; /* Make it stretch to full width */
+  height: 100px;
+  font-weight: bold;
+  transition: background 0.3s ease-in-out, transform 0.2s;
 }
 
 .submit-btn:hover {
-    background-color: #30ad4b; /* Darker green on hover */
-    transform: scale(1.05); /* Slightly enlarge on hover */
+  background-color: #30ad4b; /* Darker green on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
 }
 
-
-/* Navbar Styling */
-.custom-navbar {
-    background: #ffffff; /* Dark Blue-Grey */
-    padding: 0px 0px;}
-
-/* Logo */
-.logo-img {
-    height: 100px;
-    margin-right: 5px;
+/* Floating Chatbot Button */
+.chatbot-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #6d4fc2;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
 }
 
-
-
-/* Navbar Links */
-.navbar-nav .nav-link {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-right: 15px;
-    transition: color 0.3s ease-in-out;
+/* Hover effect */
+.chatbot-button:hover {
+  background-color: #563d99; /* Darker shade for hover */
+  transform: scale(1.1); /* Slightly enlarges button */
+  box-shadow: 0 0 15px rgba(109, 79, 194, 0.6); /* Glowing effect */
 }
 
-.navbar-nav .nav-link:hover {
-    color: #27ae60; /* Green Hover */
+/* Chatbot Container */
+.chatbot-container {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  height: 500px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  display: none;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
 }
 
-/* Search Bar */
-.search-form {
-    display: flex;
-    align-items: center;
+.chatbot-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
-.search-input {
-    border-radius: 20px;
-    padding: 8px 15px;
-    border: none;
-    outline: none;
-    width: 180px;
-    transition: width 0.3s ease-in-out;
+/* Tags for Symptoms */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  /* border: 1px solid #ccc; */
+  padding: 5px;
+  border-radius: 5px;
+  min-height: 40px;
+  align-items: center;
+  cursor: text;
 }
 
-.search-input:focus {
-    width: 220px;
+.tag {
+  background: #dc3545;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  margin: 3px;
+  display: flex;
+  align-items: center;
 }
 
-.search-btn {
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    margin-left: 8px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.3s ease-in-out;
+.tag .remove-tag {
+  margin-left: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-    
+.tag-input {
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  padding: 5px;
+  min-width: 150px;
+}
