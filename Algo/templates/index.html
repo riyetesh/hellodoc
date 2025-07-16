@@ -102,12 +102,45 @@
         </div>
       </div>
     </div>
+<!-- Disclaimer Modal -->
+<div class="disclaimer-modal" id="disclaimerModal">
+  <div class="disclaimer-content">
+    <h2>Important Notice</h2>
+    <p>This telemedicine platform is in experimental stage. Please do not rely on it for medical purposes.</p>
+    <button class="disclaimer-button" id="disclaimerButton">I Understand</button>
+  </div>
+</div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- JavaScript for Tag-based Symptoms Selection -->
     <script>
+// This is the code for the disclaimer modal
+
+// Disclaimer Modal Functionality
+document.addEventListener("DOMContentLoaded", function() {
+  const disclaimerModal = document.getElementById("disclaimerModal");
+  const disclaimerButton = document.getElementById("disclaimerButton");
+  
+  // Show the disclaimer modal when page loads
+  disclaimerModal.style.display = "flex";
+  
+  // Close the modal when button is clicked
+  disclaimerButton.addEventListener("click", function() {
+    disclaimerModal.style.display = "none";
+  });
+  
+  // Optional: Close when clicking outside the modal
+  disclaimerModal.addEventListener("click", function(e) {
+    if (e.target === disclaimerModal) {
+      disclaimerModal.style.display = "none";
+    }
+  });
+});
+
+
+
       // This is the code for the chatbot button and container
       // Function to toggle the visibility of the chatbot container
       // This function is called when the chatbot button is clicked
