@@ -35,5 +35,10 @@
         "service": "app"
       }
     }
-  ]
+  ],
+  "functions": {
+    "Algo/main.py": {
+      "excludeFiles": "{backend/**,chatbot/**,Login-and-dashboard/**,**/node_modules/**,**/.git/**,**/__pycache__/**,**/*.pyc,tests/**,**/tests/**,**/*.test.*,**/test_*.py}"
+    }
+  }
 }
