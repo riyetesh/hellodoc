@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import pickle
 from pathlib import Path
+import os
+import secrets
 from flask import    redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -67,9 +69,9 @@ def get_predicted_value(patient_symptoms):
 
 
 # creating routes========================================
-from flask import Flask, render_template, request
 
-app = Flask(__name__)
+# Sessions/flash need a secret key; set SECRET_KEY in production.
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
 # Home Route (Landing Page)
 @app.route("/")
@@ -77,7 +79,7 @@ def index():
     return render_template("index.html")
 
 # Prediction Route (Separate Results Page)
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['GET', 'POST'])
 def predict():
     if request.method == 'POST':
         symptoms = request.form.get('symptoms', '').strip()
@@ -117,5 +119,8 @@ def predict():
 
 
 if __name__ == '__main__':
-
-    app.run(debug=True)
+    # Port 5001 keeps this dev server from colliding with the Node backend
+    # (which owns 5000); backend/server.js proxies /predict here locally.
+    # FLASK_PORT (not PORT) is used deliberately: generic PORT env vars are
+    # often injected by hosts and would break the proxy target.
+    app.run(debug=True, port=int(os.environ.get("FLASK_PORT", 5001)))

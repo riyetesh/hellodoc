@@ -7,7 +7,7 @@ const App = () => {
     useEffect(() => {
         // Poll the backend for status updates every 2 seconds
         const interval = setInterval(() => {
-            fetch('http://localhost:5000/api/status')
+            fetch('/api/status')
                 .then((response) => response.json())
                 .then((data) => setStatus(data.status))
                 .catch((err) => console.error(err));

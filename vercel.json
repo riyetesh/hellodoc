@@ -24,6 +24,12 @@
   },
   "rewrites": [
     {
+      "source": "/accounts/(.*)",
+      "destination": {
+        "service": "new-login"
+      }
+    },
+    {
       "source": "/api/(.*)",
       "destination": {
         "service": "backend"

@@ -63,10 +63,10 @@
         <h2>To log in, enter your email address</h2>
         <form>
           <label for="email">E-mail</label>
-          <input type="email" id="email" placeholder="Enter your email">
+          <input type="email" id="email" placeholder="Enter your email" required>
 
           <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Enter your password">
+          <input type="password" id="password" placeholder="Enter your password" required>
 
           <button type="submit" class="continue-btn">Continue</button>
           <a href="#" class="forgot-password">Forgot Password?</a>
@@ -78,52 +78,6 @@
         </form>
       </div>
     </div>
-    <script>
-      document
-        .getElementById("open-login")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          document.getElementById("login-modal").style.display = "flex";
-        });
-
-      document
-        .querySelector(".close-btn")
-        .addEventListener("click", function () {
-          document.getElementById("login-modal").style.display = "none";
-        });
-
-      window.addEventListener("click", function (event) {
-        if (event.target === document.getElementById("login-modal")) {
-          document.getElementById("login-modal").style.display = "none";
-        }
-      });
-
-      document
-        .querySelector("form")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault(); // Prevent default form submission
-
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("password").value;
-
-          const response = await fetch("http://localhost:5000/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            // Redirect to the dashboard or home page
-            window.location.href = "./dashboard.html"; // Change to your actual redirect page
-          } else {
-            // Show error message
-            alert(data.message);
-          }
-        });
-    </script>
+    <script src="./Scripts/login.js" defer></script>
   </body>
 </html>

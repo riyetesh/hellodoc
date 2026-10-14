@@ -1,0 +1,24 @@
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+.venv/
+Algo/.venv/
+__pycache__/
+*.pyc
+
+# Node (note: node_modules already tracked in some folders — see README note;
+# new installs should not be added)
+npm-debug.log*
+
+# Vercel
+.vercel/
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+.env
