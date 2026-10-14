@@ -4,12 +4,31 @@ const path = require("path");
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const session = require("express-session");
+const crypto = require("crypto");
 
 const app = express();
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
+
+// Session configuration for authenticated users
+app.use(session({
+  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// JWT secret for token-based authentication
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
+const JWT_EXPIRY = process.env.JWT_EXPIRY || "24h";
 
 // Connection pool created lazily (mysql2 pools connect on first query), so the
 // service boots on Vercel even when the database is temporarily unreachable.
@@ -127,9 +146,57 @@ router.post("/login", (req, res) => {
       }
       if (!match) return invalidResponse();
 
-      return res.status(200).json({ message: "Login successful", userId: user.id });
+      // Generate JWT token for the authenticated user
+      const token = jwt.sign(
+        { userId: user.id, email: email },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY }
+      );
+
+      // Set session for server-side auth tracking
+      req.session.userId = user.id;
+      req.session.email = email;
+
+      return res.status(200).json({
+        message: "Login successful",
+        userId: user.id,
+        token: token
+      });
     }
   );
+});
+
+// Current user endpoint - checks session first, then JWT
+router.get("/current-user", (req, res) => {
+  // Check session first
+  if (req.session && req.session.userId) {
+    return res.json({ userId: req.session.userId, email: req.session.email });
+  }
+
+  // Check Authorization header for JWT
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      return res.json({ userId: decoded.userId, email: decoded.email });
+    } catch {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+  }
+
+  return res.status(401).json({ message: "Not authenticated" });
+});
+
+// Logout endpoint - clears session
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    res.clearCookie("connect.sid");
+    return res.json({ message: "Logged out successfully" });
+  });
 });
 
 // Health check (useful to confirm the function is live on Vercel).
@@ -151,6 +218,15 @@ app.use("/auth", router);
 if (!process.env.VERCEL) {
   app.use(express.static(path.join(__dirname, ".."), { dotfiles: "ignore" }));
 }
+
+// Legacy /accounts/* paths that previously pointed at the retired
+// Login-and-dashboard/New-login service now serve its static HTML pages.
+// New-login's own server.js has been removed; these routes are no longer
+// proxied to a separate process.
+if (!process.env.VERCEL) {
+  app.use("/accounts", express.static(path.join(__dirname, "..", "Login-and-dashboard", "New-login"), { dotfiles: "ignore" }));
+}
+
 
 // Local dev convenience: proxy the Flask symptom-checker routes to the Algo
 // app so the whole site can be exercised through one origin on port 5000.
@@ -180,18 +256,18 @@ if (!process.env.VERCEL) {
 
   const FLASK_ORIGIN = process.env.FLASK_ORIGIN || "http://127.0.0.1:5001";
   const flaskHint =
-    "Symptom service is not running locally. Start it with: python Algo/main.py (port 5001)";
+    "Symptom service is not running. Start everything with: ./start.sh (requires Python)";
 
   app.get("/predict", (req, res) => proxyRequest(FLASK_ORIGIN, req, res, flaskHint));
   app.post("/predict", (req, res) => proxyRequest(FLASK_ORIGIN, req, res, flaskHint));
   app.use("/static", (req, res) => proxyRequest(FLASK_ORIGIN, req, res, flaskHint));
+}
 
-  // Locally route the new-login service's API through the same origin so its
-  // pages work no matter which server served the static HTML.
-  const NEW_LOGIN_ORIGIN = process.env.NEW_LOGIN_ORIGIN || "http://127.0.0.1:3000";
-  const newLoginHint =
-    "New-login service is not running locally. Start it with: node Login-and-dashboard/New-login/server.js (port 3000)";
-  app.use("/accounts", (req, res) => proxyRequest(NEW_LOGIN_ORIGIN, req, res, newLoginHint));
+// Local dev convenience: route the retired new-login service pages so their
+// static HTML can still be opened from the same origin during development.
+// The new-login service itself has been removed; these pages are served as-is.
+if (!process.env.VERCEL) {
+  app.use("/accounts", express.static(path.join(__dirname, "..", "Login-and-dashboard", "New-login"), { dotfiles: "ignore" }));
 }
 
 const PORT = Number(process.env.PORT) || 5000;

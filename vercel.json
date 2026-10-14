@@ -16,19 +16,9 @@
     "chatbot": {
       "root": "chatbot",
       "framework": "vite"
-    },
-    "new-login": {
-      "root": "Login-and-dashboard/New-login",
-      "framework": "express"
     }
   },
   "rewrites": [
-    {
-      "source": "/accounts/(.*)",
-      "destination": {
-        "service": "new-login"
-      }
-    },
     {
       "source": "/api/(.*)",
       "destination": {

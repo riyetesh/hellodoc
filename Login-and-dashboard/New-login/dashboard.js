@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     userInfo.innerHTML = '<p>Loading user information...</p>';
 
     // Simple example - in a real app, you would get this from session storage
-    fetch('/accounts/current-user') // Resolves through the Vercel rewrite to the new-login service
+    fetch('/api/auth/current-user') // Resolves through the Vercel rewrite to the backend service
         .then(response => response.json())
         .then(data => {
             if (data.user) {

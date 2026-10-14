@@ -13,7 +13,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
 
     try {
         // Send to backend
-        const response = await fetch('/accounts/signup', {
+        const response = await fetch('/api/auth/signup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

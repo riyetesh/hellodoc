@@ -400,17 +400,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const mobileMenuButton = document.querySelector('.mobile-menu-button');
   const navLinks = document.querySelector('.nav-links');
   const userActions = document.querySelector('.user-actions');
+  const navbar = document.querySelector('.navbar');
+  
+  if (!mobileMenuButton || !navLinks || !userActions || !navbar) {
+    return;
+  }
   
   mobileMenuButton.addEventListener('click', function() {
     this.classList.toggle('active');
     navLinks.classList.toggle('active');
     userActions.classList.toggle('active');
-    document.querySelector('.navbar').classList.toggle('active');
+    navbar.classList.toggle('active');
   });
   
   // Add scroll effect
   window.addEventListener('scroll', function() {
-    const navbar = document.querySelector('.navbar');
     if (window.scrollY > 50) {
       navbar.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
       navbar.style.padding = '0.5rem 2rem';

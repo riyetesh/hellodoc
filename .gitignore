@@ -1,24 +1,45 @@
-# Secrets — never commit real credentials
+# ===== Root ignore for the whole repo =====
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Secrets / environment
 .env
-.env.*
+.env.local
+.env.*.local
+.env.*.example.local
 !.env.example
+!.env.*.example
+.env.example.local
 
 # Python
-venv/
-.venv/
-Algo/.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.eggs/
+*.egg-info/
+*.egg
 
-# Node (note: node_modules already tracked in some folders — see README note;
-# new installs should not be added)
-npm-debug.log*
-
-# Vercel
-.vercel/
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
 
 # Editors
 .vscode/*
 !.vscode/extensions.json
-.DS_Store
-.env
+.idea/
+*.sublime-*
+
+# Build / misc
+dist/
+build/
+coverage/
+*.tsbuildinfo

@@ -7,15 +7,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='results.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <!-- jsPDF Core -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<!-- jsPDF AutoTable Plugin -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
-
-
-
 </head>
 <body>
     <nav>
@@ -153,40 +145,18 @@
     
 
 
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 0px;">
-
-
-        <img src="{{ url_for('static', filename='res_foot.svg') }}" alt="Footer Image" class="footer-img">
-    </div>
-
     <footer>
         <div class="footer-content">
-            <Contact>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+            &copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320
         </div>
     </footer>
-    
 
-
-
-    <div class="appointment-timer">
-        <h3>Appointment Starts In:</h3>
-        <div class="timer">
-            <span id="minutes">10</span>:<span id="seconds">00</span>
-        </div>
-        <div class="timer-buttons">
-            <button id="playPauseBtn">▶</button>
-            <button id="resetBtn">⟳</button>
-        </div>
-    </div>
+    <button type="button" class="backbutton" id="backButton">Back</button>
 
    
     
 
     <script>
-
-
-
-        
       // Open Modal
 function openModal(modalId) {
     document.getElementById(modalId).classList.add("show");
@@ -207,8 +177,22 @@ window.onclick = function(event) {
 };
 
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "/";
+    }
   }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const backButton = document.getElementById("backButton");
+    if (backButton) {
+      backButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        goBack();
+      });
+    }
+  });
 
 
 

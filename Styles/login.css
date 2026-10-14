@@ -263,6 +263,21 @@
     color: #2a7fba;
     text-decoration: none;
     font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .forgot-password .soon-badge {
+    background: #eef3fd;
+    color: #1e6fa3;
+    border: 1px solid #cfe0f3;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
   
   .forgot-password:hover {
@@ -296,12 +311,24 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 10px;
     background-color: white;
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 5px;
-    cursor: pointer;
+    cursor: not-allowed;
+    opacity: 0.65;
     transition: background-color 0.3s;
+  }
+  
+  .google-login .soon-badge {
+    background: #eef3fd;
+    color: #1e6fa3;
+    border: 1px solid #cfe0f3;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
   }
   
   .google-login:hover {
