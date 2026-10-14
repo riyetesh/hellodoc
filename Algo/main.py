@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, jsonify  # Import jsonify
 import numpy as np
 import pandas as pd
 import pickle
+from pathlib import Path
 from flask import    redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -13,17 +14,22 @@ app = Flask(__name__)
 
 
 
-# load databasedataset===================================
-sym_des = pd.read_csv("datasets/symtoms_df.csv")
-precautions = pd.read_csv("datasets/precautions_df.csv")
-workout = pd.read_csv("datasets/workout_df.csv")
-description = pd.read_csv("datasets/description.csv")
-medications = pd.read_csv('datasets/new_medications.csv')
-diets = pd.read_csv("datasets/new_diets.csv")
+# Resolve data/model paths relative to this file, not Vercel's working directory.
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "datasets"
+MODEL_DIR = BASE_DIR / "models"
 
+# Load datasets
+sym_des = pd.read_csv(DATA_DIR / "symtoms_df.csv")
+precautions = pd.read_csv(DATA_DIR / "precautions_df.csv")
+workout = pd.read_csv(DATA_DIR / "workout_df.csv")
+description = pd.read_csv(DATA_DIR / "description.csv")
+medications = pd.read_csv(DATA_DIR / "new_medications.csv")
+diets = pd.read_csv(DATA_DIR / "new_diets.csv")
 
-# load model===========================================
-svc = pickle.load(open('models/svc.pkl','rb'))
+# Load model
+with (MODEL_DIR / "svc.pkl").open("rb") as model_file:
+    svc = pickle.load(model_file)
 
 
 #============================================================
