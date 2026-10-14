@@ -18,7 +18,7 @@
       "framework": "vite"
     },
     "new-login": {
-      "root": "Login and dashboard/New-login",
+      "root": "Login-and-dashboard/New-login",
       "framework": "express"
     }
   },
