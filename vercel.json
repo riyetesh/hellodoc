@@ -1,0 +1,39 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "app": {
+      "root": ".",
+      "framework": "flask"
+    },
+    "algo": {
+      "root": "Algo",
+      "framework": "flask"
+    },
+    "backend": {
+      "root": "backend",
+      "framework": "express"
+    },
+    "chatbot": {
+      "root": "chatbot",
+      "framework": "vite"
+    },
+    "new-login": {
+      "root": "Login and dashboard/New-login",
+      "framework": "express"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "app"
+      }
+    }
+  ]
+}
