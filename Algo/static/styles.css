@@ -156,9 +156,17 @@ button.btn-success:hover {
   position: relative;
 }
 
+/* The navbar wrapper owns the site's standard 1.5rem horizontal gutter (the
+   same value .container uses on the main pages) so the logo and the links are
+   never flush against the viewport edges. */
+nav {
+  padding: 0 1.5rem;
+}
+
 .nav-logo {
   height: 40px;
-  margin: 10px 0px 0px 10px;
+  /* The wrapper above provides the left gutter. */
+  margin: 10px 0px 0px;
 }
 
 .nav-items {
@@ -167,7 +175,8 @@ button.btn-success:hover {
   gap: 15px;
   align-items: center;
   position: absolute;
-  right: 10px;
+  /* Matches the wrapper's 1.5rem gutter on the right. */
+  right: 1.5rem;
   top: 10px;
 }
 
@@ -210,7 +219,7 @@ button.btn-success:hover {
 
   .nav-items {
     gap: 10px;
-    right: 0;
+    right: 1.5rem;
   }
 
   .nav-items a {

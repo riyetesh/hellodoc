@@ -110,21 +110,15 @@ img {
 }
 
 /* Reassert the container layout with higher specificity than any page-level
-   `.container` rule (signup.css, for example, sets max-width: 600px).
-   The navbar container must span full width with minimal horizontal padding. */
+   `.container` rule (signup.css, for example, sets max-width: 600px and
+   min-height: 100vh). The navbar spans the full width, with the same 1.5rem
+   horizontal gutter as `.container` so the brand and the actions are never
+   flush against the viewport edges. */
 .navbar .container {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0;
-}
-
-/* Navbar spans full width with no padding */
-.navbar-inner {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
+  padding: 0 1.5rem;
   box-sizing: border-box;
 }
 
@@ -133,11 +127,24 @@ img {
   box-shadow: var(--shadow-sm);
 }
 
-.navbar-inner {
+/* The navbar wrapper's layout, scoped as `.navbar .navbar-inner` (specificity
+   0,2,0) so page-level `.container` rules cannot hijack the bar. signup.css,
+   for example, applies `min-height: 100vh` and centering to every `.container`,
+   which stretched this navbar to a full viewport height and pushed the links
+   into the middle of the page. The horizontal gutter matches the `.container`
+   gutter used across the rest of the site. */
+.navbar .navbar-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 1.5rem;
   height: 70px;
+  min-height: 0;
 }
 
 .navbar-brand {

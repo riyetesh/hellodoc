@@ -43,3 +43,8 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
+
+# Local runtime bootstrap (portable Python + dev logs, never committed)
+.runtime/
+.freebuff/*.log
+.freebuff/backend.pid
