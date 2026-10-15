@@ -207,9 +207,11 @@ img {
 
 /* Live counter badge (appointments) */
 .nav-badge {
-  min-width: 20px;
+  min-width: 0;
+  width: 0;
   height: 20px;
-  padding: 0 6px;
+  padding: 0;
+  overflow: hidden;
   border-radius: 999px;
   background: var(--brand);
   color: #fff;
@@ -220,10 +222,19 @@ img {
   justify-content: center;
   line-height: 1;
   transform: scale(0);
-  transition: transform 0.2s var(--ease);
+  /* Hidden means *no* space: collapse the box and cancel the .nav-link flex
+     gap, otherwise the invisible badge reserves ~38px after "Appointments".
+     The negative margin must match .nav-link's gap. */
+  margin-left: -0.4rem;
+  transition: transform 0.2s var(--ease), min-width 0.2s var(--ease),
+    padding 0.2s var(--ease), margin-left 0.2s var(--ease);
 }
 
 .nav-badge.show {
+  width: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  margin-left: 0;
   transform: scale(1);
 }
 
@@ -271,40 +282,6 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Mobile menu toggle */
-.menu-toggle {
-  display: none;
-  margin-left: auto;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.menu-toggle span {
-  width: 20px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--text);
-  transition: transform 0.25s var(--ease), opacity 0.2s var(--ease);
-}
-
-.menu-toggle.open span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-.menu-toggle.open span:nth-child(2) {
-  opacity: 0;
-}
-.menu-toggle.open span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ============================================================
@@ -416,7 +393,11 @@ img {
   visibility: visible;
 }
 
-.modal {
+/* NOTE: `.modal` is the dialog box *inside* `.modal-overlay` (see dashboard.html).
+   Pages that use the older convention where `.modal` is the full-screen overlay
+   (help.html, results.html, login.html) load this stylesheet too, so every rule
+   here is scoped to `.modal-overlay` to keep the two meanings from colliding. */
+.modal-overlay .modal {
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
@@ -432,7 +413,7 @@ img {
   transform: translateY(0) scale(1);
 }
 
-.modal-header {
+.modal-overlay .modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -441,18 +422,18 @@ img {
   border-bottom: 1px solid var(--border);
 }
 
-.modal-header h3 {
+.modal-overlay .modal-header h3 {
   font-size: 1.15rem;
   font-weight: 700;
 }
 
-.modal-header p {
+.modal-overlay .modal-header p {
   color: var(--muted);
   font-size: 0.88rem;
   margin-top: 0.15rem;
 }
 
-.modal-close {
+.modal-overlay .modal-close {
   width: 36px;
   height: 36px;
   border: none;
@@ -466,16 +447,16 @@ img {
   transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
 
-.modal-close:hover {
+.modal-overlay .modal-close:hover {
   background: var(--danger-soft);
   color: var(--danger);
 }
 
-.modal-body {
+.modal-overlay .modal-body {
   padding: 1.5rem;
 }
 
-.modal-footer {
+.modal-overlay .modal-footer {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -533,36 +514,73 @@ img {
    Mobile responsive (shared)
    ============================================================ */
 @media (max-width: 900px) {
-  .menu-toggle {
-    display: inline-flex;
+  /* There is no hamburger any more: the logo/wordmark opens the menu. Its only
+     affordances are the caret below and the pressed state while the menu is open
+     (Scripts/nav.js sets aria-expanded on the brand only at this breakpoint). */
+  .navbar-brand {
+    cursor: pointer;
+    padding: 0.3rem 0.6rem;
+    margin-left: -0.6rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s var(--ease);
+  }
+
+  .navbar-brand::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.2s var(--ease);
+  }
+
+  .navbar-brand[aria-expanded="true"] {
+    background: var(--brand-soft);
+  }
+
+  .navbar-brand[aria-expanded="true"]::after {
+    transform: rotate(225deg) translateY(-2px);
+  }
+
+  /* Keep the 70px row for the brand and let the bar grow downwards while the
+     menu is open: the panels become full-width flex rows instead of absolutely
+     positioned blocks. The old `top: auto` on `.navbar-actions` resolved to the
+     bar's own row, so the Log in / Sign up panel sat on top of the logo - which
+     is now the menu trigger and has to stay visible and tappable. */
+  .navbar .navbar-inner {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 70px;
+    column-gap: 1.5rem;
+    row-gap: 0;
   }
 
   .nav-links,
   .navbar-actions {
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    flex: 0 0 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
-    padding: 0.75rem 1.5rem;
     margin: 0;
+    padding: 0.5rem 0;
+    background: var(--surface);
+    box-shadow: none;
     display: none;
+  }
+
+  .nav-links {
+    border-top: 1px solid var(--border);
+  }
+
+  .navbar-actions {
+    padding-top: 0;
+    padding-bottom: 0.75rem;
   }
 
   .nav-links.open,
   .navbar-actions.open {
     display: flex;
-  }
-
-  .navbar-actions {
-    top: auto;
-    padding-top: 0.5rem;
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
   }
 
   .nav-link {

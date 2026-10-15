@@ -1,12 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Toggle for Card Section
-    const cards = document.querySelectorAll('.card');
-    
-    cards.forEach((card) => {
-        card.addEventListener('click', () => {
-            toggleCard(card);
-        });
-    });
+    // Card clicks are handled by the inline onclick handlers on each .card,
+    // which open the matching popup. (The old toggleCard() expand/collapse was
+    // retired with the cards' inline panels; its listener only threw.)
 
     // Toggle for FAQ Section
     const accordions = document.querySelectorAll('.accordion');
@@ -147,59 +142,249 @@ window.onclick = function(event) {
 
 
 
+/* ============================================================
+   Search
+   The help content lives in six topic cards and in the accordions
+   inside their modals (there is no `.content` wrapper on this page),
+   so those are what we index. Because most matching text sits inside
+   something that is hidden until it is opened, choosing a suggestion
+   opens the owning modal/panel, scrolls to the match and highlights it.
+   ============================================================ */
 
-// Search logic
+const HIGHLIGHT_CLASS = "highlight";
+const MAX_SUGGESTIONS = 8;
+
+/* Characters that are special inside a regular expression. Backslash is
+   added by char code so this file needs no escape-heavy literals. */
+const BACKSLASH = String.fromCharCode(92);
+const REGEX_SPECIALS = "^$.*+?()[]{}|" + BACKSLASH;
+
+function escapeRegExp(value) {
+  let escaped = "";
+  for (const ch of value) {
+    escaped += REGEX_SPECIALS.indexOf(ch) === -1 ? ch : BACKSLASH + ch;
+  }
+  return escaped;
+}
+
+/* Remove the highlight spans again without disturbing the real markup. */
+function clearHighlights() {
+  document.querySelectorAll("." + HIGHLIGHT_CLASS).forEach((span) => {
+    const parent = span.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(span.textContent), span);
+    parent.normalize();
+  });
+}
+
+/* Wrap every occurrence of `needle` inside `scope`. Works on text nodes
+   only, so existing markup (e.g. the <strong> labels in the FAQs) survives. */
+function highlightMatches(scope, needle) {
+  if (!scope || !needle) return;
+
+  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let node;
+
+  while ((node = walker.nextNode())) {
+    const probe = new RegExp(escapeRegExp(needle), "i");
+    if (probe.test(node.nodeValue)) textNodes.push(node);
+  }
+
+  textNodes.forEach((textNode) => {
+    const text = textNode.nodeValue;
+    const finder = new RegExp(escapeRegExp(needle), "gi");
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    let match;
+
+    while ((match = finder.exec(text)) !== null) {
+      if (match.index > last) {
+        frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+      }
+      const span = document.createElement("span");
+      span.className = HIGHLIGHT_CLASS;
+      span.textContent = match[0];
+      frag.appendChild(span);
+      last = match.index + match[0].length;
+      if (match[0] === "") finder.lastIndex += 1;
+    }
+
+    if (last < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(last)));
+    }
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+}
+
+/* One searchable entry per topic card and per accordion item. */
+function collectSearchableEntries() {
+  const entries = [];
+
+  document.querySelectorAll(".content-wrapper > .card").forEach((card) => {
+    const heading = card.querySelector("h3");
+    if (!heading) return;
+    // The card opens its popup through an inline handler such as openAccountPopup().
+    const opener = (card.getAttribute("onclick") || "").replace(/\(\s*\)$/, "");
+    entries.push({
+      kind: "Topic",
+      label: heading.textContent.trim(),
+      questionEl: heading,
+      questionText: heading.textContent,
+      answerEl: null,
+      answerText: "",
+      scrollTarget: card,
+      open: () => {
+        if (typeof window[opener] === "function") window[opener]();
+      }
+    });
+  });
+
+  document.querySelectorAll(".accordion-item").forEach((item) => {
+    const button = item.querySelector(".accordion");
+    const panel = item.querySelector(".collapsible-content");
+    const modal = item.closest(".modal");
+
+    entries.push({
+      kind: "FAQ",
+      label: (button ? button.textContent : item.textContent).trim(),
+      questionEl: button || item,
+      questionText: button ? button.textContent : "",
+      answerEl: panel,
+      answerText: panel ? panel.textContent : "",
+      scrollTarget: panel && panel.textContent.trim() ? panel : item,
+      open: () => {
+        if (modal) {
+          if (typeof window.openModal === "function") window.openModal(modal.id);
+          else modal.style.display = "flex";
+        }
+        if (button) button.classList.add("active");
+        if (panel) {
+          panel.classList.add("active");
+          panel.style.display = "block";
+        }
+      }
+    });
+  });
+
+  return entries;
+}
 
 function searchContent() {
-    const query = document.getElementById("search-bar").value.toLowerCase();
-    const contentElements = document.querySelectorAll(".content p");
-    const suggestionsContainer = document.getElementById("suggestions");
+  const bar = document.getElementById("search-bar");
+  const list = document.getElementById("suggestions");
+  if (!bar || !list) return;
 
-    suggestionsContainer.innerHTML = ""; // Clear old suggestions
+  const needle = bar.value.trim();
+  clearHighlights();
+  list.innerHTML = "";
+  list.classList.remove("open");
 
-    if (!query) {
-        clearHighlights(contentElements);
-        return;
+  if (!needle) return;
+
+  const lower = needle.toLowerCase();
+  const matches = collectSearchableEntries()
+    .map((entry) => {
+      const inQuestion =
+        entry.questionText.toLowerCase().includes(lower) ||
+        entry.label.toLowerCase().includes(lower);
+      const inAnswer = entry.answerText.toLowerCase().includes(lower);
+      if (!inQuestion && !inAnswer) return null;
+      return { entry, rank: inQuestion ? 0 : 1 };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.rank - b.rank);
+
+  // Always highlight the card titles: they are the visible part of the page.
+  document
+    .querySelectorAll(".content-wrapper > .card .content-section h3")
+    .forEach((heading) => highlightMatches(heading, needle));
+
+  if (matches.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "suggestions__empty";
+    empty.textContent = 'No matches for "' + needle + '"';
+    list.appendChild(empty);
+    list.classList.add("open");
+    return;
+  }
+
+  matches.slice(0, MAX_SUGGESTIONS).forEach(({ entry, rank }) => {
+    const li = document.createElement("li");
+    li.className = "suggestions__item";
+    li.tabIndex = 0;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-label", entry.label);
+
+    const title = document.createElement("span");
+    title.className = "suggestions__title";
+    title.textContent = entry.label;
+
+    const meta = document.createElement("span");
+    meta.className = "suggestions__meta";
+    meta.textContent = rank === 0 ? entry.kind : entry.kind + " \u00b7 match in answer";
+
+    li.appendChild(title);
+    li.appendChild(meta);
+
+    const choose = () => {
+      clearHighlights();
+      entry.open();
+      if (entry.scrollTarget) {
+        entry.scrollTarget.scrollIntoView({ block: "center" });
+      }
+      highlightMatches(entry.questionEl, needle);
+      if (entry.answerEl) highlightMatches(entry.answerEl, needle);
+      list.innerHTML = "";
+      list.classList.remove("open");
+    };
+
+    li.addEventListener("click", choose);
+    li.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        choose();
+      }
+    });
+
+    list.appendChild(li);
+  });
+
+  if (matches.length > MAX_SUGGESTIONS) {
+    const more = document.createElement("li");
+    more.className = "suggestions__empty";
+    more.textContent = "Showing " + MAX_SUGGESTIONS + " of " + matches.length + " matches";
+    list.appendChild(more);
+  }
+
+  list.classList.add("open");
+}
+
+/* Enter picks the first suggestion, Escape clears the field. */
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = document.getElementById("search-bar");
+  const list = document.getElementById("suggestions");
+  if (!bar) return;
+
+  // `input` covers typing, pasting and IME composition in one code path.
+  bar.addEventListener("input", searchContent);
+
+  bar.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      bar.value = "";
+      searchContent();
+      return;
     }
-
-    const suggestions = new Set();
-
-    contentElements.forEach((element) => {
-        const text = element.textContent.toLowerCase();
-        if (text.includes(query)) {
-            suggestions.add(element.textContent);
-        }
-    });
-
-    if (suggestions.size > 0) {
-        suggestions.forEach((suggestion) => {
-            const li = document.createElement("li");
-            li.textContent = suggestion;
-            li.onclick = () => {
-                document.getElementById("search-bar").value = suggestion;
-                highlightMatches(contentElements, suggestion.toLowerCase());
-                suggestionsContainer.innerHTML = ""; // Clear suggestions
-            };
-            suggestionsContainer.appendChild(li);
-        });
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const first = list ? list.querySelector(".suggestions__item") : null;
+      if (first) first.click();
     }
+  });
 
-    highlightMatches(contentElements, query);
-}
-
-function clearHighlights(elements) {
-    elements.forEach((element) => {
-        element.innerHTML = element.textContent; // Reset content
-    });
-}
-
-function highlightMatches(elements, query) {
-    clearHighlights(elements);
-
-    elements.forEach((element) => {
-        const text = element.textContent;
-        const regex = new RegExp(`(${query})`, "gi");
-        const highlightedText = text.replace(regex, "<span class='highlight'>$1</span>");
-        element.innerHTML = highlightedText;
-    });
-}
+  document.addEventListener("click", (event) => {
+    if (!list || !event.target.closest(".search-container")) {
+      list.classList.remove("open");
+    }
+  });
+});

@@ -51,6 +51,65 @@ body {
     border-color: #4CAF50;
 }
 
+/* Suggestions dropdown (the <ul id="suggestions"> had no styling at all) */
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    margin: 6px 0 0;
+    padding: 6px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    max-height: 320px;
+    overflow-y: auto;
+    display: none;
+}
+
+.suggestions.open {
+    display: block;
+}
+
+.suggestions__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.suggestions__item:hover,
+.suggestions__item:focus-visible {
+    background: #eaf3ff;
+    outline: none;
+}
+
+.suggestions__title {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: #1f2d3d;
+}
+
+.suggestions__meta {
+    font-size: 0.74rem;
+    color: #6b7c93;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.suggestions__empty {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    color: #6b7c93;
+    cursor: default;
+}
+
 /* Font Awesome Magnifying Glass Icon */
 .fa-magnifying-glass {
     position: absolute;
@@ -91,11 +150,12 @@ body {
     background-color: #ffffff;
 }
 
-/* Highlight matched text */
+/* Highlight matched text (was white-on-white, so matches were invisible) */
 .highlight {
-    background-color: #ffffff;
+    background-color: #fde68a;
     font-weight: bold;
-    color: black;
+    color: #1c1c1c;
+    border-radius: 2px;
 }
 
 /* Section Styling */

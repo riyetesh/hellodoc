@@ -18,7 +18,7 @@
 
 /* ---------- Page-scoped tokens ---------- */
 .hellodoc-story {
-  --hs-paper: #faf8f4;
+  --hs-paper: #ffffff;
   --hs-paper-tint: #f1f4ef;
   --hs-ink: #14171a;
   --hs-body: #333b36;
@@ -46,7 +46,7 @@
 
 /* Body background so the area behind the fixed progress bar matches */
 body.hellodoc-story-page {
-  background: var(--hs-paper, #faf8f4);
+  background: var(--hs-paper, #ffffff);
 }
 
 .hellodoc-story h1,
@@ -410,13 +410,6 @@ body.hellodoc-story-page {
   will-change: transform;
 }
 
-.hs-credit {
-  margin-top: 0.7rem;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--hs-muted);
-}
-
 .hs-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -504,8 +497,11 @@ body.hellodoc-story-page {
   scroll-margin-top: 92px;
 }
 
+/* The page reads as flat white. The alternating sections keep their rhythm
+   from spacing and hairline rules rather than a tint; restore banding by
+   pointing this back at var(--hs-paper-tint). */
 .hs-section--tint {
-  background: var(--hs-paper-tint);
+  background: var(--hs-paper);
 }
 
 .hs-split {
@@ -1282,42 +1278,8 @@ body.hellodoc-story-page {
   font-size: clamp(1.02rem, 1.6vw, 1.18rem);
 }
 
-.hs-closing__credit {
-  margin-top: 1.5rem;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.72);
-  max-width: 70ch;
-}
-
 .hs-closing :focus-visible {
   outline-color: #fff;
-}
-
-/* ---------- Credits ---------- */
-.hs-credits {
-  padding: clamp(2.5rem, 5vw, 4rem) 0;
-  background: var(--hs-paper-tint);
-  border-top: 1px solid var(--hs-line);
-}
-
-.hs-credits__list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
-  display: grid;
-  gap: 0.6rem;
-  font-size: 0.85rem;
-  color: var(--hs-muted);
-}
-
-.hs-credits__list a {
-  color: var(--hs-blue);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.hs-credits__list a:hover {
-  color: var(--hs-green);
 }
 
 /* ---------- Scroll reveals ---------- */

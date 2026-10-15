@@ -1,7 +1,7 @@
 /* ============================================================
    HelloDoc - Shared navbar behavior
    Loaded by every page so the navbar acts the same everywhere:
-   mobile menu toggle, scroll shadow, live appointments badge,
+   logo-triggered mobile menu, scroll shadow, live appointments badge,
    and the logged-in user chip (fetched from the backend session).
    Requires app.css for markup/classes. Optionally uses
    appointments.js for the badge count.
@@ -12,17 +12,84 @@
 
   const $ = (sel) => document.querySelector(sel);
 
+  // There is no hamburger button any more. Below the mobile breakpoint the
+  // logo/wordmark is the menu trigger; on wider screens it stays a plain link
+  // to the home page, so it only becomes a disclosure while that matches.
+  const mobileNav = window.matchMedia("(max-width: 900px)");
+
   function initMenu() {
-    const toggle = $("#menuToggle");
+    const brand = $(".navbar-brand");
     const links = $("#navLinks");
     const actions = $("#navActions");
-    if (!toggle || !links || !actions) return;
+    if (!brand || !links || !actions) return;
 
-    toggle.addEventListener("click", () => {
-      const open = toggle.classList.toggle("open");
+    function isOpen() {
+      return links.classList.contains("open");
+    }
+
+    function setOpen(open) {
       links.classList.toggle("open", open);
       actions.classList.toggle("open", open);
+      brand.setAttribute("aria-expanded", open ? "true" : "false");
+      brand.setAttribute(
+        "aria-label",
+        open
+          ? "HelloDoc, close the navigation menu"
+          : "HelloDoc, open the navigation menu"
+      );
+    }
+
+    function close() {
+      setOpen(false);
+    }
+
+    // Mobile: the brand is a disclosure button for the menu.
+    function asMenuTrigger() {
+      brand.setAttribute("aria-controls", "navLinks");
+      setOpen(false);
+    }
+
+    // Desktop: strip the disclosure attributes so the brand is just the home link.
+    // `close()` sets those same attributes, so it has to run first.
+    function asLink() {
+      close();
+      brand.removeAttribute("aria-controls");
+      brand.removeAttribute("aria-expanded");
+      brand.removeAttribute("aria-label");
+    }
+
+    brand.addEventListener("click", (event) => {
+      if (!mobileNav.matches) return;
+      event.preventDefault();
+      setOpen(!isOpen());
     });
+
+    // With no close button, the menu has to be dismissable in the usual ways:
+    // a click outside it, Escape, or leaving the breakpoint entirely.
+    document.addEventListener("click", (event) => {
+      if (!mobileNav.matches || !isOpen()) return;
+      const inside =
+        brand.contains(event.target) ||
+        links.contains(event.target) ||
+        actions.contains(event.target);
+      if (!inside) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isOpen()) {
+        close();
+        brand.focus();
+      }
+    });
+
+    function sync() {
+      if (mobileNav.matches) asMenuTrigger();
+      else asLink();
+    }
+
+    sync();
+    if (mobileNav.addEventListener) mobileNav.addEventListener("change", sync);
+    else if (mobileNav.addListener) mobileNav.addListener(sync); // older Safari
   }
 
   function initScrollShadow() {
