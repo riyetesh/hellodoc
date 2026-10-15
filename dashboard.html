@@ -3,112 +3,184 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
-
-    <!-- Linking CSS -->
+    <title>Find a Doctor — HelloDoc</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./Styles/app.css" />
     <link rel="stylesheet" href="./Styles/dashboard.css" />
   </head>
 
   <body>
-    <!-- Modern Navigation Bar -->
-<nav class="navbar">
-  <!-- Logo with hover effect -->
-  <div class="navbar-brand">
-    <a href="#">
-      <img src="./images/Logo.png" alt="Medical Clinic Logo" class="logo hover-scale">
-    </a>
-  </div>
+    <!-- ===== Navbar ===== -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./images/Logo.png" alt="HelloDoc" class="logo" />
+          <span>helloDoc</span>
+        </a>
 
-  <!-- Mobile menu button (hidden on desktop) -->
-  <button class="mobile-menu-button" aria-label="Toggle navigation">
-    <span class="menu-icon"></span>
-    <span class="menu-icon"></span>
-    <span class="menu-icon"></span>
-  </button>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
 
-  <!-- Navigation Links -->
-  <ul class="nav-links">
-    <li><a href="index.html" class="nav-link hover-underline">Home</a></li>
-    <li><a href="/predict" class="nav-link hover-underline">Check symptoms</a></li>
-    <li><a href="help.html" class="nav-link hover-underline">Help</a></li>
-    <li><a href="team.html" class="nav-link hover-underline">Team</a></li>
-  </ul>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+          <li><a href="team.html" class="nav-link">Team</a></li>
+        </ul>
 
-  <!-- User Actions -->
-  <div class="user-actions">
-    <a href="login.html" class="btn btn-outline">Log in</a>
-    <a href="signup.html" class="btn btn-primary">Profile</a>
-  </div>
-</nav>
-
-    <!-- Search, Sort, and Filter -->
-<div class="search-sort">
-  <!-- Search Bar -->
-  <div class="search">
-    <form action="">
-      <input type="text" id="search" placeholder="Search by name" />
-    </form>
-    <div class="image">
-      <!-- Search Icon -->
-      <img src="./images/search.png" alt="search icon" />
-    </div>
-  </div>
-
-  <!-- Sort - 'Experience, High-Low, Low-High'-->
-  <div class="sort">
-    <label for="sort"></label>
-    <div class="dropdown">
-      <button class="dropbtn">Sort</button>
-      <div class="dropdown-content">
-        <a href="#" class="sort-option" data-value="all">All</a>
-        <a href="#" class="sort-option" data-value="experience">Experience</a>
-        <a href="#" class="sort-option" data-value="hourlyFeeHighLow">Hourly Fee - High to Low</a>
-        <a href="#" class="sort-option" data-value="hourlyFeeLowHigh">Hourly Fee - Low to High</a>
+        <div class="navbar-actions" id="navActions">
+          <a href="login.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
       </div>
-    </div>
-  </div>
+    </nav>
 
-  <!-- Filter by 'Speciality' -->
-  <div class="filter">
-    <label for="filter">Speciality</label>
-    <div class="checkbox-container">
-      <input type="checkbox" id="generalPhysician" value="General Physician" /> General Physician<br>
-      <input type="checkbox" id="pediatrician" value="Pediatrician" /> Pediatrician<br>
-      <input type="checkbox" id="gynecologist" value="Gynecologist & Obstetrician" /> Gynecologist & Obstetrician<br>
-      <input type="checkbox" id="dermatologist" value="Dermatologist" /> Dermatologist<br>
-      <input type="checkbox" id="cardiologist" value="Cardiologist" /> Cardiologist<br>
-      <input type="checkbox" id="neurologist" value="Neurologist" /> Neurologist<br>
-      <input type="checkbox" id="orthopedic" value="Orthopedic Surgeon" /> Orthopedic Surgeon<br>
-      <input type="checkbox" id="ent" value="ENT Specialist" /> ENT Specialist<br>
-      <input type="checkbox" id="ophthalmologist" value="Ophthalmologist" /> Ophthalmologist<br>
-      <input type="checkbox" id="psychiatrist" value="Psychiatrist" /> Psychiatrist<br>
-      <input type="checkbox" id="endocrinologist" value="Endocrinologist" /> Endocrinologist<br>
-      <input type="checkbox" id="pulmonologist" value="Pulmonologist" /> Pulmonologist<br>
-      <input type="checkbox" id="nephrologist" value="Nephrologist" /> Nephrologist<br>
-      <input type="checkbox" id="gastroenterologist" value="Gastroenterologist" /> Gastroenterologist<br>
-      <input type="checkbox" id="urologist" value="Urologist" /> Urologist<br>
-      <input type="checkbox" id="oncologist" value="Oncologist" /> Oncologist<br>
-      <input type="checkbox" id="hematologist" value="Hematologist" /> Hematologist<br>
-      <input type="checkbox" id="rheumatologist" value="Rheumatologist" /> Rheumatologist<br>
-      <input type="checkbox" id="infectiousDisease" value="Infectious Disease Specialist" /> Infectious Disease Specialist<br>
-      <input type="checkbox" id="allergist" value="Allergist/Immunologist" /> Allergist/Immunologist<br>
-      <input type="checkbox" id="plasticSurgeon" value="Plastic Surgeon" /> Plastic Surgeon<br>
-      <input type="checkbox" id="anesthesiologist" value="Anesthesiologist" /> Anesthesiologist<br>
-      <input type="checkbox" id="radiologist" value="Radiologist" /> Radiologist<br>
-      <input type="checkbox" id="pathologist" value="Pathologist" /> Pathologist<br>
-      <input type="checkbox" id="emergencyMedicine" value="Emergency Medicine Specialist" /> Emergency Medicine Specialist<br>
-    </div>
-  </div>
-</div>
+    <!-- ===== Hero ===== -->
+    <header class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Trusted by 50k+ patients</span>
+          <h1 id="heroGreeting">Find the right doctor, book in seconds</h1>
+          <p>
+            Browse verified specialists, see live availability and book a video
+            consultation — then run a symptom check to prepare for your visit.
+          </p>
+          <div class="hero-stats">
+            <div class="stat"><strong id="statDoctors">0</strong><span>Specialists</span></div>
+            <div class="stat"><strong>24/7</strong><span>Support</span></div>
+            <div class="stat"><strong>4.8★</strong><span>Avg. rating</span></div>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-card">
+            <i class="fa-solid fa-stethoscope"></i>
+            <div><strong>AI symptom check</strong><span>Instant, evidence-based</span></div>
+          </div>
+          <div class="hero-card">
+            <i class="fa-solid fa-video"></i>
+            <div><strong>Video consults</strong><span>Join from anywhere</span></div>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <!-- Doctors -->
-    <!-- <a href="https://google.com" target="_self"> -->
-      
-    <div class="team-container">
-        <!-- Doctor cards will be dynamically inserted here by JavaScript -->
+    <!-- ===== Toolbar ===== -->
+    <section class="toolbar-wrap">
+      <div class="container toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search" placeholder="Search by doctor name…" autocomplete="off" />
+        </div>
+
+        <div class="dropdown" id="sortDropdown">
+          <button class="dropbtn" type="button">
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
+            <span id="sortLabel">Sort: Relevance</span>
+            <i class="fa-solid fa-chevron-down caret"></i>
+          </button>
+          <div class="dropdown-content" id="sortMenu">
+            <a href="#" class="sort-option active" data-value="relevance">Relevance</a>
+            <a href="#" class="sort-option" data-value="experience">Experience</a>
+            <a href="#" class="sort-option" data-value="rating">Rating</a>
+            <a href="#" class="sort-option" data-value="feeLowHigh">Fee: Low to High</a>
+            <a href="#" class="sort-option" data-value="feeHighLow">Fee: High to Low</a>
+          </div>
+        </div>
+
+        <button class="filter-toggle" id="filterToggle" type="button">
+          <i class="fa-solid fa-sliders"></i>
+          Speciality
+          <span class="filter-count" id="filterCount" hidden>0</span>
+        </button>
       </div>
 
-    <!-- Javascript -->
+      <!-- Speciality chips -->
+      <div class="container chips" id="chips" hidden></div>
+    </section>
+
+    <!-- ===== Results ===== -->
+    <main class="results container">
+      <div class="results-head">
+        <h2 id="resultsTitle">All specialists</h2>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+      <div class="team-container" id="teamContainer"></div>
+      <div class="no-results" id="noResults" hidden>
+        <i class="fa-solid fa-user-doctor"></i>
+        <h3>No doctors found</h3>
+        <p>Try a different name or clear some speciality filters.</p>
+        <button class="btn btn-outline" id="clearFilters">Clear filters</button>
+      </div>
+    </main>
+
+    <!-- ===== Booking modal ===== -->
+    <div class="modal-overlay" id="bookingOverlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+        <div class="modal-header">
+          <div class="booking-doc" id="bookingDoc">
+            <img src="" alt="" id="bookingImg" />
+            <div>
+              <h3 id="bookingTitle">Doctor</h3>
+              <p id="bookingSpeciality">Speciality</p>
+            </div>
+          </div>
+          <button class="modal-close" id="bookingClose" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label>Select a date</label>
+            <div class="date-row" id="dateRow"></div>
+          </div>
+
+          <div class="field">
+            <label>Available slots</label>
+            <div class="slot-grid" id="slotGrid"></div>
+          </div>
+
+          <div class="field">
+            <label for="bookingReason">Reason for visit <span>(optional)</span></label>
+            <textarea id="bookingReason" rows="2" placeholder="e.g. Fever and headache for 3 days"></textarea>
+          </div>
+
+          <div class="fee-row">
+            <span>Consultation fee</span>
+            <strong id="bookingFee">Rs. 0</strong>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-ghost" id="bookingCancel">Cancel</button>
+          <button class="btn btn-primary" id="bookingConfirm" disabled>Confirm booking</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="./Scripts/doctors-data.js"></script>
+    <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/dashboard.js"></script>
   </body>
 </html>

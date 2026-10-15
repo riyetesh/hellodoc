@@ -1,426 +1,399 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // Array to hold the doctor data
-  const doctors = [
-    {
-      name: "Dr. Priya Shah",
-      experience: "12 years",
-      speciality: "General Physician",
-      hourlyFee: 2500,
-      image: "./images/dr priya shah.jpeg",
-    },
-    {
-      name: "Dr. Ramesh Kumar",
-      experience: "15 years",
-      speciality: "Pediatrician",
-      hourlyFee: 3000,
-      image: "./images/dr ramesh kumar.jpeg",
-    },
-    {
-      name: "Dr. Ananya Gupta",
-      experience: "8 years",
-      speciality: "Gynecologist & Obstetrician",
-      hourlyFee: 4000,
-      image: "./images/gynecologist.jpeg",
-    },
-    {
-      name: "Dr. Amit Verma",
-      experience: "20 years",
-      speciality: "Dermatologist",
-      hourlyFee: 3500,
-      image: "./images/Dr. Amit verma.jpeg",
-    },
-    {
-      name: "Dr. Vinay Singh",
-      experience: "10 years",
-      speciality: "Cardiologist",
-      hourlyFee: 5000,
-      image: "./images/dr.vinay singh.jpeg",
-    },
-    {
-      name: "Dr. Neha Yadav",
-      experience: "25 years",
-      speciality: "Neurologist",
-      hourlyFee: 6000,
-      image: "./images/Dr. neha yadav.jpeg",
-    },
-    {
-      name: "Dr. Sunil Rao",
-      experience: "7 years",
-      speciality: "Orthopedic Surgeon",
-      hourlyFee: 4500,
-      image: "./images/Dr. sunil Rao.jpeg",
-    },
-    {
-      name: "Dr. Seema Dubey",
-      experience: "22 years",
-      speciality: "ENT Specialist",
-      hourlyFee: 4000,
-      image: "./images/Dr.seema dubey.jpeg",
-    },
-    {
-      name: "Dr. Harish Mehta",
-      experience: "17 years",
-      speciality: "Ophthalmologist",
-      hourlyFee: 3500,
-      image: "./images/Dr. Subodh Gupta.jpeg",
-    },
-    {
-      name: "Dr. Shalini Agarwal",
-      experience: "9 years",
-      speciality: "Psychiatrist",
-      hourlyFee: 3800,
-      image: "./images/Dr. Shalini Agarwal.jpeg",
-      
-    },
-    {
-      name: "Dr. Prakash Reddy",
-      experience: "18 years",
-      speciality: "Endocrinologist",
-      hourlyFee: 5500,
-      image: "./images/Dr. Prakash Reddy.jpeg",
-    },
-    {
-      name: "Dr. Manisha Sharma",
-      experience: "14 years",
-      speciality: "Pulmonologist",
-      hourlyFee: 4700,
-      image: "./images/Dr. Manisha Sharma.jpeg",
-    },
-    {
-      name: "Dr. Rajesh Kumar",
-      experience: "19 years",
-      speciality: "Nephrologist",
-      hourlyFee: 5200,
-      image: "./images/Dr. Rajesh Kumar.jpeg",
-    },
-    {
-      name: "Dr. Kavita Singh",
-      experience: "11 years",
-      speciality: "Gastroenterologist",
-      hourlyFee: 4400,
-      image: "./images/Dr. Kiran Verma.jpeg",
-    },
-    {
-      name: "Dr. Tarun Mehra",
-      experience: "16 years",
-      speciality: "Urologist",
-      hourlyFee: 5000,
-      image: "./images/Dr. Tarun Mehra.jpeg",
-    },
-    {
-      name: "Dr. Sanjeev Bhatt",
-      experience: "21 years",
-      speciality: "Oncologist",
-      hourlyFee: 6000,
-      image: "./images/Dr. Sanjeev Bhatt.jpeg",
-    },
-    {
-      name: "Dr. Aditi Desai",
-      experience: "24 years",
-      speciality: "Hematologist",
-      hourlyFee: 5500,
-      image: "./images/Dr. Aditi Desai.jpeg",
-    },
-    {
-      name: "Dr. Vikas Yadav",
-      experience: "13 years",
-      speciality: "Rheumatologist",
-      hourlyFee: 4800,
-      image: "./images/Dr. Vikas Yadav.jpeg",
-    },
-    {
-      name: "Dr. Rohit Malhotra",
-      experience: "6 years",
-      speciality: "Infectious Disease Specialist",
-      hourlyFee: 3300,
-      image: "./images/Dr. Rohit Malhotra.jpeg",
-    },
-    {
-      name: "Dr. Priyanka Mehta",
-      experience: "30 years",
-      speciality: "Allergist/Immunologist",
-      hourlyFee: 4600,
-      image: "./images/Dr. Priyanka Mehta.jpeg",
-    },
-    {
-      name: "Dr. Ritu Bansal",
-      experience: "20 years",
-      speciality: "Plastic Surgeon",
-      hourlyFee: 7000,
-      image: "./images/Dr. Ritu Bansal.jpeg",
-    },
-    {
-      name: "Dr. Amar Singh",
-      experience: "28 years",
-      speciality: "Anesthesiologist",
-      hourlyFee: 4000,
-      image: "./images/Dr. Amar Singh.jpeg",
-    },
-    {
-      name: "Dr. Nisha Gupta",
-      experience: "5 years",
-      speciality: "Radiologist",
-      hourlyFee: 3800,
-      image: "./images/Dr. Nisha Gupta.jpeg",
-    },
-    {
-      name: "Dr. Rakesh Patil",
-      experience: "23 years",
-      speciality: "Pathologist",
-      hourlyFee: 4700,
-      image: "./images/Dr. Rakesh Patil.jpeg",
-    },
-    {
-      name: "Dr. Suman Devi",
-      experience: "8 years",
-      speciality: "Emergency Medicine Specialist",
-      hourlyFee: 5000,
-      image: "./images/Dr. Suman Devi.jpeg",
-    },
-    {
-      name: "Dr. Nitin Kumar",
-      experience: "12 years",
-      speciality: "General Physician",
-      hourlyFee: 2900,
-      image: "./images/Dr. Nitin Kumar.jpeg",
-    },
-    {
-      name: "Dr. Nandini Mishra",
-      experience: "18 years",
-      speciality: "Pediatrician",
-      hourlyFee: 3500,
-      image: "./images/Dr. Nandini Mishra.jpeg",
-    },
-    {
-      name: "Dr. Kiran Verma",
-      experience: "22 years",
-      speciality: "Gynecologist & Obstetrician",
-      hourlyFee: 4500,
-      image: "./images/Dr. Kiran Verma.jpeg",
-    },
-    {
-      name: "Dr. Subodh Gupta",
-      experience: "17 years",
-      speciality: "Dermatologist",
-      hourlyFee: 3800,
-      image: "./images/Dr. Subodh Gupta.jpeg",
-    },
-    {
-      name: "Dr. Chandra Prakash",
-      experience: "15 years",
-      speciality: "Cardiologist",
-      hourlyFee: 5200,
-      image: "./images/Dr. Chandra Prakash.jpeg",
-    },
-    {
-      name: "Dr. Suresh Babu",
-      experience: "27 years",
-      speciality: "Neurologist",
-      hourlyFee: 6200,
-      image: "./images/Dr. Suresh Babu.jpeg",
-    },
-    {
-      name: "Dr. Rina Kapoor",
-      experience: "19 years",
-      speciality: "Orthopedic Surgeon",
-      hourlyFee: 4700,
-      image: "./images/Dr. Rina Kapoor.jpeg",
-    },
-    {
-      name: "Dr. Arvind Joshi",
-      experience: "23 years",
-      speciality: "ENT Specialist",
-      hourlyFee: 5000,
-      image: "./images/Dr. Arvind Joshi.jpeg",
-    },
-  ];
+/* ============================================================
+   HelloDoc — Dashboard logic
+   Renders doctor cards, handles search / sort / speciality
+   filters, drives the booking modal (writes to the shared
+   Appointments store), shows toasts, and keeps the nav badge
+   and user greeting in sync.
+   Depends on: doctors-data.js, appointments.js, app.css.
+   ============================================================ */
 
-  const teamContainer = document.querySelector(".team-container");
-  const searchInput = document.getElementById("search");
-  const sortOptions = document.querySelectorAll(".sort-option");
-  const checkboxes = document.querySelectorAll(".checkbox-container input[type='checkbox']");
-  const filterLabel = document.querySelector(".filter label");
+(function () {
+  "use strict";
 
-  // Function to generate doctor cards
-  function generateDoctorCards(filteredDoctors) {
-    teamContainer.innerHTML = ""; // Clear current cards
-    
-    if (filteredDoctors.length === 0) {
-      teamContainer.innerHTML = '<div class="no-results">No doctors match your search criteria.</div>';
-      return;
+  // --- state ---
+  let state = {
+    query: "",
+    sort: "relevance",
+    specialities: new Set(),
+    booking: null, // { doctor, date, time }
+  };
+
+  const els = {};
+
+  // --- helpers ---
+  const $ = (sel) => document.querySelector(sel);
+
+  function toast(message, type = "info") {
+    const container = $("#toastContainer");
+    if (!container) return;
+    const icon =
+      type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-circle-info";
+    const node = document.createElement("div");
+    node.className = "toast " + type;
+    node.innerHTML = `<i class="fa-solid ${icon} toast-icon"></i><span></span>`;
+    node.querySelector("span").textContent = message;
+    container.appendChild(node);
+    requestAnimationFrame(() => node.classList.add("show"));
+    setTimeout(() => {
+      node.classList.remove("show");
+      setTimeout(() => node.remove(), 350);
+    }, 3200);
+  }
+
+  // --- filtering / sorting ---
+  function getVisibleDoctors() {
+    let list = window.DOCTORS.slice();
+
+    if (state.specialities.size > 0) {
+      list = list.filter((d) => state.specialities.has(d.speciality));
     }
 
-    filteredDoctors.forEach((doctor) => {
-      const doctorCard = document.createElement("div");
-      doctorCard.classList.add("card");
+    if (state.query) {
+      const q = state.query.toLowerCase();
+      list = list.filter(
+        (d) => d.name.toLowerCase().includes(q) || d.speciality.toLowerCase().includes(q)
+      );
+    }
 
-      const profileDiv = document.createElement("div");
-      profileDiv.classList.add("profile");
+    switch (state.sort) {
+      case "experience":
+        list.sort((a, b) => b.experience - a.experience);
+        break;
+      case "rating":
+        list.sort((a, b) => b.rating - a.rating);
+        break;
+      case "feeLowHigh":
+        list.sort((a, b) => a.hourlyFee - b.hourlyFee);
+        break;
+      case "feeHighLow":
+        list.sort((a, b) => b.hourlyFee - a.hourlyFee);
+        break;
+      default:
+        // relevance: available first, then rating
+        list.sort((a, b) => b.available - a.available || b.rating - a.rating);
+    }
+    return list;
+  }
 
-      const doctorImage = document.createElement("img");
-      doctorImage.src = doctor.image;
-      doctorImage.alt = doctor.name;
+  // --- rendering ---
+  function renderCards() {
+    const list = getVisibleDoctors();
+    const grid = els.teamContainer;
+    grid.innerHTML = "";
 
-      const onlineStatus = document.createElement("span");
-      onlineStatus.classList.add("online"); // Add class for online status styling
+    $("#resultsCount").textContent = `${list.length} doctor${list.length === 1 ? "" : "s"}`;
+    $("#resultsTitle").textContent =
+      state.specialities.size > 0 ? "Filtered specialists" : "All specialists";
 
-      profileDiv.appendChild(doctorImage);
-      profileDiv.appendChild(onlineStatus);
+    $("#noResults").hidden = list.length !== 0;
 
-      const descriptionDiv = document.createElement("div");
-      descriptionDiv.classList.add("description");
-
-      const doctorName = document.createElement("h2");
-      doctorName.textContent = doctor.name;
-
-      const experience = document.createElement("p");
-      experience.classList.add("experience");
-      experience.textContent = `Experience - ${doctor.experience}`;
-
-      const speciality = document.createElement("p");
-      speciality.classList.add("speciality");
-      speciality.textContent = `Speciality - ${doctor.speciality}`;
-
-      const hourlyFee = document.createElement("div");
-      hourlyFee.classList.add("hourlyFee");
-      hourlyFee.textContent = `Hourly fee - Rs.${doctor.hourlyFee}`;
-
-      descriptionDiv.appendChild(doctorName);
-      descriptionDiv.appendChild(experience);
-      descriptionDiv.appendChild(speciality);
-      descriptionDiv.appendChild(hourlyFee);
-
-      doctorCard.appendChild(profileDiv);
-      doctorCard.appendChild(descriptionDiv);
-
-      teamContainer.appendChild(doctorCard);
+    const frag = document.createDocumentFragment();
+    list.forEach((doc) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="profile">
+          <img src="${doc.image}" alt="${doc.name}" loading="lazy" />
+          <span class="rating-pill"><i class="fa-solid fa-star"></i>${doc.rating.toFixed(1)}</span>
+          <span class="status-dot ${doc.available ? "online" : "offline"}">
+            ${doc.available ? "Available" : "Offline"}
+          </span>
+        </div>
+        <div class="description">
+          <h2>${doc.name}</h2>
+          <div class="spec">${doc.speciality}</div>
+          <div class="meta">
+            <div><strong>${doc.experience} yrs</strong><span>Experience</span></div>
+            <div><strong>Rs.${doc.hourlyFee}</strong><span>Per hour</span></div>
+            <div><strong>${doc.reviews}</strong><span>Reviews</span></div>
+          </div>
+          <div class="next-slot"><i class="fa-regular fa-clock"></i>Next: ${doc.nextSlot}</div>
+          <div class="card-actions">
+            <button class="btn btn-primary" data-book="${doc.id}">
+              <i class="fa-regular fa-calendar-plus"></i>Book
+            </button>
+            <a class="btn btn-outline" href="/predict?doctor=${encodeURIComponent(doc.name)}">
+              <i class="fa-solid fa-stethoscope"></i>Symptoms
+            </a>
+          </div>
+        </div>`;
+      frag.appendChild(card);
     });
+    grid.appendChild(frag);
   }
 
-  // Function to filter doctors based on selected specialities
-  function filterDoctors() {
-    const selectedSpecialities = Array.from(checkboxes)
-      .filter(checkbox => checkbox.checked)
-      .map(checkbox => checkbox.value);
-
-    // If no specialities are selected, show all doctors
-    if (selectedSpecialities.length === 0) {
-      return [...doctors];
-    }
-
-    return doctors.filter(doctor => 
-      selectedSpecialities.includes(doctor.speciality)
-    );
-  }
-
-  // Function to search doctors by name
-  function searchDoctors(filteredDoctors) {
-    const searchQuery = searchInput.value.toLowerCase();
-    return filteredDoctors.filter(doctor => 
-      doctor.name.toLowerCase().includes(searchQuery)
-    );
-  }
-
-  // Function to sort doctors based on selected sort criteria
-  function sortDoctors(filteredDoctors, sortValue) {
-    if (sortValue === "experience") {
-      return [...filteredDoctors].sort((a, b) => {
-        const expA = parseInt(a.experience.split(" ")[0]);
-        const expB = parseInt(b.experience.split(" ")[0]);
-        return expB - expA; // High to low
+  function renderChips() {
+    const wrap = els.chips;
+    wrap.innerHTML = "";
+    window.SPECIALITIES.forEach((spec) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip" + (state.specialities.has(spec) ? " active" : "");
+      chip.textContent = spec;
+      chip.addEventListener("click", () => {
+        if (state.specialities.has(spec)) state.specialities.delete(spec);
+        else state.specialities.add(spec);
+        chip.classList.toggle("active");
+        syncFilterCount();
+        renderCards();
       });
-    } else if (sortValue === "hourlyFeeHighLow") {
-      return [...filteredDoctors].sort((a, b) => b.hourlyFee - a.hourlyFee);
-    } else if (sortValue === "hourlyFeeLowHigh") {
-      return [...filteredDoctors].sort((a, b) => a.hourlyFee - b.hourlyFee);
-    }
-    return [...filteredDoctors]; // Default case (including "all")
-  }
-
-  // Function to update the display based on current filters
-  function updateDisplay() {
-    let filteredDoctors = filterDoctors();
-    filteredDoctors = searchDoctors(filteredDoctors);
-    
-    // Get the active sort option
-    const activeSort = document.querySelector(".sort-option.active");
-    const sortValue = activeSort ? activeSort.dataset.value : "all";
-    
-    const sortedDoctors = sortDoctors(filteredDoctors, sortValue);
-    generateDoctorCards(sortedDoctors);
-  }
-
-  // Event listeners
-  searchInput.addEventListener("input", updateDisplay);
-
-  // Sort option click handler
-  sortOptions.forEach(option => {
-    option.addEventListener("click", function(e) {
-      e.preventDefault();
-      sortOptions.forEach(opt => opt.classList.remove("active"));
-      this.classList.add("active");
-      updateDisplay();
+      wrap.appendChild(chip);
     });
-  });
-
-  // Checkbox change handler
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener("change", updateDisplay);
-  });
-
-  // Filter toggle
-  filterLabel.addEventListener("click", function(e) {
-    // Prevent this from triggering the document click handler below
-    e.stopPropagation();
-    document.querySelector(".filter").classList.toggle("active");
-  });
-
-  // Close filter when clicking outside
-  document.addEventListener("click", function() {
-    document.querySelector(".filter").classList.remove("active");
-  });
-
-  // Prevent filter from closing when clicking inside it
-  document.querySelector(".checkbox-container").addEventListener("click", function(e) {
-    e.stopPropagation();
-  });
-
-  // Initialize with "All" sort option selected
-  document.querySelector('.sort-option[data-value="all"]').classList.add("active");
-  
-  // Initial load
-  updateDisplay();
-});
-
-
-
-//Nav Bar
-
-document.addEventListener('DOMContentLoaded', function() {
-  const mobileMenuButton = document.querySelector('.mobile-menu-button');
-  const navLinks = document.querySelector('.nav-links');
-  const userActions = document.querySelector('.user-actions');
-  const navbar = document.querySelector('.navbar');
-  
-  if (!mobileMenuButton || !navLinks || !userActions || !navbar) {
-    return;
   }
-  
-  mobileMenuButton.addEventListener('click', function() {
-    this.classList.toggle('active');
-    navLinks.classList.toggle('active');
-    userActions.classList.toggle('active');
-    navbar.classList.toggle('active');
-  });
-  
-  // Add scroll effect
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 50) {
-      navbar.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-      navbar.style.padding = '0.5rem 2rem';
-    } else {
-      navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-      navbar.style.padding = '1rem 2rem';
+
+  function syncFilterCount() {
+    const n = state.specialities.size;
+    const badge = $("#filterCount");
+    badge.hidden = n === 0;
+    badge.textContent = n;
+  }
+
+  // --- booking modal ---
+  function openBooking(doc) {
+    state.booking = { doctor: doc, date: null, time: null };
+    $("#bookingImg").src = doc.image;
+    $("#bookingImg").alt = doc.name;
+    $("#bookingTitle").textContent = doc.name;
+    $("#bookingSpeciality").textContent = doc.speciality + " · " + doc.experience + " yrs";
+    $("#bookingFee").textContent = "Rs." + doc.hourlyFee;
+    $("#bookingReason").value = "";
+    buildDateRow();
+    buildSlotGrid();
+    syncConfirm();
+    els.overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeBooking() {
+    els.overlay.classList.remove("open");
+    document.body.style.overflow = "";
+    state.booking = null;
+  }
+
+  function buildDateRow() {
+    const row = $("#dateRow");
+    row.innerHTML = "";
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+        d.getDate()
+      ).padStart(2, "0")}`;
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "date-chip";
+      chip.dataset.date = iso;
+      chip.innerHTML = `
+        <span class="dow">${i === 0 ? "Today" : d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+        <span class="dnum">${d.getDate()}</span>
+        <span class="mon">${d.toLocaleDateString(undefined, { month: "short" })}</span>`;
+      chip.addEventListener("click", () => {
+        row.querySelectorAll(".date-chip").forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        state.booking.date = iso;
+        syncConfirm();
+      });
+      row.appendChild(chip);
     }
+  }
+
+  function buildSlotGrid() {
+    const grid = $("#slotGrid");
+    grid.innerHTML = "";
+    const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+    slots.forEach((time, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot";
+      btn.textContent = formatTime12(time);
+      // pseudo-randomly disable a couple of slots so the UI feels real
+      const taken = (time.charCodeAt(1) + idx) % 7 === 0;
+      if (taken) {
+        btn.disabled = true;
+        btn.title = "Unavailable";
+      } else {
+        btn.addEventListener("click", () => {
+          grid.querySelectorAll(".slot").forEach((s) => s.classList.remove("active"));
+          btn.classList.add("active");
+          state.booking.time = time;
+          syncConfirm();
+        });
+      }
+      grid.appendChild(btn);
+    });
+  }
+
+  function formatTime12(hhmm) {
+    const [h, m] = hhmm.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return `${hr}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
+
+  function syncConfirm() {
+    const ok = state.booking && state.booking.date && state.booking.time;
+    $("#bookingConfirm").disabled = !ok;
+  }
+
+  function confirmBooking() {
+    const b = state.booking;
+    if (!b || !b.date || !b.time) return;
+    const record = window.Appointments.add({
+      doctorId: b.doctor.id,
+      doctorName: b.doctor.name,
+      speciality: b.doctor.speciality,
+      image: b.doctor.image,
+      fee: b.doctor.hourlyFee,
+      date: b.date,
+      time: b.time,
+      reason: $("#bookingReason").value.trim(),
+      status: "upcoming",
+    });
+    closeBooking();
+    window.refreshAppointmentBadge();
+    toast(`Appointment booked with ${record.doctorName}`, "success");
+  }
+
+  // --- user greeting ---
+  async function loadUser() {
+    try {
+      const res = await fetch("/api/auth/current-user", { credentials: "same-origin" });
+      if (res.ok) {
+        const data = await res.json();
+        const email = data.email || (data.user && data.user.email) || "";
+        const name =
+          (data.user && data.user.firstName) ||
+          (email ? email.split("@")[0].replace(/[._]/g, " ") : "there");
+        showUser(name, email);
+        setHeroGreeting(name);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    // Not signed in — leave the Log in / Sign up buttons visible.
+  }
+
+  function showUser(name, email) {
+    const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    $("#loginBtn").hidden = true;
+    $("#signupBtn").hidden = true;
+    const chip = $("#userChip");
+    chip.hidden = false;
+    $("#userName").textContent = pretty;
+    $("#userAvatar").textContent = pretty.trim().charAt(0).toUpperCase() || "U";
+    if (email) chip.title = email;
+  }
+
+  function setHeroGreeting(name) {
+    const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    $("#heroGreeting").textContent = `Hi ${pretty}, find the right doctor`;
+  }
+
+  // --- navbar behaviour ---
+  function initNav() {
+    const navbar = $("#navbar");
+    const toggle = $("#menuToggle");
+    const links = $("#navLinks");
+    const actions = $("#navActions");
+
+    toggle.addEventListener("click", () => {
+      const open = toggle.classList.toggle("open");
+      links.classList.toggle("open", open);
+      actions.classList.toggle("open", open);
+    });
+
+    window.addEventListener("scroll", () => {
+      navbar.classList.toggle("scrolled", window.scrollY > 8);
+    });
+
+    $("#userChip").addEventListener("click", () => {
+      window.location.href = "appointments.html";
+    });
+  }
+
+  // --- toolbar behaviour ---
+  function initToolbar() {
+    els.search.addEventListener("input", (e) => {
+      state.query = e.target.value.trim();
+      renderCards();
+    });
+
+    const dropdown = $("#sortDropdown");
+    $("#sortMenu").addEventListener("click", (e) => {
+      const opt = e.target.closest(".sort-option");
+      if (!opt) return;
+      e.preventDefault();
+      $("#sortMenu").querySelectorAll(".sort-option").forEach((o) => o.classList.remove("active"));
+      opt.classList.add("active");
+      state.sort = opt.dataset.value;
+      $("#sortLabel").textContent = "Sort: " + opt.textContent;
+      dropdown.classList.remove("open");
+      renderCards();
+    });
+    $("#sortDropdown .dropbtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+    document.addEventListener("click", () => dropdown.classList.remove("open"));
+
+    $("#filterToggle").addEventListener("click", () => {
+      els.chips.hidden = !els.chips.hidden;
+    });
+
+    $("#clearFilters").addEventListener("click", () => {
+      state.query = "";
+      state.specialities.clear();
+      els.search.value = "";
+      renderChips();
+      syncFilterCount();
+      renderCards();
+    });
+  }
+
+  // --- card actions (delegated) ---
+  function initCards() {
+    els.teamContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-book]");
+      if (!btn) return;
+      const doc = window.getDoctorById(btn.dataset.book);
+      if (doc) openBooking(doc);
+    });
+  }
+
+  // --- modal wiring ---
+  function initModal() {
+    $("#bookingClose").addEventListener("click", closeBooking);
+    $("#bookingCancel").addEventListener("click", closeBooking);
+    $("#bookingConfirm").addEventListener("click", confirmBooking);
+    els.overlay.addEventListener("click", (e) => {
+      if (e.target === els.overlay) closeBooking();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && els.overlay.classList.contains("open")) closeBooking();
+    });
+  }
+
+  // --- init ---
+  document.addEventListener("DOMContentLoaded", () => {
+    els.teamContainer = $("#teamContainer");
+    els.search = $("#search");
+    els.chips = $("#chips");
+    els.overlay = $("#bookingOverlay");
+
+    $("#statDoctors").textContent = window.DOCTORS.length;
+
+    initNav();
+    initToolbar();
+    initCards();
+    initModal();
+
+    renderChips();
+    renderCards();
+    window.refreshAppointmentBadge();
+    loadUser();
+
+    window.addEventListener("appointments:changed", window.refreshAppointmentBadge);
   });
-});
+})();
