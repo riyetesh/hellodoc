@@ -3,143 +3,84 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-    <title>HelloDoc — Disease Prediction &amp; Doctor Finder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>HelloDoc</title>
     <link rel="stylesheet" href="./Styles/login.css" />
-    <style>
-      .landing {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 3rem 1.5rem 2rem;
-        text-align: center;
-      }
-      .landing h2 {
-        font-size: 2rem;
-        margin-bottom: 0.75rem;
-      }
-      .landing p.lead {
-        color: #555;
-        max-width: 640px;
-        margin: 0 auto 2rem;
-        line-height: 1.6;
-      }
-      .cta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: center;
-        margin-bottom: 3rem;
-      }
-      .cta {
-        display: inline-block;
-        padding: 0.85rem 1.75rem;
-        border-radius: 8px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: opacity 0.2s;
-      }
-      .cta:hover {
-        opacity: 0.85;
-      }
-      .cta-primary {
-        background: #1a73e8;
-        color: #fff;
-      }
-      .cta-secondary {
-        background: #eef3fd;
-        color: #1a73e8;
-        border: 1px solid #1a73e8;
-      }
-      .features {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
-        text-align: left;
-      }
-      .feature {
-        background: #f7f9fc;
-        border: 1px solid #e3e9f2;
-        border-radius: 10px;
-        padding: 1.5rem;
-      }
-      .feature i {
-        font-size: 1.6rem;
-        color: #1a73e8;
-        margin-bottom: 0.75rem;
-      }
-      .feature h3 {
-        margin: 0 0 0.5rem;
-        font-size: 1.05rem;
-      }
-      .feature p {
-        margin: 0;
-        color: #555;
-        font-size: 0.92rem;
-        line-height: 1.5;
-      }
-    </style>
+
+    
   </head>
   <body>
     <header>
+
       <nav>
-        <img src="./Asset/Login/hello-doc.png" alt="Hello Doc Logo" class="nav-logo" />
-        <a href="dashboard.html">Find a doctor</a>
-        <a href="appointments.html">Appointments</a>
-        <a href="help.html">Help</a>
-        <a href="login.html">Log in</a>
-        <a href="signup.html" class="signup-btn">Sign up</a>
-      </nav>
+  <img src="./Asset/Login/hello-doc.png" alt="Hello Doc Logo" class="nav-logo">
+  <a href="dashboard.html">Find a doctor</a>
+  <a href="appointments.html">Appointments</a>
+  <a href="help.html">Help</a>
+  <a href="#" id="open-login">Log in</a>
+  <a href="signup.html" class="signup-btn">Sign up</a>
+</nav>
+
+
+    
     </header>
+    <main>
+      <!-- Left side image -->
+      <img src="./Asset/Login/med-right.png" alt="Medical illustration" class="med-right">
+      
+      <!-- Right side image -->
+      <img src="./Asset/Login/med-left.png" alt="Medical illustration" class="med-left">
+      
+      <!-- Bottom right image -->
+      <img src="./Asset/Login/doc_bottom.png" alt="Doctor illustration" class="doc-bottom">
 
-    <main class="landing">
-      <h2>Your Health, Predicted &amp; Connected</h2>
-      <p class="lead">
-        Describe your symptoms and let our machine-learning model suggest possible
-        conditions — along with precautions, medications, diet and workout advice — then
-        find the right doctor.
-      </p>
-
-      <div class="cta-row">
-        <a href="/predict" class="cta cta-primary">Check your symptoms</a>
-        <a href="signup.html" class="cta cta-secondary">Create an account</a>
-        <a href="dashboard.html" class="cta cta-secondary">Find a doctor</a>
-        <a href="help.html" class="cta cta-secondary">Help center</a>
-        <a href="/predict" class="cta cta-primary">Start a prediction</a>
-        <a href="/predict" class="cta cta-primary">Start a prediction</a>
+      <div class="hero-section">
+        <div class="hero-content">
+          <h1>Expert Healthcare at Your Doorstep</h1>
+          <div class="contact-btn-container">
+            <a href="./team.html" class="contact-btn">
+              Contact Our Team 
+              <i class="fas fa-arrow-right"></i> <!-- Font Awesome icon -->
+            </a>
+          </div>
+          
+        </div>
       </div>
 
-      <div class="features">
-        <div class="feature">
-          <i class="fas fa-brain"></i>
-          <h3>AI Disease Prediction</h3>
-          <p>Enter your symptoms and get a predicted condition with tailored guidance.</p>
-        </div>
-        <div class="feature">
-          <i class="fas fa-user-md"></i>
-          <h3>Find Nearby Doctors</h3>
-          <p>Browse doctors by speciality, experience and hourly fee on the dashboard.</p>
-        </div>
-        <div class="feature">
-          <i class="fas fa-notes-medical"></i>
-          <h3>Complete Care Plan</h3>
-          <p>Every prediction ships with precautions, medications, diet and workouts.</p>
-        </div>
-        <div class="feature">
-          <i class="fas fa-robot"></i>
-          <h3>Medical Chatbot</h3>
-          <p>Ask health-related questions and get quick answers through our chatbot.</p>
-        </div>
-      </div>
+      
     </main>
-
+    <p class="hero-description">
+      Find an in-network doctor from over 1,000+ registered doctors pool.
+      Register yourself as an authorized doctor and connect with your patients.
+    </p>
     <div class="contact-info">
       <div>Contact us at: hellodoc.com</div>
       <div>+91-7608093320</div>
     </div>
 
-    <script src="./Scripts/landing.js" defer></script>
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>To log in, enter your email address</h2>
+        <form>
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="Enter your email" required>
+
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+
+          <button type="submit" class="continue-btn">Continue</button>
+          <!-- TODO: implement password reset flow -->
+          <a href="#" class="forgot-password" disabled aria-disabled="true" title="Coming soon">Forgot Password? (coming soon)</a>
+
+          <div class="divider">or</div>
+          <button class="google-login">
+            <img src="./Asset/Login/google1.png" alt="Google" class="google">
+          </button>
+        </form>
+      </div>
+    </div>
+    <script src="./Scripts/login.js" defer></script>
   </body>
 </html>
