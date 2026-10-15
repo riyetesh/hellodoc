@@ -1,5 +1,5 @@
 /* ============================================================
-   HelloDoc — Appointments store (localStorage-backed)
+   HelloDoc - Appointments store (localStorage-backed)
    Shared by the dashboard (booking) and the appointments page.
    Exposes a tiny API on `window.Appointments` so plain <script>
    pages can use it without a bundler.

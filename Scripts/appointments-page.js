@@ -1,5 +1,5 @@
 /* ============================================================
-   HelloDoc — Appointments page logic
+   HelloDoc - Appointments page logic
    Renders upcoming / past appointments from the shared store,
    supports starting a visit (routes to the symptom predictor
    /predict with context), cancelling, and rebooking.
@@ -189,27 +189,9 @@
     });
   }
 
-  // ---- navbar (same behaviour as dashboard) ----
-  function initNav() {
-    const navbar = $("#navbar");
-    const toggle = $("#menuToggle");
-    const links = $("#navLinks");
-    const actions = $("#navActions");
-
-    toggle.addEventListener("click", () => {
-      const open = toggle.classList.toggle("open");
-      links.classList.toggle("open", open);
-      actions.classList.toggle("open", open);
-    });
-
-    window.addEventListener("scroll", () => {
-      navbar.classList.toggle("scrolled", window.scrollY > 8);
-    });
-  }
-
   // ---- init ----
+  // The shared navbar (menu, badge, auth chip) is handled by nav.js.
   document.addEventListener("DOMContentLoaded", () => {
-    initNav();
     initTabs();
     render();
 

@@ -1,5 +1,5 @@
 /* ============================================================
-   HelloDoc — Shared design system
+   HelloDoc - Shared design system
    Tokens, reset, navbar, buttons, modal, toast.
    Loaded by dashboard + appointments (and reusable elsewhere).
    ============================================================ */
@@ -89,8 +89,16 @@ img {
 
 /* ============================================================
    Navbar
+   The navbar markup is identical on every page: brand logo, nav
+   links, and auth actions. These rules deliberately use class
+   selectors strong enough to override legacy element-level
+   `nav { }` / `nav a { }` rules defined by older page stylesheets.
    ============================================================ */
 .navbar {
+  display: block;
+  width: 100%;
+  padding: 0;
+  font-family: var(--font);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -99,6 +107,15 @@ img {
   -webkit-backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border);
   transition: box-shadow 0.25s var(--ease), background 0.25s var(--ease);
+}
+
+/* Reassert the container layout with higher specificity than any page-level
+   `.container` rule (signup.css, for example, sets max-width: 600px). */
+.navbar .container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 .navbar.scrolled {
@@ -147,6 +164,7 @@ img {
   color: var(--muted);
   font-weight: 600;
   font-size: 0.95rem;
+  text-decoration: none;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
 

@@ -1,5 +1,5 @@
 // Login modal + submit handling for the root login page.
-document.getElementById("open-login").addEventListener("click", function (event) {
+document.getElementById("loginBtn").addEventListener("click", function (event) {
   event.preventDefault();
   document.getElementById("login-modal").style.display = "flex";
 });

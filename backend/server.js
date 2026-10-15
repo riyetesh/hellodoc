@@ -35,7 +35,7 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || "24h";
 
 // Connection pool created lazily (mysql2 pools connect on first query), so the
 // service boots on Vercel even when the database is temporarily unreachable.
-// All credentials come from environment variables — never hardcode them.
+// All credentials come from environment variables, never hardcode them.
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 3306,
@@ -281,7 +281,7 @@ const PORT = Number(process.env.PORT) || 5000;
 // Historically the symptom predictor had to be launched separately
 // (`python Algo/main.py` or `./start.sh`). To make the site "just work" from a
 // single command, the backend now spawns the Flask app as a child process when
-// it boots, and tears it down on shutdown. On Vercel none of this runs — the
+// it boots, and tears it down on shutdown. On Vercel none of this runs, the
 // platform routes /predict to the Algo service via vercel.json rewrites.
 const FLASK_PORT = Number(process.env.FLASK_PORT) || 5001;
 let flaskChild = null;

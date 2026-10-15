@@ -1,5 +1,5 @@
 /* ============================================================
-   HelloDoc — Dashboard logic
+   HelloDoc - Dashboard logic
    Renders doctor cards, handles search / sort / speciality
    filters, drives the booking modal (writes to the shared
    Appointments store), shows toasts, and keeps the nav badge
@@ -255,61 +255,23 @@
     toast(`Appointment booked with ${record.doctorName}`, "success");
   }
 
-  // --- user greeting ---
-  async function loadUser() {
-    try {
-      const res = await fetch("/api/auth/current-user", { credentials: "same-origin" });
-      if (res.ok) {
-        const data = await res.json();
-        const email = data.email || (data.user && data.user.email) || "";
-        const name =
-          (data.user && data.user.firstName) ||
-          (email ? email.split("@")[0].replace(/[._]/g, " ") : "there");
-        showUser(name, email);
-        setHeroGreeting(name);
-        return;
-      }
-    } catch {
-      /* ignore */
-    }
-    // Not signed in — leave the Log in / Sign up buttons visible.
-  }
-
-  function showUser(name, email) {
-    const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
-    $("#loginBtn").hidden = true;
-    $("#signupBtn").hidden = true;
-    const chip = $("#userChip");
-    chip.hidden = false;
-    $("#userName").textContent = pretty;
-    $("#userAvatar").textContent = pretty.trim().charAt(0).toUpperCase() || "U";
-    if (email) chip.title = email;
-  }
-
+  // --- user greeting (auth state itself is handled by nav.js) ---
   function setHeroGreeting(name) {
     const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
     $("#heroGreeting").textContent = `Hi ${pretty}, find the right doctor`;
   }
 
-  // --- navbar behaviour ---
-  function initNav() {
-    const navbar = $("#navbar");
-    const toggle = $("#menuToggle");
-    const links = $("#navLinks");
-    const actions = $("#navActions");
-
-    toggle.addEventListener("click", () => {
-      const open = toggle.classList.toggle("open");
-      links.classList.toggle("open", open);
-      actions.classList.toggle("open", open);
-    });
-
-    window.addEventListener("scroll", () => {
-      navbar.classList.toggle("scrolled", window.scrollY > 8);
-    });
-
-    $("#userChip").addEventListener("click", () => {
-      window.location.href = "appointments.html";
+  function initGreeting() {
+    // Restore immediately if a previous visit already resolved the session.
+    try {
+      const stored = sessionStorage.getItem("hellodoc.userName");
+      if (stored) setHeroGreeting(stored);
+    } catch {
+      // sessionStorage unavailable, wait for the event below.
+    }
+    // Update when nav.js resolves the session during this page load.
+    window.addEventListener("hellodoc:user", (e) => {
+      if (e.detail && e.detail.name) setHeroGreeting(e.detail.name);
     });
   }
 
@@ -384,16 +346,12 @@
 
     $("#statDoctors").textContent = window.DOCTORS.length;
 
-    initNav();
     initToolbar();
     initCards();
     initModal();
+    initGreeting();
 
     renderChips();
     renderCards();
-    window.refreshAppointmentBadge();
-    loadUser();
-
-    window.addEventListener("appointments:changed", window.refreshAppointmentBadge);
   });
 })();

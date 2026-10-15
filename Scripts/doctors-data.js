@@ -1,5 +1,5 @@
 /* ============================================================
-   HelloDoc — Shared doctor directory
+   HelloDoc - Shared doctor directory
    Single source of truth for the doctor list used by the
    dashboard (browse/book) and the appointments page.
    ============================================================ */

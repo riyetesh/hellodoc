@@ -73,9 +73,6 @@ nav {
   
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .navbar {
-    padding: 0.8rem 1rem;
-  }
   
   .nav-btn span {
     display: none;

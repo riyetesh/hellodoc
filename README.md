@@ -4,7 +4,7 @@ Welcome to our Disease Prediction & Doctor Finder project! 🚑 This web-based p
 🌟 Features
 🧠 AI-Powered Disease Prediction: Enter your symptoms, and let our smart algorithms predict potential health conditions.
 📍 Find Nearby Doctors: Get recommendations for doctors based on your predicted condition and location.
-📅 Easy Appointment Booking: Schedule appointments with a few clicks—no hassle!
+📅 Easy Appointment Booking: Schedule appointments with a few clicks, no hassle!
 🔒 Secure & Private: Your health data is safe with us.
 
 🚀 Tech Stack
