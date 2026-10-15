@@ -1,6 +1,9 @@
 require("dotenv").config();
 
 const path = require("path");
+const fs = require("fs");
+const net = require("net");
+const { spawn } = require("child_process");
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcryptjs");
@@ -272,9 +275,143 @@ if (!process.env.VERCEL) {
 
 const PORT = Number(process.env.PORT) || 5000;
 
+// ---------------------------------------------------------------------------
+// Auto-start the Flask symptom service (local development only).
+// ---------------------------------------------------------------------------
+// Historically the symptom predictor had to be launched separately
+// (`python Algo/main.py` or `./start.sh`). To make the site "just work" from a
+// single command, the backend now spawns the Flask app as a child process when
+// it boots, and tears it down on shutdown. On Vercel none of this runs — the
+// platform routes /predict to the Algo service via vercel.json rewrites.
+const FLASK_PORT = Number(process.env.FLASK_PORT) || 5001;
+let flaskChild = null;
+let flaskShuttingDown = false;
+
+function resolvePythonCommand() {
+  // Prefer an absolute path into a local virtualenv so we don't depend on the
+  // caller's PATH or an activated venv. Windows uses Scripts/, POSIX uses bin/.
+  const isWin = process.platform === "win32";
+  const venvPython = path.join(
+    __dirname,
+    "..",
+    "venv",
+    isWin ? "Scripts" : "bin",
+    isWin ? "python.exe" : "python3"
+  );
+  if (fs.existsSync(venvPython)) {
+    return { command: venvPython, args: [] };
+  }
+  // Fall back to a system interpreter. `py` is the Windows launcher.
+  return { command: isWin ? "py" : "python3", args: [] };
+}
+
+function startFlaskService() {
+  // Only auto-start when running locally as a real process (not on Vercel),
+  // and allow opting out with FLASK_AUTOSTART=false.
+  if (process.env.VERCEL) return;
+  if (process.env.FLASK_AUTOSTART === "false") return;
+
+  // If something is already listening on the Flask port (e.g. the developer
+  // launched it manually, or start.sh did), don't spawn a duplicate.
+  isPortInUse(FLASK_PORT, (inUse) => {
+    if (inUse) {
+      console.log(`[autostart] Symptom service already running on port ${FLASK_PORT}.`);
+      return;
+    }
+
+    const { command, args } = resolvePythonCommand();
+    const scriptPath = path.join(__dirname, "..", "Algo", "main.py");
+
+    try {
+      flaskChild = spawn(command, [...args, scriptPath], {
+        cwd: path.join(__dirname, "..", "Algo"),
+        env: {
+          ...process.env,
+          FLASK_PORT: String(FLASK_PORT),
+          // Single process (no Werkzeug reloader) so we can kill it cleanly.
+          FLASK_NO_RELOADER: "1",
+        },
+        stdio: ["ignore", "pipe", "pipe"],
+        windowsHide: true,
+      });
+    } catch (err) {
+      console.warn(`[autostart] Could not start symptom service: ${err.message}`);
+      console.warn(
+        "[autostart] /predict will return 502. Install Python 3.8+ and requirements.txt, or set FLASK_AUTOSTART=false."
+      );
+      return;
+    }
+
+    flaskChild.stdout.on("data", (data) => {
+      process.stdout.write(`[flask] ${data}`);
+    });
+    flaskChild.stderr.on("data", (data) => {
+      process.stderr.write(`[flask] ${data}`);
+    });
+
+    flaskChild.on("error", (err) => {
+      console.warn(`[autostart] Failed to launch symptom service: ${err.message}`);
+      console.warn(
+        "[autostart] /predict will return 502. Ensure Python 3.8+ is installed and requirements.txt is satisfied."
+      );
+      flaskChild = null;
+    });
+
+    flaskChild.on("exit", (code, signal) => {
+      flaskChild = null;
+      if (!flaskShuttingDown) {
+        console.warn(
+          `[autostart] Symptom service exited unexpectedly (code=${code}, signal=${signal}).`
+        );
+      }
+    });
+
+    console.log(
+      `[autostart] Starting symptom service on port ${FLASK_PORT} (pid ${flaskChild.pid})…`
+    );
+  });
+}
+
+function isPortInUse(port, callback) {
+  const socket = net.connect({ port, host: "127.0.0.1" }, () => {
+    socket.destroy();
+    callback(true);
+  });
+  socket.on("error", () => callback(false));
+  socket.setTimeout(1000, () => {
+    socket.destroy();
+    callback(false);
+  });
+}
+
+function stopFlaskService() {
+  flaskShuttingDown = true;
+  if (flaskChild) {
+    try {
+      flaskChild.kill();
+    } catch {
+      /* ignore */
+    }
+    flaskChild = null;
+  }
+}
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    startFlaskService();
+  });
+
+  // Tear the child down on normal exit and on interrupts so we don't leave an
+  // orphaned Python process holding port 5001.
+  process.on("exit", stopFlaskService);
+  process.on("SIGINT", () => {
+    stopFlaskService();
+    process.exit(0);
+  });
+  process.on("SIGTERM", () => {
+    stopFlaskService();
+    process.exit(0);
   });
 }
 

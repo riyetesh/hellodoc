@@ -123,4 +123,14 @@ if __name__ == '__main__':
     # (which owns 5000); backend/server.js proxies /predict here locally.
     # FLASK_PORT (not PORT) is used deliberately: generic PORT env vars are
     # often injected by hosts and would break the proxy target.
-    app.run(debug=True, port=int(os.environ.get("FLASK_PORT", 5001)))
+    #
+    # When backend/server.js auto-starts this process it sets FLASK_NO_RELOADER=1
+    # so we run as a single, cleanly-killable process (the Werkzeug reloader
+    # otherwise forks a grandchild that can survive the parent being stopped).
+    _debug = os.environ.get("FLASK_DEBUG", "1") == "1"
+    _reloader = os.environ.get("FLASK_NO_RELOADER", "0") != "1"
+    app.run(
+        debug=_debug,
+        use_reloader=_reloader,
+        port=int(os.environ.get("FLASK_PORT", 5001)),
+    )
