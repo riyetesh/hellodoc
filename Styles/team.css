@@ -1,245 +1,227 @@
-/* General Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+/* ============================================================
+   HelloDoc - Team page styles
+   Uses app.css design tokens. Loaded after app.css.
+   ============================================================ */
 
-body {
-  font-family: 'Poppins', Arial, sans-serif; /* Font style */
-  background-color: #ffffff; /* Fallback background color */
-  margin: 0;
-  padding: 0;
-  position: relative; /* For pseudo-element positioning */
-  min-height: 100vh; /* Ensure it covers full height of content */
-}
-
-body::before {
-  content: "";
-  position: fixed; /* Fixed to ensure it stays across all pages */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('/Asset/Team/pattern.jpg'); /* Path to your image */
-  background-repeat: repeat; /* Repeat the pattern */
-  background-size: 50%; /* Use the image's original size */
-  opacity: 0.3; /* Set to 50% opacity */
-  z-index: -1; /* Place behind all content */
-  pointer-events: none; /* Prevent interference with clicks or interactions */
-}
-
-
-
-nav {
-  display: flex;
-  justify-content: space-between; /* Pushes logo left and links right */
-  align-items: center;
-  gap: 20px;
-  width: 95%; /* Ensures full width */
-  padding: 10px;
-}
-  
-  nav a {
-    text-decoration: none;
-    color: #555;
-    font-weight: 500;
-    transition: color 0.3s;
-  }
-  
-  nav a:hover {
-    color: #2a7fba;
-  }
-  
-  .login-btn {
-    background-color: #2a7fba;
-    color: white !important;
-    padding: 8px 20px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-  }
-  .nav-logo {
-    height: 50px; /* Adjust based on your logo */
-    margin-right: auto; /* Pushes everything else to the right */
-  }
-
-  .login:hover {
-    background-color: #1e6fa3;
-  }
-
-  
-
-
-header {
-  background: white;
-  color: rgb(0, 0, 0);
+/* ---------- Page header ---------- */
+.team-header {
   text-align: center;
-  padding:0rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  padding: 2.5rem 0 1.5rem;
 }
 
-header h1 {
-  font-family: 'Ananda Black', cursive; /* Ensure the correct font is applied */
-  font-weight: bold;
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-  text-align: center; /* Align text to the center */
-  background: linear-gradient(90deg, #007bff, #28a745); /* Blue to green gradient */
-  -webkit-background-clip: text; /* Clip the background to the text */
-  -webkit-text-fill-color: transparent; /* Make the text transparent to show gradient */
-  background-clip: text; /* For other browsers supporting background-clip */
-  color: transparent; /* Fallback color */
-  display: inline-block; /* Prevents clipping issues */
-
+.team-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
-
-
-header p {
-  font-size: 1.2rem;
-  margin: 0;
+.team-header p {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin-inline: auto;
 }
 
-
-.content-wrapper {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
-  display: grid; /* Use grid for better control over spacing */
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Adjusts the number of columns */
-  gap: 30px; /* Equal horizontal and vertical spacing between cards */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-}
-
-.person {
-  /* border: 1px solid; */
+/* ---------- Profile card ---------- */
+.person-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 250px;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.25s var(--ease);
 }
-.container {
-  height: 312px;
-  width: 400px;
-  cursor: pointer;
-  transform: scale(0.48);
-  transition: transform 250ms 
-    cubic-bezier(0.4, 0, 0.2, 1);
+
+.person-card .photo-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 1.25rem;
 }
-.circle {
+
+.person-card .photo-container .circle {
   position: absolute;
-  background: var(--color);
-  height: 380px;
-  width: 380px;
-  top: 210px;
-  left: 10px;
+  inset: 0;
   border-radius: 50%;
+  background: var(--color, var(--brand-soft));
+  z-index: 0;
 }
-.person img {
+
+.person-card .photo-container img {
   position: relative;
-  width: 340px;
-  top: 164px;
-  left: 22px;
-  transform: translateY(20px) scale(1.15);
-  transition: transform 250ms 
-    cubic-bezier(0.4, 0, 0.2, 1);
-}
-.conianer-inner {
-  position: relative;
-  clip-path: path("M 390,400 C 390,504.9341 304.9341,590 200,590 95.065898,590 10,504.9341 10,400 V 10 H 200 390 Z");
-  top: -200px;
-}
-.divider {
-  height: 3px;
-  width: 130px;
-  border-radius: 5px;
-  background: var(--color);
-}
-.person h1 {
-  color: #464646;
-  margin: 16px 0 0 0;
-}
-.person p {
-  font-family: arial;
-  color: #6e6e6e;
-  font-size: 14px;
-  margin-top: 5px;
-}
-/* hover */
-.container:hover {
-  transform: scale(0.54);
-} 
-.container:hover img {
-  transform: translateY(0) scale(1.3);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 1;
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-
-footer {
-  padding: 1em 2em; /* Space around content */
-  text-align: center; /* Center align the text */
-  font-family: 'Poppins', sans-serif; /* Modern font */
-  font-size: 14px; /* Slightly smaller font size */
-  color: #333; /* Neutral text color */
+.person-card .photo-container:hover img {
+  transform: scale(1.15);
 }
 
-/* Footer Links */
-footer a {
-  text-decoration: none; /* Remove underline */
-  color: #007bff; /* Blue for links */
-  transition: color 0.3s ease; /* Smooth hover effect */
+/* ---------- Story block ---------- */
+.story {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  line-height: 1.7;
+  text-align: left;
 }
 
-footer a:hover {
-  color: #0056b3; /* Darker blue on hover */
+.story p {
+  margin-bottom: 1rem;
+  color: var(--text);
 }
 
-.footer-img {
-  height: 350px;
-  position: relative; /* Allows precise positioning */
-padding-right: 30rem;    z-index: 0; /* Ensures it is behind the footer */
+.story p:last-child {
+  margin-bottom: 0;
 }
 
-footer p {
-  margin: 0;
+.story strong {
+  color: var(--brand);
+  font-weight: 600;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  footer {
-      padding: 1em; /* Reduce padding on smaller screens */
-      font-size: 12px; /* Adjust font size */
-  }
-}
-
+/* ---------- Social links ---------- */
 .socials {
-  margin: 1rem 0; /* Space above and below the social links */
-  display: flex; /* Arrange links in a row */
-  justify-content: center; /* Center-align the links */
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .socials a {
-  display: flex; /* Ensures the icon stays centered */
-  align-items: center; /* Center icon vertically */
-  justify-content: center; /* Center icon horizontally */
-  margin: 0 0.5rem; /* Spacing between icons */
-  font-size: 1.2rem; /* Icon size */
-  text-decoration: none; /* Remove underline */
-  width: 40px; /* Set a fixed width for circular shape */
-  height: 40px; /* Set a fixed height for circular shape */
-  border-radius: 50%; /* Makes the element circular */
-  transition: all 0.3s ease; /* Smooth hover effect for all properties */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 1.15rem;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
 .socials a:hover {
-  color: var(--color-secondary); /* Highlight color on hover */
-  transform: translateY(-3px); /* Lift effect on hover */
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  transform: translateY(-2px);
 }
 
+/* ---------- Tech stack section ---------- */
+.tech-stack-section {
+  margin-top: 3rem;
+  padding: 2.5rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+}
+
+.tech-stack-section h2 {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2rem;
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.tech-category {
+  padding: 1.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--brand);
+}
+
+.tech-category h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 1rem;
+}
+
+.tech-category ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tech-category li {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.tech-category li:last-child {
+  border-bottom: none;
+}
+
+.tech-category li strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tech-category li span {
+  color: var(--muted);
+}
+
+/* ---------- Layout helpers ---------- */
+.team-content {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .person-card {
+    padding: 2rem 1rem;
+  }
+
+  .person-card .photo-container {
+    width: 150px;
+    height: 150px;
+  }
+
+  .tech-stack-section {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .tech-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .socials {
+    gap: 0.75rem;
+  }
+}
+
+/* ---------- Footer image ---------- */
+.footer-img {
+  height: 150px;
+  max-width: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 0;
+}

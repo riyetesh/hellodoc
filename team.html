@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="./Styles/app.css" />
     <link rel="stylesheet" href="./Styles/team.css">
-  <title>Our Team</title>
+  <title>My Story | HelloDoc</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 </head>
@@ -32,7 +32,7 @@
         </a>
       </li>
       <li><a href="help.html" class="nav-link">Help</a></li>
-      <li><a href="team.html" class="nav-link active">Team</a></li>
+      <li>      <a href="story.html" class="nav-link active">My Story</a></li>
     </ul>
 
     <div class="navbar-actions" id="navActions">
@@ -47,178 +47,82 @@
   </div>
 </nav>
 
-<header>
+<header class="team-header">
         <div>
-            <h1>Our Team &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <h1>My Story &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h1>
         </div>
-    </header>
+    </header>  <div class="team-content">
 
-  <div class="content-wrapper">
-
-  
-  <div class="person" style="--color: #782a2b">
-    <div class="container">
-      <div class="conianer-inner">
+    <div class="person-card" style="--color: #782a2b">
+      <div class="photo-container">
         <div class="circle"></div>
-        <img src="./Asset/Team/Ritesh.png">
+        <img src="./Asset/Team/Ritesh.png" alt="Ritesh Yadav">
+      </div>
+      <div class="divider"></div>
+      <h1 class="name">Ritesh Yadav</h1>
+      <p class="role">Creator & Lead Developer</p>
+      <div class="story">
+        I am Ritesh Yadav, the creator and lead developer of HelloDoc. What started as a simple idea to make healthcare accessible from home grew into a full-featured web application with doctor search, appointment booking, symptom prediction, and user authentication.
+        I designed the entire user interface from scratch, creating a clean and intuitive experience that works across devices. The platform features a modern navbar system, responsive layouts, interactive doctor cards, a booking modal, and a comprehensive help center. I also implemented the login and signup flows with form validation and session management.
+        For the frontend, I used HTML5, CSS3, JavaScript (ES6+), the Inter font family, Font Awesome icons, and responsive design principles. I chose vanilla web technologies for fast loading and broad compatibility.
+      </div>
+      <div class="socials" role="group" aria-label="Social links">
+        <a href="https://www.instagram.com/riye_tesh" target="_blank" aria-label="Instagram">
+          <i class="fab fa-instagram"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/theriteshyadav/" target="_blank" aria-label="LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+        <a href="https://github.com/riyetesh" target="_blank" aria-label="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
       </div>
     </div>
-    <div class="divider"></div>
-    <h1>Ritesh Yadav</h1>
-    <p>UX/UI and Frontend Developer</p>
 
-    <div class="socials">
-      <a href="https://www.instagram.com/riye_tesh" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://www.linkedin.com/in/theriteshyadav/" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com/riyetesh" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-
-    
-  </div>
-
-
-
-
-  <div class="person" style="--color: #37375e">
-    <div class="container">
-      <div class="conianer-inner">
-        <div class="circle"></div>
-        <img src="./Asset/Team/Bijay.png">
+    <div class="tech-stack-section">
+      <h2>Technology I Used</h2>
+      <div class="tech-grid">
+        <div class="tech-category">
+          <h3>Frontend (what I built)</h3>
+          <ul>
+            <li>HTML5 - Semantic markup and structure</li>
+            <li>CSS3 - Custom properties, flexbox, grid, animations</li>
+            <li>JavaScript (ES6+) - DOM manipulation, fetch API, modules</li>
+            <li>Inter - Modern sans-serif typeface</li>
+            <li>Font Awesome 6 - Icon library</li>
+          </ul>
+        </div>
+        <div class="tech-category">
+          <h3>Backend (what I set up)</h3>
+          <ul>
+            <li>Node.js - JavaScript runtime</li>
+            <li>Express.js - Web framework</li>
+            <li>MySQL - Database for users and appointments</li>
+            <li>bcryptjs - Password hashing</li>
+            <li>JSON Web Tokens - Session authentication</li>
+          </ul>
+        </div>
+        <div class="tech-category">
+          <h3>AI/ML (what I integrated)</h3>
+          <ul>
+            <li>Python - Machine learning runtime</li>
+            <li>Scikit-learn - Disease prediction models</li>
+            <li>NumPy, Pandas - Data processing</li>
+            <li>Flask - ML API serving</li>
+          </ul>
+        </div>
+        <div class="tech-category">
+          <h3>Infrastructure (what I deployed to)</h3>
+          <ul>
+            <li>Vercel - Frontend hosting and deployment</li>
+            <li>Cloudflare Workers - Edge runtime (preview)</li>
+            <li>Swagger/OpenAPI - API documentation</li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="divider"></div>
-    <h1>Bijay Rauniyar</h1>
-    <p>AI Developer</p>
-    <div class="socials">
-      <a href="https://facebook.com" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-  </div>
-
-  <div class="person" style="--color: #ffdfba">
-    <div class="container">
-      <div class="conianer-inner">
-        <div class="circle"></div>
-        <img src="./Asset/Team/Sanjay.png">
-      </div>
-    </div>
-    <div class="divider"></div>
-    <h1>Sanjay Sah</h1>
-    <p>Data Science Expert</p>
-    <div class="socials">
-      <a href="https://www.instagram.com/sahsanjay455/" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://www.linkedin.com/in/sanjay-sah-260282278/" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com/sahsanjay3455" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-  </div>
-
-
-
-  <div class="person" style="--color: #ffb3ba">
-    <div class="container">
-      <div class="conianer-inner">
-        <div class="circle"></div>
-        <img src="./Asset/Team/Anuj.png">
-      </div>
-    </div>
-    <div class="divider"></div>
-    <h1>Anuj Prajapati</h1>
-    <p>Full-Stack Developer</p>
-    <div class="socials">
-      <a href="https://www.instagram.com/anuj_prajapati01/" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://www.linkedin.com/in/anuj-prajapati-4169b1239/" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com/Anujp-prajapati" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-  </div>
-
-
-
-
-
-  <div class="person" style="--color: #3e6e7c">
-    <div class="container">
-      <div class="conianer-inner">
-        <div class="circle"></div>
-        <img src="./Asset/Team/hariom.png">
-      </div>
-    </div>
-    <div class="divider"></div>
-    <h1>Hariom</h1>
-    <p>Deep Learning Expert</p>
-    <div class="socials">
-      <a href="https://www.instagram.com/purushotam_kurmi" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://www.linkedin.com/in/purushotam-patel96" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-  </div>
-
-
-
-
-
-  <div class="person" style="--color: #baffc9">
-    <div class="container">
-      <div class="conianer-inner">
-        <div class="circle"></div>
-        <img src="./Asset/Team/Pursotam.png">
-      </div>
-    </div>
-    <div class="divider"></div>
-    <h1>Pursotam Kurmi</h1>
-    <p>Full-Stack Developer</p>
-    <div class="socials">
-      <a href="https://facebook.com" target="_blank" aria-label="Facebook">
-        <i class="fab fa-instagram"></i>
-      </a>
-  
-      <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a href="https://github.com" target="_blank" aria-label="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-  </div>
-
-
 
   </div>
 
@@ -227,10 +131,10 @@
 </div>
 
   <footer>
-    <div class="footer-content">
-        <Contact>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+    <div class="container" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
     </div>
-</footer>
+  </footer>
 
 <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js"></script>

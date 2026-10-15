@@ -5,7 +5,7 @@
 
 /* ---------- Hero ---------- */
 .hero {
-  background: linear-gradient(160deg, #eaf1ff 0%, #f4f6fb 55%, #f4f6fb 100%);
+  background: #ffffff;
   border-bottom: 1px solid var(--border);
   padding: 2.75rem 0 2.5rem;
   overflow: hidden;

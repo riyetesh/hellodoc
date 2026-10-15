@@ -22,7 +22,7 @@
   --danger-soft: #fdecec;
 
   /* Surfaces + text */
-  --bg: #f4f6fb;
+  --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f8fafc;
   --text: #0f172a;
@@ -57,7 +57,7 @@ html {
 
 body {
   font-family: var(--font);
-  background: var(--bg);
+  background: #ffffff;
   color: var(--text);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -110,12 +110,22 @@ img {
 }
 
 /* Reassert the container layout with higher specificity than any page-level
-   `.container` rule (signup.css, for example, sets max-width: 600px). */
+   `.container` rule (signup.css, for example, sets max-width: 600px).
+   The navbar container must span full width with minimal horizontal padding. */
 .navbar .container {
   width: 100%;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 0 1.5rem;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar spans full width with no padding */
+.navbar-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .navbar.scrolled {
@@ -559,4 +569,38 @@ img {
   .user-chip .user-name {
     max-width: 180px;
   }
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+}
+
+footer .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+footer p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+footer a {
+  color: var(--brand);
+  font-weight: 500;
+  transition: color 0.2s var(--ease);
+}
+
+footer a:hover {
+  color: var(--brand-600);
 }
