@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>HelloDoc — The Story Behind the Project</title>
+    <meta
+      name="description"
+      content="Discover the personal motivation, engineering, machine-learning approach, and future vision behind HelloDoc, a digital healthcare project exploring more accessible care."
+    />
+    <!-- NOTE: no canonical/og:url is set because this repository does not record the
+         production domain. Add an absolute <link rel="canonical"> and og:url once the
+         deployed origin is known. og:image is relative for the same reason. -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="HelloDoc — The Story Behind the Project" />
+    <meta
+      property="og:description"
+      content="The motivation, engineering, machine-learning approach, and future vision behind HelloDoc, a project exploring more accessible digital healthcare."
+    />
+    <meta property="og:image" content="Asset/Story/nepal-village-hero-1920.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./Styles/app.css" />
+    <link rel="stylesheet" href="./Styles/story.css" />
+
+    <!-- Progressive enhancement: story.js adds .hs-tabs and .hs-anim only after the
+         timeline and scroll reveals are wired up, so without JavaScript nothing is
+         hidden and the entire story remains readable. -->
+  </head>
+
+  <body class="hellodoc-story-page">
+    <a class="hs-skip" href="#story-main">Skip to the story</a>
+
+    <!-- ===================== Existing navbar (unchanged) ===================== -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+          <li><a href="story.html" class="nav-link active">My Story</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Reading progress for the story (decorative: heading structure carries navigation) -->
+    <div class="hs-progress" aria-hidden="true"><span class="hs-progress__bar" data-progress></span></div>
+
+    <main id="story-main" class="hellodoc-story">
+      <!-- ========================= 1. Cinematic hero ========================= -->
+      <section class="hs-hero" id="top" aria-labelledby="hs-hero-title">
+        <div class="hs-wrap hs-hero__grid">
+          <div class="hs-hero__copy">
+            <p class="hs-eyebrow">The story behind HelloDoc</p>
+            <h1 class="hs-display" id="hs-hero-title">Healthcare should never be out of reach.</h1>
+            <p class="hs-lede">
+              An idea shaped by growing up around gaps in healthcare access, and a journey to explore
+              how technology could help bridge them.
+            </p>
+
+            <div class="hs-cta-row">
+              <a class="hs-btn hs-btn--primary" href="#origin">Discover the story</a>
+              <a class="hs-btn hs-btn--ghost" href="#technology">Explore the technology</a>
+            </div>
+
+            <dl class="hs-meta">
+              <div class="hs-meta__item">
+                <dt>Project</dt>
+                <dd>HelloDoc</dd>
+              </div>
+              <div class="hs-meta__item">
+                <dt>Focus</dt>
+                <dd>Digital healthcare and machine learning</dd>
+              </div>
+              <div class="hs-meta__item">
+                <dt>Built with</dt>
+                <dd>JavaScript, Node.js, Python, Flask and scikit-learn</dd>
+              </div>
+            </dl>
+          </div>
+
+          <figure class="hs-hero__figure" data-parallax>
+            <img
+              class="hs-hero__img"
+              src="./Asset/Story/nepal-village-hero-1920.jpg"
+              srcset="
+                ./Asset/Story/nepal-village-hero-960.jpg   960w,
+                ./Asset/Story/nepal-village-hero-1920.jpg 1920w
+              "
+              sizes="(max-width: 900px) 100vw, 46vw"
+              width="1920"
+              height="1280"
+              fetchpriority="high"
+              decoding="async"
+              alt="A village of low, flat-roofed houses below bare Himalayan ridges in Mustang, Nepal."
+            />
+            <figcaption class="hs-credit">
+              Mustang, Nepal. Photograph by Sajan Shakya24, CC BY-SA 4.0 — a representative landscape,
+              not the villages described below.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ====================== 2. The personal origin story ====================== -->
+      <section class="hs-section" id="origin" aria-labelledby="hs-origin-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">01 / The beginning</p>
+          <h2 class="hs-h2" id="hs-origin-title">It started with a problem I had seen growing up.</h2>
+
+          <div class="hs-split">
+            <div class="hs-prose">
+              <p>
+                In the rural municipality where I grew up, three villages depended on a health post
+                without a doctor. Accessing healthcare was not always as simple as it should have
+                been. People struggled to understand their symptoms, find reliable guidance, and know
+                where to turn for help.
+              </p>
+              <p>
+                I kept thinking about a question: what if technology could make that first step
+                toward healthcare easier, even for someone living far from a hospital?
+              </p>
+              <p class="hs-prose__closer">That question became HelloDoc.</p>
+
+              <details class="hs-details">
+                <summary>Why this mattered to me</summary>
+                <div class="hs-details__body">
+                  <p>
+                    The gap I kept noticing was not only about buildings or equipment. It was about
+                    information: knowing whether a symptom is something to watch, something to ask
+                    about, or something that needs care today — and knowing who to ask when the
+                    nearest doctor is a long way away.
+                  </p>
+                  <p>
+                    I was already interested in building software, and I wanted that interest to point
+                    at something concrete. HelloDoc became the place where those two things met: a
+                    problem I had seen for myself, and the tools I was learning to use.
+                  </p>
+                  <p>
+                    I am not a clinician, and this project is not a clinical claim. It is an attempt to
+                    explore — carefully and honestly — what a small piece of software can and cannot
+                    do for someone trying to take the first step.
+                  </p>
+                </div>
+              </details>
+            </div>
+
+            <figure class="hs-figure hs-figure--origin">
+              <img
+                src="./Asset/Story/nepal-health-post-1280.jpg"
+                width="1280"
+                height="853"
+                loading="lazy"
+                decoding="async"
+                alt="A single-storey health post building with a corrugated roof and a small sign, set against dry hills."
+              />
+              <figcaption class="hs-credit">
+                A health post in Jomsom, Nepal. Photograph by Bijay Chaurasia, CC BY-SA 4.0 — shown as
+                a representative facility, not the health post described above.
+              </figcaption>
+            </figure>
+          </div>
+
+          <blockquote class="hs-pullquote">
+            <p>
+              What if where you lived didn&rsquo;t determine how easily you could take the first step
+              toward healthcare?
+            </p>
+          </blockquote>
+        </div>
+      </section>
+
+      <!-- ==================== 3. From idea to working project ==================== -->
+      <section class="hs-section hs-section--tint" id="build" aria-labelledby="hs-build-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">02 / The build</p>
+          <h2 class="hs-h2" id="hs-build-title">From a question to something I could build.</h2>
+          <p class="hs-lede hs-lede--tight">
+            I wanted to explore how software could bring symptom guidance, doctor discovery, and
+            appointment-related experiences together in one place. HelloDoc became a way to turn that
+            question into an engineering project.
+          </p>
+
+          <!-- Timeline: tablist on desktop, vertical sequence on mobile. Without JS every
+               panel below stays visible, so the information is never trapped. -->
+          <div class="hs-timeline" data-timeline>
+            <div class="hs-timeline__tabs" role="tablist" aria-label="Milestones in the project">
+              <button
+                type="button"
+                class="hs-step is-selected"
+                role="tab"
+                id="hs-tab-1"
+                aria-controls="hs-panel-1"
+                aria-selected="true"
+                tabindex="0"
+                data-timeline-tab
+              >
+                <span class="hs-step__num">01</span>
+                <span class="hs-step__label">The problem</span>
+              </button>
+              <button
+                type="button"
+                class="hs-step"
+                role="tab"
+                id="hs-tab-2"
+                aria-controls="hs-panel-2"
+                aria-selected="false"
+                tabindex="-1"
+                data-timeline-tab
+              >
+                <span class="hs-step__num">02</span>
+                <span class="hs-step__label">The concept</span>
+              </button>
+              <button
+                type="button"
+                class="hs-step"
+                role="tab"
+                id="hs-tab-3"
+                aria-controls="hs-panel-3"
+                aria-selected="false"
+                tabindex="-1"
+                data-timeline-tab
+              >
+                <span class="hs-step__num">03</span>
+                <span class="hs-step__label">The engineering</span>
+              </button>
+              <button
+                type="button"
+                class="hs-step"
+                role="tab"
+                id="hs-tab-4"
+                aria-controls="hs-panel-4"
+                aria-selected="false"
+                tabindex="-1"
+                data-timeline-tab
+              >
+                <span class="hs-step__num">04</span>
+                <span class="hs-step__label">The next chapter</span>
+              </button>
+            </div>
+
+            <div class="hs-timeline__panels">
+              <div class="hs-panel is-active" role="tabpanel" id="hs-panel-1" aria-labelledby="hs-tab-1" tabindex="0">
+                <h3 class="hs-h3">The problem</h3>
+                <p>Recognising barriers to accessing healthcare in underserved communities.</p>
+                <p class="hs-note">
+                  Distance is only one barrier. Uncertainty about symptoms, cost, travel time, and not
+                  knowing who to ask all shape whether someone seeks care at all.
+                </p>
+              </div>
+              <div class="hs-panel" role="tabpanel" id="hs-panel-2" aria-labelledby="hs-tab-2" tabindex="0">
+                <h3 class="hs-h3">The concept</h3>
+                <p>
+                  Exploring a digital healthcare platform that combines symptom assessment and access
+                  to care.
+                </p>
+                <p class="hs-note">
+                  The idea was never to replace a clinician. It was to make the first step clearer:
+                  describe what you feel, get preliminary guidance, and see where to go next.
+                </p>
+              </div>
+              <div class="hs-panel" role="tabpanel" id="hs-panel-3" aria-labelledby="hs-tab-3" tabindex="0">
+                <h3 class="hs-h3">The engineering</h3>
+                <p>
+                  Building a web interface, backend services, and a machine-learning-based symptom
+                  prediction pipeline.
+                </p>
+                <p class="hs-note">
+                  In practice that meant a static front end, an Express service handling accounts and
+                  development routing, and a separate Flask service that loads a saved classifier and
+                  its reference datasets.
+                </p>
+              </div>
+              <div class="hs-panel" role="tabpanel" id="hs-panel-4" aria-labelledby="hs-tab-4" tabindex="0">
+                <h3 class="hs-h3">The next chapter</h3>
+                <p>
+                  Improving the experience through better validation, accessibility, and potential
+                  real-world collaboration.
+                </p>
+                <p class="hs-note">
+                  These are intentions, not finished work. The honest next steps are evaluation on
+                  representative data, usability testing with real people, and conversations with
+                  people who deliver care.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== 4. Human-centred design principles ================== -->
+      <section class="hs-section" id="philosophy" aria-labelledby="hs-philosophy-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">03 / The philosophy</p>
+          <h2 class="hs-h2" id="hs-philosophy-title">Technology only matters when people can use it.</h2>
+
+          <div class="hs-principles">
+            <article class="hs-principle" data-reveal>
+              <span class="hs-principle__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M3.5 12h17M12 3.2c2.4 2.4 2.4 15.2 0 17.6M12 3.2c-2.4 2.4-2.4 15.2 0 17.6" />
+                </svg>
+              </span>
+              <h3 class="hs-h3">Accessible by design</h3>
+              <p>
+                Healthcare interfaces should be understandable to people with different levels of
+                digital literacy. That means plain language, forgiving forms, and layouts that work on
+                a modest phone.
+              </p>
+            </article>
+
+            <article class="hs-principle" data-reveal>
+              <span class="hs-principle__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h13a3 3 0 0 1 3 3v10a3 3 0 0 0-3 3H4z" />
+                  <path d="M4 20a3 3 0 0 1 3-3h13" />
+                  <path d="M8 8h7M8 12h5" />
+                </svg>
+              </span>
+              <h3 class="hs-h3">Designed for real-world constraints</h3>
+              <p>
+                Connectivity, device limitations, affordability, and the needs of underserved
+                communities have to be considered from the beginning — not retrofitted at the end.
+              </p>
+            </article>
+
+            <article class="hs-principle" data-reveal>
+              <span class="hs-principle__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3.5 5 6v6c0 4.2 3 7.4 7 8.5 4-1.1 7-4.3 7-8.5V6z" />
+                  <path d="M9.2 12.2l2 2 3.6-4" />
+                </svg>
+              </span>
+              <h3 class="hs-h3">Built to support, not replace, professionals</h3>
+              <p>
+                Machine learning can help organise information and offer preliminary guidance, but
+                responsible healthcare requires clinical expertise, appropriate validation, and clear
+                limits.
+              </p>
+            </article>
+          </div>
+
+          <details class="hs-details hs-details--wide">
+            <summary>The trade-offs behind the design</summary>
+            <div class="hs-details__body">
+              <p>
+                Accessibility, privacy, reliability, and medical safety are engineering requirements
+                here, not optional enhancements — and each one costs something.
+              </p>
+              <ul class="hs-list">
+                <li>
+                  <strong>Accessibility versus density.</strong> Larger text, generous spacing, and
+                  plain wording reduce how much can be shown at once. That trade is worth making when
+                  the alternative is an interface someone cannot use.
+                </li>
+                <li>
+                  <strong>Privacy versus usefulness.</strong> Symptom information is sensitive. The
+                  safer default is to collect less, store less, and be explicit about what happens to
+                  what is entered.
+                </li>
+                <li>
+                  <strong>Reliability versus ambition.</strong> A feature that fails silently in a
+                  low-connectivity setting is worse than a smaller feature that behaves predictably.
+                  Graceful error states matter more than extra capability.
+                </li>
+                <li>
+                  <strong>Safety versus simplicity.</strong> Communicating uncertainty makes an
+                  interface less decisive and less satisfying — and it is still the honest thing to
+                  do when the output is a preliminary signal rather than a diagnosis.
+                </li>
+              </ul>
+              <p class="hs-note">
+                Being explicit about this: the current build does not yet claim to have solved all of
+                these. Several are directions, not finished work.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- =================== 5. The interactive technical story =================== -->
+      <section class="hs-section hs-section--tint" id="technology" aria-labelledby="hs-tech-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">04 / Under the hood</p>
+          <h2 class="hs-h2" id="hs-tech-title">The engineering behind HelloDoc.</h2>
+          <p class="hs-lede hs-lede--tight">
+            Behind the interface is a combination of web technologies, backend services, structured
+            health-related datasets, and a machine-learning classifier.
+          </p>
+
+          <!-- 5.0 Verified stack -->
+          <h3 class="hs-h3 hs-h3--spaced">What it is actually built with</h3>
+          <ul class="hs-tech" aria-label="Technology used in this project">
+            <li>HTML5</li>
+            <li>CSS3</li>
+            <li>JavaScript</li>
+            <li>Node.js</li>
+            <li>Express.js</li>
+            <li>Python</li>
+            <li>Flask</li>
+            <li>scikit-learn</li>
+            <li>NumPy</li>
+            <li>pandas</li>
+            <li>MySQL</li>
+            <li>Vercel</li>
+          </ul>
+          <p class="hs-note">
+            Accounts additionally use bcrypt password hashing, JSON Web Tokens, and server-side
+            sessions. A separate React + Vite chatbot app lives in the repository and talks to a
+            generative API endpoint configured through an environment variable.
+          </p>
+
+          <figure class="hs-figure hs-figure--engineer">
+            <img
+              src="./Asset/Story/developer-at-work-1280.jpg"
+              width="1280"
+              height="960"
+              loading="lazy"
+              decoding="async"
+              alt="A software developer working at a laptop with code visible on the screen."
+            />
+            <figcaption class="hs-credit">
+              Photograph by daudi_mukiibi, CC BY-SA 4.0 — a representative image of software work,
+              not a photograph of this project or its author.
+            </figcaption>
+          </figure>
+
+          <!-- ------------------------- 5A. Architecture ------------------------- -->
+          <div class="hs-subsection" id="architecture">
+            <h3 class="hs-h3 hs-h3--spaced" id="hs-arch-title">How a symptom check travels through the system</h3>
+            <p class="hs-prose__intro">
+              Select a step to read what it does, or play the flow to watch the sequence. The account
+              lane is shown separately because signing in and predicting are independent paths.
+            </p>
+
+            <div class="hs-diagram" data-diagram>
+              <div class="hs-diagram__controls">
+                <button class="hs-btn hs-btn--small" type="button" data-flow-play>Play data flow</button>
+                <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-flow-reset>Reset</button>
+                <p class="hs-status" data-flow-status role="status" aria-live="polite">
+                  Showing the full path. Select any step for detail.
+                </p>
+              </div>
+
+              <div class="hs-lane">
+                <h4 class="hs-lane__title">Prediction path <span>/predict</span></h4>
+                <ol class="hs-flow">
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-browser">
+                      <span class="hs-node__tag">Browser</span>
+                      <span class="hs-node__name">Symptom form</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-routing">
+                      <span class="hs-node__tag">Routing</span>
+                      <span class="hs-node__name">Express proxy or Vercel rewrite</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-flask">
+                      <span class="hs-node__tag">Python</span>
+                      <span class="hs-node__name">Flask /predict</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-vector">
+                      <span class="hs-node__tag">Encoding</span>
+                      <span class="hs-node__name">Binary feature vector</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-model">
+                      <span class="hs-node__tag">Model</span>
+                      <span class="hs-node__name">Saved linear SVC</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-class">
+                      <span class="hs-node__tag">Output</span>
+                      <span class="hs-node__name">Predicted category</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-lookup">
+                      <span class="hs-node__tag">Lookup</span>
+                      <span class="hs-node__name">Dataset records</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-results">
+                      <span class="hs-node__tag">Response</span>
+                      <span class="hs-node__name">Results page</span>
+                    </button>
+                  </li>
+                </ol>
+              </div>
+
+              <div class="hs-lane hs-lane--account">
+                <h4 class="hs-lane__title">Account lane <span>/api/auth/*</span></h4>
+                <ol class="hs-flow hs-flow--short">
+                  <li>
+                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-express">
+                      <span class="hs-node__tag">Express</span>
+                      <span class="hs-node__name">Signup / login / session</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-mysql">
+                      <span class="hs-node__tag">MySQL</span>
+                      <span class="hs-node__name">Users table</span>
+                    </button>
+                  </li>
+                </ol>
+                <p class="hs-note hs-note--tight">
+                  This lane never touches the classifier, and a symptom check never requires an
+                  account.
+                </p>
+              </div>
+
+              <section class="hs-node-detail" data-node-detail aria-label="Selected step detail" aria-live="polite">
+                <p>
+                  Select a step above to see what it does in the current implementation.
+                </p>
+              </section>
+
+              <!-- Detail copy kept in the document so nothing depends on JS-generated text -->
+              <div hidden data-detail-source>
+                <div id="flow-browser">
+                  <h5>Symptom form</h5>
+                  <p>
+                    The predictor page collects symptoms and posts them to <code>/predict</code>. In
+                    the current build the input is a tag field that accepts one symptom name at a
+                    time, up to four.
+                  </p>
+                </div>
+                <div id="flow-routing">
+                  <h5>Routing</h5>
+                  <p>
+                    Locally, <code>backend/server.js</code> serves the static site and proxies
+                    <code>/predict</code> and <code>/static</code> to the Flask service on
+                    <code>127.0.0.1:5001</code>. In production, <code>vercel.json</code> routes
+                    <code>/api/*</code> to the Express service and everything else to the Flask app
+                    service, so there is no proxy hop.
+                  </p>
+                </div>
+                <div id="flow-flask">
+                  <h5>Flask /predict</h5>
+                  <p>
+                    <code>Algo/main.py</code> exposes <code>GET</code> and <code>POST</code>
+                    <code>/predict</code>. It splits the submitted string on commas, strips each
+                    entry, and passes the list to the prediction helper.
+                  </p>
+                </div>
+                <div id="flow-vector">
+                  <h5>Binary feature vector</h5>
+                  <p>
+                    A dictionary maps each known symptom name to a position. The service builds a
+                    zero-filled array of 132 positions and sets a 1 for every recognised symptom, so
+                    the model receives a sparse binary vector. Unknown names are simply ignored.
+                  </p>
+                </div>
+                <div id="flow-model">
+                  <h5>Saved linear SVC</h5>
+                  <p>
+                    The vector is handed to a scikit-learn Support Vector Classifier loaded from
+                    <code>Algo/models/svc.pkl</code>. The shipped model was trained with
+                    <code>kernel="linear"</code> and <code>C=1.0</code>, classifies 41 categories,
+                    and contains 267 support vectors.
+                  </p>
+                </div>
+                <div id="flow-class">
+                  <h5>Predicted category</h5>
+                  <p>
+                    <code>predict()</code> returns the index of one class, which is mapped back to a
+                    disease name through a lookup table. Because the model was fitted with
+                    <code>probability=False</code>, the service can only report a single label — it
+                    has no calibrated confidence score to show.
+                  </p>
+                </div>
+                <div id="flow-lookup">
+                  <h5>Dataset records</h5>
+                  <p>
+                    The predicted name is used to filter pandas data frames for a description,
+                    precautions, medications, diet, and workout guidance. These are lookups on
+                    reference tables, not further machine-learning inference.
+                  </p>
+                </div>
+                <div id="flow-results">
+                  <h5>Results page</h5>
+                  <p>
+                    Flask renders the results template with the prediction and the retrieved rows and
+                    sends the finished page back to the browser.
+                  </p>
+                </div>
+                <div id="auth-express">
+                  <h5>Express authentication</h5>
+                  <p>
+                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/current-user</code>,
+                    and <code>/logout</code> hash passwords with bcrypt, issue a JSON Web Token, and
+                    keep a server-side session. The legacy <code>/auth/*</code> prefix is mounted on
+                    the same router.
+                  </p>
+                </div>
+                <div id="auth-mysql">
+                  <h5>MySQL users table</h5>
+                  <p>
+                    Accounts are stored in MySQL through a connection pool. Credentials come from
+                    environment variables, never from the repository, and the pool is created lazily
+                    so the service can still boot when the database is unreachable.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ------------------- 5B. The algorithm, explained ------------------- -->
+          <div class="hs-subsection" id="algorithm">
+            <h3 class="hs-h3 hs-h3--spaced" id="hs-algo-title">
+              How does HelloDoc turn symptoms into a prediction?
+            </h3>
+
+            <ol class="hs-steps">
+              <li class="hs-step-card" data-reveal>
+                <h4 class="hs-h4"><span>Step 1</span> Encode the symptoms</h4>
+                <p>
+                  The Python service keeps a mapping between symptom names and feature positions.
+                  Selected symptoms are written into a binary vector: a 1 marks a selected symptom,
+                  and a 0 marks an absent or unselected one. The current implementation defines
+                  <strong>132</strong> symptom features.
+                </p>
+              </li>
+              <li class="hs-step-card" data-reveal>
+                <h4 class="hs-h4"><span>Step 2</span> Classify the feature vector</h4>
+                <p>
+                  The service loads a saved model from <code>Algo/models/svc.pkl</code> and calls its
+                  <code>predict()</code> method. The classifier is a scikit-learn Support Vector
+                  Classifier (SVC) with a linear kernel, fitted with <code>C=1.0</code> over
+                  <strong>41</strong> categories.
+                </p>
+              </li>
+              <li class="hs-step-card" data-reveal>
+                <h4 class="hs-h4"><span>Step 3</span> Retrieve associated information</h4>
+                <p>
+                  The predicted category is used to pull matching records from datasets holding
+                  descriptions, precautions, medications, diets, and workouts. Those rows are
+                  reference data retrieved after classification — not additional model predictions.
+                </p>
+              </li>
+            </ol>
+
+            <div class="hs-demo" data-svc-demo>
+              <div class="hs-demo__head">
+                <h4 class="hs-h4">Illustrative pipeline</h4>
+                <p class="hs-badge">Illustrative — not a model output</p>
+              </div>
+              <p class="hs-note">
+                The animation below uses a simplified three-feature example to show the shape of the
+                process. It is not a real prediction from the shipped model, and nothing here has
+                been reviewed clinically.
+              </p>
+
+              <div class="hs-demo__stage">
+                <ol class="hs-demo__stages">
+                  <li class="hs-demo__stage-item is-active" data-demo-stage="0">
+                    <span class="hs-demo__stage-label">Symptoms</span>
+                    <span class="hs-demo__chips">
+                      <span class="hs-chip">itching</span>
+                      <span class="hs-chip">skin_rash</span>
+                      <span class="hs-chip">nodal_skin_eruptions</span>
+                    </span>
+                  </li>
+                  <li class="hs-demo__stage-item" data-demo-stage="1">
+                    <span class="hs-demo__stage-label">Binary features (simplified)</span>
+                    <span class="hs-demo__vector" aria-hidden="true">
+                      <span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span
+                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span
+                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span
+                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span>
+                    </span>
+                    <span class="hs-sr-only"
+                      >Three of the first twelve positions are set to one; the remaining positions are
+                      zero. The real model receives 132 positions.</span
+                    >
+                  </li>
+                  <li class="hs-demo__stage-item" data-demo-stage="2">
+                    <span class="hs-demo__stage-label">Linear decision boundary</span>
+                    <svg class="hs-boundary" viewBox="0 0 240 120" role="img" aria-label="Illustrative scatter plot of two classes separated by a straight decision boundary, with the closest points marked as support vectors.">
+                      <line x1="0" y1="0" x2="240" y2="120" class="hs-boundary__grid" />
+                      <line x1="0" y1="120" x2="240" y2="0" class="hs-boundary__grid" />
+                      <line x1="16" y1="104" x2="224" y2="16" class="hs-boundary__line" />
+                      <circle cx="34" cy="96" r="5" class="hs-dot hs-dot--a" />
+                      <circle cx="58" cy="84" r="5" class="hs-dot hs-dot--a" />
+                      <circle cx="46" cy="112" r="5" class="hs-dot hs-dot--a is-sv" />
+                      <circle cx="86" cy="70" r="5" class="hs-dot hs-dot--a" />
+                      <circle cx="70" cy="66" r="5" class="hs-dot hs-dot--a is-sv" />
+                      <circle cx="196" cy="20" r="5" class="hs-dot hs-dot--b" />
+                      <circle cx="172" cy="34" r="5" class="hs-dot hs-dot--b" />
+                      <circle cx="206" cy="44" r="5" class="hs-dot hs-dot--b" />
+                      <circle cx="158" cy="22" r="5" class="hs-dot hs-dot--b is-sv" />
+                      <circle cx="182" cy="54" r="5" class="hs-dot hs-dot--b is-sv" />
+                    </svg>
+                    <span class="hs-sr-only"
+                      >Points of two classes are separated by a straight line; the circled points
+                      nearest the line are the support vectors.</span
+                    >
+                  </li>
+                  <li class="hs-demo__stage-item" data-demo-stage="3">
+                    <span class="hs-demo__stage-label">Lookup</span>
+                    <span class="hs-demo__lookup">
+                      <span>description</span><span>precautions</span><span>medications</span
+                      ><span>diet</span><span>workout</span>
+                    </span>
+                  </li>
+                </ol>
+
+                <div class="hs-demo__controls">
+                  <button class="hs-btn hs-btn--small" type="button" data-demo-next>Next step</button>
+                  <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-demo-reset>Reset</button>
+                  <p class="hs-status" data-demo-status role="status" aria-live="polite">Step 1 of 4</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="hs-disclosure">
+              <p>
+                <strong>Technical disclosure.</strong> The current implementation uses a saved SVC
+                model for preliminary symptom-based classification. Its predictions are not confirmed
+                diagnoses. Clinical accuracy and suitability require independent evaluation and
+                appropriate medical oversight.
+              </p>
+              <p class="hs-note">
+                One detail worth stating plainly: the training notebook records a held-out accuracy of
+                1.0 on its own 30% test split, and re-running that protocol reproduces both the score
+                and the model's 267 support vectors. A perfect score on a small, highly separable
+                dataset is a sign that the benchmark is easy — not evidence that the tool is
+                clinically accurate. No external or clinical validation has been performed.
+              </p>
+              <p>
+                <a
+                  class="hs-link"
+                  href="https://github.com/riyetesh/hellodoc/blob/main/Algo/main.py"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Read the implementation</a
+                >
+              </p>
+            </div>
+
+            <details class="hs-details hs-details--wide">
+              <summary>How classification works</summary>
+              <div class="hs-details__body">
+                <p>
+                  <strong>Think of it as drawing a line.</strong> Every row of training data is a
+                  point in space — here, a list of 132 zeros and ones. Each point already carries a
+                  label: the disease it belongs to. A classifier's job is to find boundaries that
+                  separate points with different labels.
+                </p>
+                <p>
+                  <strong>Support vectors.</strong> Most training points are far from any sensible
+                  boundary; they do not decide where it sits. The points closest to the gap between
+                  classes are the ones that fix its position, and they are called support vectors.
+                  That is why a model with 4,920 training rows can be described by only 267 support
+                  vectors.
+                </p>
+                <p>
+                  <strong>Why a linear kernel.</strong> A linear kernel searches for straight
+                  boundaries. With 132 binary features and 41 classes, the implementation trains one
+                  boundary per class in a one-versus-rest scheme
+                  (<code>decision_function_shape="ovr"</code>) and returns the strongest match.
+                </p>
+                <p>
+                  <strong>What it cannot tell you.</strong> This model was fitted with
+                  <code>probability=False</code>, so it does not produce calibrated probabilities.
+                  You get one label, not a confidence level — which is exactly the kind of uncertainty
+                  an interface for real people should be careful about.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- --------------------- 5C. Expandable technical detail --------------------- -->
+          <div class="hs-subsection" id="details">
+            <h3 class="hs-h3 hs-h3--spaced" id="hs-details-title">Technical detail, if you want it</h3>
+
+            <div class="hs-accordion">
+              <details class="hs-details">
+                <summary>Frontend structure</summary>
+                <div class="hs-details__body">
+                  <p>
+                    The main site is plain HTML, CSS, and JavaScript with no build step: shared
+                    styling tokens live in <code>Styles/app.css</code>, shared navbar behaviour in
+                    <code>Scripts/nav.js</code>, and each page adds its own stylesheet. The symptom
+                    predictor is a separate Flask template with its own stylesheet.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Express backend and API responsibilities</summary>
+                <div class="hs-details__body">
+                  <p>
+                    <code>backend/server.js</code> owns accounts, sessions, and development routing.
+                    It also serves the static site locally and proxies prediction requests to Flask.
+                    Database errors are caught and returned as a plain 503 rather than leaking
+                    internals to the client.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Flask prediction endpoint</summary>
+                <div class="hs-details__body">
+                  <p>
+                    <code>Algo/main.py</code> loads its datasets and the saved model at import time,
+                    which keeps request handling fast but makes startup depend on those files being
+                    present. Paths are resolved relative to the file itself, not the working
+                    directory.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>MySQL-backed account functionality</summary>
+                <div class="hs-details__body">
+                  <p>
+                    Account records live in a <code>users</code> table reached through a
+                    <code>mysql2</code> connection pool. Connection details and secrets are read from
+                    environment variables; the pool is created lazily so the service can start even if
+                    the database is unavailable.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Authentication mechanisms</summary>
+                <div class="hs-details__body">
+                  <p>
+                    Passwords are hashed with bcrypt. A successful login issues a JSON Web Token with
+                    a configurable expiry and also records a server-side session in an
+                    <code>httpOnly</code> cookie. Login failures return the same message whether the
+                    address is unknown or the password is wrong, so the API does not reveal which
+                    emails are registered.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Model loading and feature encoding</summary>
+                <div class="hs-details__body">
+                  <p>
+                    The model is deserialised with <code>pickle</code> at startup. The symptom
+                    dictionary and disease list are kept in the same module, so the encoding used at
+                    prediction time mirrors the ordering used during training. The saved model expects
+                    132 features and was serialised with an earlier scikit-learn release than the one
+                    currently pinned, which produces a version warning at load time.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Dataset lookup process</summary>
+                <div class="hs-details__body">
+                  <p>
+                    Reference tables are read once into pandas data frames. After a prediction, the
+                    helper filters those frames by disease name to assemble the description,
+                    precautions, medications, diet, and workout sections shown on the results page.
+                  </p>
+                </div>
+              </details>
+
+              <details class="hs-details">
+                <summary>Deployment architecture</summary>
+                <div class="hs-details__body">
+                  <p>
+                    <code>vercel.json</code> declares four services: the root Flask app, the
+                    <code>Algo</code> Flask service, the Express backend, and the chatbot. Rewrites
+                    send <code>/api/*</code> to the backend and every other path to the root app. The
+                    prediction service therefore runs as its own deployment unit rather than as part
+                    of the account backend.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 6. The challenges and lessons ==================== -->
+      <section class="hs-section" id="lessons" aria-labelledby="hs-lessons-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">05 / What I&rsquo;m learning</p>
+          <h2 class="hs-h2" id="hs-lessons-title">Building it is only the beginning.</h2>
+
+          <div class="hs-lessons">
+            <article class="hs-lesson" data-reveal>
+              <h3 class="hs-h3">The problem comes before the technology.</h3>
+              <p>
+                A technically impressive solution is not useful unless it addresses the constraints
+                people actually face — travel, cost, connectivity, and uncertainty about whether a
+                symptom is worth acting on.
+              </p>
+            </article>
+            <article class="hs-lesson" data-reveal>
+              <h3 class="hs-h3">Healthcare requires a higher standard of responsibility.</h3>
+              <p>
+                A prediction is not proof. Sensitive information, uncertainty, validation, and
+                appropriate escalation all have to be considered before anything is put in front of a
+                person who is worried about their health.
+              </p>
+            </article>
+            <article class="hs-lesson" data-reveal>
+              <h3 class="hs-h3">Real-world usefulness requires more than code.</h3>
+              <p>
+                Accessibility, trust, local context, reliable infrastructure, and collaboration all
+                influence whether a digital health tool can work outside a development environment.
+              </p>
+            </article>
+          </div>
+
+          <details class="hs-details hs-details--wide">
+            <summary>What still needs work</summary>
+            <div class="hs-details__body">
+              <ul class="hs-list">
+                <li>
+                  <strong>Model validation.</strong> Evaluate the classifier on data that reflects
+                  real presentation, not only the dataset it was trained on, and report honest
+                  metrics including failure cases.
+                </li>
+                <li>
+                  <strong>Usability testing.</strong> Watch people who are not developers attempt the
+                  symptom flow, and fix what confuses them.
+                </li>
+                <li>
+                  <strong>Clinical collaboration.</strong> Any clinically meaningful guidance needs to
+                  be reviewed by people qualified to give it.
+                </li>
+                <li>
+                  <strong>Privacy and security review.</strong> Confirm how symptom data is handled,
+                  minimised, and protected before it is collected from real users.
+                </li>
+                <li>
+                  <strong>Evaluation with representative users.</strong> Test with the people the
+                  project is meant for, on the devices and connections they actually have.
+                </li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ====================== 7. The future of HelloDoc ====================== -->
+      <section class="hs-section hs-section--tint" id="future" aria-labelledby="hs-future-title">
+        <div class="hs-wrap">
+          <p class="hs-eyebrow">06 / The future</p>
+          <h2 class="hs-h2" id="hs-future-title">
+            What if access to healthcare became less dependent on geography?
+          </h2>
+          <p class="hs-lede hs-lede--tight">
+            I want to keep exploring how responsible technology could make the first step toward
+            healthcare easier for people who are often overlooked by conventional digital services.
+          </p>
+
+          <p class="hs-roadmap-key">
+            <span class="hs-key hs-key--now">Current project foundations</span>
+            <span class="hs-key hs-key--next">Future exploration</span>
+          </p>
+
+          <div class="hs-roadmap" data-roadmap>
+            <article class="hs-milestone hs-milestone--now">
+              <p class="hs-milestone__kind">Foundation <span class="hs-sr-only">(built)</span></p>
+              <h3 class="hs-h3"><span class="hs-milestone__num">01</span> Make the core experience more reliable</h3>
+              <details class="hs-details">
+                <summary>Objective, value, challenge, and next steps</summary>
+                <div class="hs-details__body">
+                  <dl class="hs-facts">
+                    <dt>Objective</dt>
+                    <dd>Improve usability, accessibility, error handling, and the clarity of symptom-guidance results.</dd>
+                    <dt>Why it matters</dt>
+                    <dd>A person who cannot complete the flow, or cannot understand the result, receives no help from it.</dd>
+                    <dt>Main challenge</dt>
+                    <dd>Making a technical pipeline understandable without overstating what its output means.</dd>
+                    <dt>Next steps</dt>
+                    <dd>Usability sessions, accessibility auditing against WCAG, and clearer empty and error states.</dd>
+                  </dl>
+                </div>
+              </details>
+            </article>
+
+            <article class="hs-milestone hs-milestone--now">
+              <p class="hs-milestone__kind">Foundation <span class="hs-sr-only">(built)</span></p>
+              <h3 class="hs-h3"><span class="hs-milestone__num">02</span> Explore access beyond constant connectivity</h3>
+              <details class="hs-details">
+                <summary>Objective, value, challenge, and next steps</summary>
+                <div class="hs-details__body">
+                  <dl class="hs-facts">
+                    <dt>Objective</dt>
+                    <dd>Investigate offline-friendly interactions and SMS-based access for suitable, carefully scoped features.</dd>
+                    <dt>Why it matters</dt>
+                    <dd>A tool that only works with a good connection excludes many of the people it is meant to serve.</dd>
+                    <dt>Main challenge</dt>
+                    <dd>Working within the hard limits of SMS and low-bandwidth devices without losing clarity or safety.</dd>
+                    <dt>Next steps</dt>
+                    <dd>Prototype one narrow, low-risk interaction and test it with users on basic handsets.</dd>
+                  </dl>
+                </div>
+              </details>
+            </article>
+
+            <article class="hs-milestone hs-milestone--next">
+              <p class="hs-milestone__kind">Exploration <span class="hs-sr-only">(not built)</span></p>
+              <h3 class="hs-h3"><span class="hs-milestone__num">03</span> Build connections with real healthcare services</h3>
+              <details class="hs-details">
+                <summary>Objective, value, challenge, and next steps</summary>
+                <div class="hs-details__body">
+                  <dl class="hs-facts">
+                    <dt>Objective</dt>
+                    <dd>Explore collaboration with local healthcare professionals, clinics, NGOs, and public institutions.</dd>
+                    <dt>Why it matters</dt>
+                    <dd>Guidance only helps if it connects to care that someone can actually reach.</dd>
+                    <dt>Main challenge</dt>
+                    <dd>Trust, responsibility, and referral pathways that do not depend on one student project.</dd>
+                    <dt>Next steps</dt>
+                    <dd>Conversations with local professionals about what would be useful — and what would not.</dd>
+                  </dl>
+                </div>
+              </details>
+            </article>
+
+            <article class="hs-milestone hs-milestone--next">
+              <p class="hs-milestone__kind">Exploration <span class="hs-sr-only">(not built)</span></p>
+              <h3 class="hs-h3"><span class="hs-milestone__num">04</span> Improve evidence and responsible AI</h3>
+              <details class="hs-details">
+                <summary>Objective, value, challenge, and next steps</summary>
+                <div class="hs-details__body">
+                  <dl class="hs-facts">
+                    <dt>Objective</dt>
+                    <dd>Investigate representative data, appropriate evaluation, clinical review, and better ways to communicate uncertainty.</dd>
+                    <dt>Why it matters</dt>
+                    <dd>Without honest evaluation and visible uncertainty, a confident-looking output can do harm.</dd>
+                    <dt>Main challenge</dt>
+                    <dd>Obtaining representative data and expert review while keeping expectations realistic.</dd>
+                    <dt>Next steps</dt>
+                    <dd>Define an evaluation protocol, document its limitations, and publish results as they are — including poor ones.</dd>
+                  </dl>
+                </div>
+              </details>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================= 8. Closing statement ========================= -->
+      <section class="hs-closing" id="closing" aria-labelledby="hs-closing-title">
+        <img
+          class="hs-closing__img"
+          src="./Asset/Story/health-worker-patient-1280.jpg"
+          width="1280"
+          height="853"
+          loading="lazy"
+          decoding="async"
+          alt="A health worker in a blue sari checking a patient's blood pressure at a temporary health post in Nepal."
+        />
+        <div class="hs-closing__scrim" aria-hidden="true"></div>
+        <div class="hs-wrap hs-closing__content">
+          <h2 class="hs-h2 hs-h2--invert" id="hs-closing-title">
+            Technology should bring healthcare closer to the people who need it most.
+          </h2>
+          <p class="hs-closing__copy">
+            HelloDoc began with a question about access to healthcare. I want to keep building,
+            testing, learning, and exploring how technology can help close that gap.
+          </p>
+          <div class="hs-cta-row">
+            <a
+              class="hs-btn hs-btn--light"
+              href="https://github.com/riyetesh/hellodoc"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Explore the project on GitHub</a
+            >
+            <a class="hs-btn hs-btn--outline-light" href="/predict">Explore the current application</a>
+            <a class="hs-btn hs-btn--outline-light" href="#top">Back to the top</a>
+          </div>
+          <p class="hs-closing__credit">
+            Photograph: a health worker at the temporary Batulechaur Health Post, Nepal — Department of
+            Foreign Affairs and Trade / Jim Holmes, CC BY 4.0.
+          </p>
+        </div>
+      </section>
+
+      <!-- ===================== Image credits and licensing ===================== -->
+      <section class="hs-credits" aria-labelledby="hs-credits-title">
+        <div class="hs-wrap">
+          <h2 class="hs-h3" id="hs-credits-title">Photography credits</h2>
+          <p class="hs-note">
+            These are representative photographs of Nepal, licensed for reuse. They are not images of
+            the specific villages or health post described in this story, and no photograph should be
+            read as evidence about any location, project, or person mentioned here. Images were
+            resized for delivery.
+          </p>
+          <ul class="hs-credits__list">
+            <li>
+              Mustang, Nepal — Sajan Shakya24,
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noopener noreferrer" target="_blank">CC BY-SA 4.0</a>,
+              via
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Beautiful_Village_and_Himalayas_seen_around_Mustang,Nepal.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Wikimedia Commons</a
+              >.
+            </li>
+            <li>
+              Health post, Jomsom — Bijay Chaurasia,
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noopener noreferrer" target="_blank">CC BY-SA 4.0</a>,
+              via
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Health_Post_at_Jomsom_Village-WLV-0704.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Wikimedia Commons</a
+              >.
+            </li>
+            <li>
+              Software developer at work — daudi_mukiibi,
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noopener noreferrer" target="_blank">CC BY-SA 4.0</a>,
+              via
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Software_developer_at_work_01.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Wikimedia Commons</a
+              >.
+            </li>
+            <li>
+              Health worker and patient, Batulechaur — Department of Foreign Affairs and Trade / Jim
+              Holmes,
+              <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener noreferrer" target="_blank">CC BY 4.0</a>,
+              via
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Bishnu_Maya_Thapa_is_the_Health_Worker_as_Bishnu_Maya_Sunar_arrives_at_the_temporary_Batulechaur_Health_Post_for_a_blood_pressure_checkup_(10677193566).jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Wikimedia Commons</a
+              >.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===================== Existing footer (unchanged) ===================== -->
+    <footer>
+      <div class="container">
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+      </div>
+    </footer>
+
+    <!-- Same shared scripts every other page uses, so the navbar behaves identically. -->
+    <script src="./Scripts/appointments.js"></script>
+    <script src="./Scripts/nav.js"></script>
+    <script src="./Scripts/story.js" defer></script>
+  </body>
+</html>
