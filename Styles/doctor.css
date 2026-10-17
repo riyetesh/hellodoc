@@ -1,0 +1,12 @@
+.doctor-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1rem; }
+.doctor-filters label { flex: 1 1 9rem; margin: 0; }
+.doctor-filters button { margin-bottom: .1rem; }
+#visitPanel { grid-column: 1 / -1; }
+#visitPanel h3 { font-size: 1.05rem; margin: 1.4rem 0 .5rem; }
+#visitPanel article, #appointments article, #tasks article, #drafts article, #slots article, #analytics article { padding: .75rem 0; border-bottom: 1px solid var(--border); }
+#visitPanel article p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.doctor-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+.doctor-actions button { cursor: pointer; }
+#documentForm { max-width: 42rem; }
+#documentForm textarea { width: 100%; }
+#message:empty { display: none; }

@@ -1,0 +1,3 @@
+# Vercel deployment ignore rules
+# Ignore the retired new-login service folder entirely
+Login-and-dashboard/New-login/**

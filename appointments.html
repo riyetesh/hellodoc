@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Appointments</title>
+    <meta name="description" content="See your upcoming and past HelloDoc appointments, review the details of each visit, and cancel a booking you can no longer make." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/appointments.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
+
+  <body>
+    <!-- ===== Navbar ===== -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== Header ===== -->
+    <header class="page-head">
+      <div class="container page-head-inner">
+        <div>
+          <h1>My Appointments</h1>
+          <p>Manage your consultations and start a visit when it's time.</p>
+        </div>
+        <a href="dashboard.html" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Book new
+        </a>
+      </div>
+    </header>
+
+    <!-- ===== Tabs ===== -->
+    <div class="container tabs-wrap">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="upcoming">
+          Upcoming <span class="tab-count" id="upcomingCount">0</span>
+        </button>
+        <button class="tab" data-tab="past">
+          Past <span class="tab-count" id="pastCount">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== List ===== -->
+    <main class="container appt-main">
+      <div id="apptList" class="appt-list"></div>
+
+      <div id="apptEmpty" class="appt-empty" hidden>
+        <i class="fa-regular fa-calendar-xmark"></i>
+        <h3 id="emptyTitle">No upcoming appointments</h3>
+        <p id="emptyText">When you book a consultation, it will show up here.</p>
+        <a href="dashboard.html" class="btn btn-primary">
+          <i class="fa-solid fa-user-doctor"></i> Find a doctor
+        </a>
+      </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <footer>
+      <div class="container">
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
+      </div>
+    </footer>
+
+    <script src="./Scripts/appointments.js"></script>
+    <script src="./Scripts/nav.js"></script>
+    <script src="./Scripts/appointments-page.js"></script>
+  </body>
+</html>

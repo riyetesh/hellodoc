@@ -1,0 +1,35 @@
+.content {
+    position: relative;
+    top: 5px;
+    left: 0;
+  }
+  .background-image-container {
+    display: flex;
+    justify-content: space-between;
+    width: 80vw;
+    height: 90vh;
+    position: absolute;
+    left: 0;
+    padding: 40px 0;
+  }
+
+  .left-container img {
+    width: 200px;
+    height: 180px;
+  }
+
+  .right-container,
+  .left-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .left-container {
+    padding: 30px 0;
+  }
+
+  .right-container > img {
+    width: 200px;
+    height: 180px;
+  }

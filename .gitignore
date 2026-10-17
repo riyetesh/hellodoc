@@ -1,0 +1,50 @@
+# ===== Root ignore for the whole repo =====
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Secrets / environment
+.env
+.env.local
+.env.*.local
+.env.*.example.local
+!.env.example
+!.env.*.example
+.env.example.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.eggs/
+*.egg-info/
+*.egg
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sublime-*
+
+# Build / misc
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local runtime bootstrap (portable Python + dev logs, never committed)
+.runtime/
+.freebuff/*.log
+.freebuff/backend.pid

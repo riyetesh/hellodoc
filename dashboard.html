@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Doctors</title>
+    <meta name="description" content="Search HelloDoc's pool of registered doctors by speciality, fee and availability, then book an appointment with the one you choose." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/dashboard.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
+
+  <body>
+    <!-- ===== Navbar ===== -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== Hero ===== -->
+    <header class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Verified doctors</span>
+          <h1 id="heroGreeting">Find your doctor</h1>
+          <p>
+Browse approved doctors, review their specialties and consultation details, and request a visit when booking is open.
+          </p>
+          <div class="hero-stats">
+            <div class="stat"><strong id="statDoctors">0</strong><span>Approved doctors</span></div>
+
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-card">
+            <i class="fa-solid fa-stethoscope"></i>
+            <div><strong>Verified profiles</strong><span>Only approved doctors appear here</span></div>
+          </div>
+          <div class="hero-card">
+            <i class="fa-solid fa-video"></i>
+            <div><strong>Request a visit</strong><span>Track status in appointments</span></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== Toolbar ===== -->
+    <section class="toolbar-wrap">
+      <div class="container toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search" placeholder="Search by doctor, speciality or language…" autocomplete="off" />
+        </div>
+
+        <div class="dropdown" id="sortDropdown">
+          <button class="dropbtn" type="button">
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
+            <span id="sortLabel">Sort: Relevance</span>
+            <i class="fa-solid fa-chevron-down caret"></i>
+          </button>
+          <div class="dropdown-content" id="sortMenu">
+            <a href="#" class="sort-option active" data-value="relevance">Relevance</a>
+            <a href="#" class="sort-option" data-value="feeLowHigh">Fee: Low to High</a>
+            <a href="#" class="sort-option" data-value="feeHighLow">Fee: High to Low</a>
+          </div>
+        </div>
+
+        <button class="filter-toggle" id="filterToggle" type="button">
+          <i class="fa-solid fa-sliders"></i>
+          Speciality
+          <span class="filter-count" id="filterCount" hidden>0</span>
+        </button>
+      </div>
+
+      <!-- Speciality chips -->
+      <div class="container chips" id="chips" hidden></div>
+    </section>
+
+    <!-- ===== Results ===== -->
+    <main class="results container">
+      <div class="results-head">
+        <h2 id="resultsTitle">All specialists</h2>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+      <div class="team-container" id="teamContainer" aria-live="polite"></div>
+      <div class="no-results" id="noResults" role="status" hidden>
+        <i class="fa-solid fa-user-doctor"></i>
+        <h3>No doctors found</h3>
+        <p>No approved doctors are listed yet. Try again later.</p>
+        <button class="btn btn-outline" id="clearFilters">Clear filters</button>
+      </div>
+    </main>
+
+    <!-- ===== Booking modal ===== -->
+    <div class="modal-overlay" id="bookingOverlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+        <div class="modal-header">
+          <div class="booking-doc" id="bookingDoc">
+            <img src="" alt="" id="bookingImg" />
+            <div>
+              <h3 id="bookingTitle">Doctor</h3>
+              <p id="bookingSpeciality">Speciality</p>
+            </div>
+          </div>
+          <button class="modal-close" id="bookingClose" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label>Select a date</label>
+            <div class="date-row" id="dateRow"></div>
+          </div>
+
+          <div class="field">
+            <label>Available slots</label>
+            <div class="slot-grid" id="slotGrid"></div>
+          </div>
+
+          <div class="field">
+            <label for="bookingReason">Reason for visit <span>(optional)</span></label>
+            <textarea id="bookingReason" rows="2" placeholder="e.g. Fever and headache for 3 days"></textarea>
+          </div>
+
+          <div class="fee-row">
+            <span>Consultation fee</span>
+            <strong id="bookingFee">Rs. 0</strong>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-ghost" id="bookingCancel">Cancel</button>
+          <button class="btn btn-primary" id="bookingConfirm" disabled>Confirm booking</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <footer>
+      <div class="container">
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
+      </div>
+    </footer>
+
+    <script src="./Scripts/appointments.js"></script>
+    <script src="./Scripts/nav.js"></script>
+    <script src="./Scripts/dashboard.js"></script>
+  </body>
+</html>

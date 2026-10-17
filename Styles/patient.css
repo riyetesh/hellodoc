@@ -1,0 +1,15 @@
+.patient-main { padding-top: 2rem; }
+.patient-main > .lead { max-width: none; margin-bottom: 1.5rem; }
+.patient-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.patient-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-xs); }
+.patient-panel h2 { font-size: var(--text-scale-6); margin-bottom: 1rem; }
+.patient-panel p, .patient-panel li { color: var(--text-soft); margin-bottom: .75rem; }
+.patient-panel a { color: var(--brand); font-weight: 600; }
+.patient-panel label { display: block; font-weight: 600; margin: .9rem 0; }
+.patient-panel label input, .patient-panel label textarea, .patient-panel label select { display: block; margin-top: .35rem; }
+.patient-panel article { padding: .75rem 0; border-bottom: 1px solid var(--border); }
+.patient-panel article:last-child { border-bottom: none; }
+.patient-panel article strong, .patient-panel article span { display: block; }
+.patient-panel article span { color: var(--muted); font-size: var(--text-scale-3); }
+.patient-message { padding-block: 3rem; color: var(--muted); }
+@media (max-width: 760px) { .patient-grid { grid-template-columns: 1fr; } }

@@ -1,0 +1,694 @@
+/* ============================================================
+   HelloDoc - Dashboard (Find a Doctor)
+   Modern telemedicine layout. Relies on app.css tokens.
+   ============================================================ */
+
+/* ---------- Hero ---------- */
+.hero {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 2.75rem 0 2.5rem;
+  overflow: hidden;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand);
+  background: var(--brand-soft);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+
+.hero-copy h1 {
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.hero-copy p {
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 520px;
+  margin-bottom: 1.5rem;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.hero-stats .stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-stats strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.hero-stats span {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.hero-art {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 300px;
+}
+
+.hero-card i {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.hero-card strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.hero-card span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar-wrap {
+  position: sticky;
+  top: 70px;
+  z-index: 900;
+  background: var(--bg);
+  padding: 1.25rem 0 0.5rem;
+  border-bottom: 1px solid transparent;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+.search i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.search input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Sort dropdown */
+.dropdown {
+  position: relative;
+}
+
+.dropbtn,
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.dropbtn:hover,
+.filter-toggle:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.dropbtn .caret {
+  font-size: 0.7rem;
+  color: var(--muted);
+  transition: transform 0.2s var(--ease);
+}
+
+.dropdown.open .dropbtn .caret {
+  transform: rotate(180deg);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 0.4rem;
+  z-index: 950;
+}
+
+.dropdown.open .dropdown-content {
+  display: block;
+  animation: pop 0.16s var(--ease);
+}
+
+.dropdown-content a {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dropdown-content a:hover {
+  background: var(--surface-2);
+}
+
+.dropdown-content a.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.filter-toggle {
+  position: relative;
+}
+
+.filter-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Speciality chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.9rem;
+  padding-bottom: 0.4rem;
+}
+
+.chip {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.chip.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ---------- Results ---------- */
+.results {
+  padding: 1.75rem 1.5rem 4rem;
+}
+
+.results-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.results-head h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.results-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.team-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Doctor card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.card:hover {
+  transform: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card .profile {
+  position: relative;
+  height: 210px;
+  background: var(--surface-2);
+}
+
+.card .profile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  backdrop-filter: blur(4px);
+}
+
+.status-dot::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.status-dot.online::before {
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.status-dot.offline::before {
+  background: var(--muted);
+  box-shadow: 0 0 0 3px #eef1f6;
+}
+
+.rating-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  backdrop-filter: blur(4px);
+}
+
+.rating-pill i {
+  color: var(--warning);
+  font-size: 0.72rem;
+}
+
+.card .description {
+  padding: 1.1rem 1.2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card .description h2 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.card .doctor-bio {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.card .doctor-bio[hidden] { display: none; }
+
+.card .spec {
+  color: var(--brand);
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.card .meta {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 0.85rem;
+}
+
+.card .meta div {
+  display: flex;
+  flex-direction: column;
+}
+
+.card .meta strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.card .meta span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.card .next-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.83rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.card .next-slot i {
+  color: var(--teal);
+}
+
+.card .card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.card .card-actions .btn {
+  flex: 1;
+}
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--muted);
+}
+
+.no-results i {
+  font-size: 2.5rem;
+  color: var(--border);
+  margin-bottom: 1rem;
+}
+
+.no-results h3 {
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.no-results p {
+  margin-bottom: 1.25rem;
+}
+
+/* ---------- Booking modal ---------- */
+.booking-doc {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.booking-doc img {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.field {
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.field label span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.date-row {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.date-chip {
+  flex-shrink: 0;
+  min-width: 62px;
+  padding: 0.6rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+
+.date-chip .dow {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.date-chip .dnum {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.1rem 0;
+}
+
+.date-chip .mon {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.date-chip:hover {
+  border-color: var(--brand);
+}
+
+.date-chip.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.date-chip.active .dow,
+.date-chip.active .mon {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 0.5rem;
+}
+
+.slot {
+  padding: 0.55rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.16s var(--ease);
+}
+
+.slot:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.slot.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.slot:disabled {
+  background: var(--surface-2);
+  color: var(--border);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.field textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.fee-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.fee-row strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+/* ---------- Animation ---------- */
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  .hero-art {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .toolbar {
+    gap: 0.5rem;
+  }
+  .search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .dropbtn span,
+  .filter-toggle {
+    font-size: 0.85rem;
+  }
+  .hero-stats {
+    gap: 1.5rem;
+  }
+}

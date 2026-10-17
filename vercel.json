@@ -1,0 +1,40 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "app": {
+      "root": ".",
+      "framework": "flask"
+    },
+    "algo": {
+      "root": "Algo",
+      "framework": "flask"
+    },
+    "backend": {
+      "root": "backend",
+      "framework": "express"
+    },
+    "chatbot": {
+      "root": "chatbot",
+      "framework": "vite"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "app"
+      }
+    }
+  ],
+  "functions": {
+    "Algo/main.py": {
+      "excludeFiles": "{backend/**,chatbot/**,Login-and-dashboard/**,**/node_modules/**,**/.git/**,**/__pycache__/**,**/*.pyc,tests/**,**/tests/**,**/*.test.*,**/test_*.py}"
+    }
+  }
+}

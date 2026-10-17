@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HelloDoc | My health</title>
+  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+  <link rel="stylesheet" href="/Styles/app.css?v=blue2">
+  <link rel="stylesheet" href="/Styles/patient.css">
+</head>
+<body>
+  <nav class="navbar" id="navbar"><div class="container navbar-inner">
+    <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo"></a>
+    <ul class="nav-links" id="navLinks"><li><a href="index.html#about" class="nav-link">About</a></li><li><a href="dashboard.html" class="nav-link">Find a doctor</a></li><li><a href="appointments.html" class="nav-link">Appointments <span class="nav-badge" data-appt-badge>0</span></a></li><li><a href="story.html" class="nav-link">My Story</a></li><li><a href="help.html" class="nav-link">Help</a></li></ul>
+    <div class="navbar-actions" id="navActions"><a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a><a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a><button class="user-chip" id="userChip" hidden><span class="avatar" id="userAvatar">U</span><span class="user-name" id="userName">Guest</span></button></div>
+  </div></nav>
+  <header class="page-head"><div class="container page-head-inner"><div><h1 id="greeting">My health</h1><p>Your visits, notes and care in one place.</p></div><a class="btn btn-primary" href="dashboard.html">Find a doctor</a></div></header>
+  <main class="container patient-main" id="portal" hidden>
+    <p class="lead" id="nextVisit"></p>
+    <p class="lead" id="visitMetrics"></p>
+    <div class="patient-grid">
+      <section class="patient-panel"><h2>Appointments</h2><div id="visits"></div><a href="appointments.html">Manage appointments</a></section>
+      <section class="patient-panel"><h2>Pending tasks</h2><p id="tasks"></p></section>
+      <section class="patient-panel"><h2>Health history</h2><div id="history"></div></section>
+
+      <section class="patient-panel"><h2>Settings</h2><p id="profile"></p><button class="btn btn-outline" id="logout" type="button">Log out</button><p>Clinical questionnaires are unavailable during the database migration.</p></section>
+    </div>
+  </main>
+  <div class="container patient-message" id="portalMessage" role="status">Loading your health information…</div>
+  <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
+  <script src="/Scripts/appointments.js"></script><script src="/Scripts/nav.js"></script><script src="/Scripts/patient.js"></script>
+</body></html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelloDoc | Help</title>
+    <meta name="description" content="Answers to common questions about HelloDoc: booking and cancelling appointments, finding a doctor, symptom checks, accounts and privacy." />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/help.css?v=blue2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
+
+<body>
+    
+
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+<header class="page-head">
+      <div class="container page-head-inner">
+        <div>
+          <h1>Help Center</h1>
+          <p>Answers to common questions about using HelloDoc.</p>
+        </div>
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            id="search-bar"
+            placeholder="Search questions and answers"
+            aria-label="Search help"
+            aria-controls="suggestions"
+            autocomplete="off"
+          />
+          <ul id="suggestions" class="suggestions" aria-label="Search suggestions" hidden></ul>
+          <p id="search-status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </header>
+
+<main class="container">
+  <div class="help-cards">
+    <!-- About Account Section -->
+    <button type="button" class="help-topic" data-help-topic="accountPopupModal"><img src="Asset/Illustrations/account.svg" alt="" class="help-card-icon" /><span>Account</span></button>
+
+<!-- Account Modal Structure -->
+<div id="accountPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="accountPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="accountPopupTitle">Account information</h3>
+      <button class="modal-close" aria-label="Close account information">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I create an account?</button>
+        <div class="accordion-panel">
+          <p>Click Sign Up, enter your name, email, and password, and follow the steps to register.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How can I update my account information?</button>
+        <div class="accordion-panel">
+          <p>Go to Account Settings in your dashboard to edit your details.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What do I do if I forget my password?</button>
+        <div class="accordion-panel">
+          <p>Click Forgot Password? on the login page and follow the steps to reset it.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I delete my account?</button>
+        <div class="accordion-panel">
+          <p>Yes. You can delete your account via Account Settings or by contacting support.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I use the same email for multiple accounts?</button>
+        <div class="accordion-panel">
+          <p>No. Each email address is linked to a single account.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I log out of my account?</button>
+        <div class="accordion-panel">
+          <p>Use the logout control in your dashboard or profile menu. Your session ends immediately.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What happens to my data if I delete my account?</button>
+        <div class="accordion-panel">
+          <p>Your account and personal data are permanently deleted within 30 days of your request.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Appointment Section -->
+    <button type="button" class="help-topic" data-help-topic="appointmentPopupModal"><img src="Asset/Illustrations/appointment.svg" alt="" class="help-card-icon" /><span>Appointment</span></button>
+
+<!-- Appointment Modal Structure -->
+<div id="appointmentPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="appointmentPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="appointmentPopupTitle">Appointment details</h3>
+      <button class="modal-close" aria-label="Close appointment details">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I book an appointment?</button>
+        <div class="accordion-panel">
+          <p>Select a doctor from the search results, choose an available time slot, and confirm your appointment.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I reschedule my appointment?</button>
+        <div class="accordion-panel">
+          <p>Yes. You can reschedule through the My Appointments section of your dashboard.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Is there a fee for cancelling an appointment?</button>
+        <div class="accordion-panel">
+          <p>Cancellation policies depend on the doctor’s terms. Check the cancellation terms when booking.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I book an appointment for someone else?</button>
+        <div class="accordion-panel">
+          <p>Yes. You can book for a family member or friend by entering their details during booking.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I know if my appointment is confirmed?</button>
+        <div class="accordion-panel">
+          <p>Once your booking is confirmed, you will receive a confirmation and an email with the appointment details.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy and Legal Section -->
+    <button type="button" class="help-topic" data-help-topic="privacyPopupModal"><img src="Asset/Illustrations/privacy.svg" alt="" class="help-card-icon" /><span>Privacy and Legal</span></button>
+
+<!-- Privacy and Legal Modal Structure -->
+<div id="privacyPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="privacyPopupTitle">Privacy and legal</h3>
+      <button class="modal-close" aria-label="Close privacy and legal information">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What information do you collect from users?</button>
+        <div class="accordion-panel">
+          <p>We collect basic information such as name, email, and phone number during registration, as well as details relevant to your use of the platform.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How is my personal information used?</button>
+        <div class="accordion-panel">
+          <p>Your information is used to provide services, such as managing appointments and improving the user experience.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Is my data shared with third parties?</button>
+        <div class="accordion-panel">
+          <p>Your data is not shared with third parties without your consent, except as required by law or to provide essential services.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How can I request the deletion of my data?</button>
+        <div class="accordion-panel">
+          <p>You can request data deletion by contacting support. Once processed, your data will be permanently removed from our systems.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Where can I find your terms of service and privacy policy?</button>
+        <div class="accordion-panel">
+          <p>Our terms of service and privacy policy are available in the website footer and in the Privacy and Legal section of your account.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Troubleshooting Section -->
+    <button type="button" class="help-topic" data-help-topic="troubleshootingPopupModal"><img src="Asset/Illustrations/troubleshooting.svg" alt="" class="help-card-icon" /><span>Troubleshooting</span></button>
+
+<!-- Troubleshooting Modal Structure -->
+<div id="troubleshootingPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="troubleshootingPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="troubleshootingPopupTitle">Troubleshooting</h3>
+      <button class="modal-close" aria-label="Close troubleshooting information">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Why can’t I log in to my account?</button>
+        <div class="accordion-panel">
+          <p>Make sure you are using the correct email and password. If the issue persists, try resetting your password or clearing your browser cache.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What should I do if a page doesn’t load properly?</button>
+        <div class="accordion-panel">
+          <p>Refresh the page, check your internet connection, or try accessing the platform from a different browser or device.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Why is the app running slowly?</button>
+        <div class="accordion-panel">
+          <p>This may be due to high server traffic or a slow internet connection. Make sure you are using the latest version of the app.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I report a technical issue?</button>
+        <div class="accordion-panel">
+          <p>You can report issues through the Support section in the app or website, including screenshots or details of the problem.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What can I do if my problem isn’t resolved?</button>
+        <div class="accordion-panel">
+          <p>If the issue persists, contact our customer support team directly for further assistance.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I clear my browser cache for this site?</button>
+        <div class="accordion-panel">
+          <p>Use your browser’s settings to clear cached images and files, then reload the page.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What accessibility features does the platform offer?</button>
+        <div class="accordion-panel">
+          <p>We support keyboard navigation, screen readers, and high contrast text across all pages.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How do I request a refund for a cancelled appointment?</button>
+        <div class="accordion-panel">
+          <p>Refund eligibility depends on the cancellation terms set by the doctor. Contact support for assistance.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I leave a review for a doctor after my appointment?</button>
+        <div class="accordion-panel">
+          <p>Yes. You can rate and review doctors from your appointment history to help other patients.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- About Section -->
+    <button type="button" class="help-topic" data-help-topic="aboutPopupModal"><img src="Asset/Illustrations/about.svg" alt="" class="help-card-icon" /><span>About</span></button>
+
+<!-- About Modal Structure -->
+<div id="aboutPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="aboutPopupTitle">About</h3>
+      <button class="modal-close" aria-label="Close about information">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What is this platform about?</button>
+        <div class="accordion-panel">
+          <p>This platform connects patients with doctors, allowing users to book appointments, access medical records, and communicate for follow up queries.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How can I get in touch with support?</button>
+        <div class="accordion-panel">
+          <p>You can contact support through the Contact section on the website or through our customer service number in the app.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Is this platform available globally?</button>
+        <div class="accordion-panel">
+          <p>Currently, our services are available in select countries. Check the availability on the website or app for your region.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What services are offered through this platform?</button>
+        <div class="accordion-panel">
+          <p>Our platform offers appointment scheduling, doctor search, medical records management, and follow up messaging services.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How can I provide feedback about my experience?</button>
+        <div class="accordion-panel">
+          <p>You can submit feedback through the Feedback section on the app or website, where you can rate your experience and share suggestions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Section -->
+    <button type="button" class="help-topic" data-help-topic="contactPopupModal"><img src="Asset/Illustrations/contact.svg" alt="" class="help-card-icon" /><span>Contact</span></button>
+
+<!-- Contact Modal Structure -->
+<div id="contactPopupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="contactPopupTitle" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="contactPopupTitle">Contact</h3>
+      <button class="modal-close" aria-label="Close contact information">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">How can I contact customer support?</button>
+        <div class="accordion-panel">
+          <p>You can contact customer support through the Contact section on the website or the app. You can also reach us by email or our support hotline.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">What is the customer support contact number?</button>
+        <div class="accordion-panel">
+          <p>The customer support number is +91 7608093320. You can also reach us by email for assistance.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Can I contact support outside working hours?</button>
+        <div class="accordion-panel">
+          <p>Yes. You can send an email or use the support form at any time, and we will respond as soon as possible during working hours.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">Where can I find the company’s physical address?</button>
+        <div class="accordion-panel">
+          <p>The company’s physical address is Butwal, Nepal.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </div>
+
+  <section class="help-contact" aria-labelledby="contact-title">
+    <div><h2 id="contact-title">Contact us</h2><p>Still need a hand? Tell us what happened and we will help you find the next step.</p></div>
+    <div class="help-contact-links"><a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a><a href="tel:+917608093320">+91 76080 93320</a><p>Please do not send passwords or private medical details.</p></div>
+  </section>
+
+
+
+
+
+
+
+
+
+  <section class="help-faq">
+    <div class="container">
+      <h2 class="section-title">FAQs</h2>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">For Patients</button>
+        <div class="accordion-panel">
+          <p><strong>How do I create an account?</strong> Create an account by clicking the Sign Up button on the homepage. You can register with your email address.</p>
+          <p><strong>How can I search for a doctor?</strong> Use the search bar on the homepage to look for doctors by symptom, location, or speciality.</p>
+          <p><strong>How do I book an appointment?</strong> Select a doctor from the search results, choose an available time slot, and confirm your appointment.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion" aria-expanded="false">For Doctors</button>
+        <div class="accordion-panel">
+          <p><strong>How do I register as a doctor?</strong> Click on Register as a Doctor on the homepage. Provide your medical credentials and complete the verification process.</p>
+          <p><strong>What credentials are required?</strong> You need a valid medical license and proof of identity to register as an authorised doctor.</p>
+          <p><strong>How do I update my doctor profile?</strong> Use the profile settings in your dashboard to edit your speciality, experience, and hourly fee.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="help-feedback">
+    <div class="container">
+      <div class="card">
+        <div class="help-feedback__inner">
+          <h2 class="section-title" style="margin-bottom:0.5rem">Feedback and suggestions</h2>
+          <p class="lead">
+            We value your input and use it to improve the platform. Please share your thoughts using the
+            feedback form or contact us.
+          </p>
+          <a href="mailto:hi@hellodoc.com" class="btn btn-primary">
+            Give feedback
+            <i class="fa-solid fa-paper-plane"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
+    </div>
+  </footer>
+
+  <script src="./Scripts/appointments.js"></script>
+  <script src="./Scripts/nav.js"></script>
+  <script src="./Scripts/help.js?v=3"></script>
+</body>
+
+</html>

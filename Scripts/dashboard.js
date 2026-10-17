@@ -1,0 +1,488 @@
+/* ============================================================
+   HelloDoc - Dashboard logic
+   Renders doctor cards, handles search / sort / speciality
+   filters, drives the booking modal (writes to the shared
+   Appointments store), shows toasts, and keeps the nav badge
+   and user greeting in sync.
+   Depends on: doctors-data.js, appointments.js, app.css.
+   ============================================================ */
+
+(function () {
+  "use strict";
+
+  // --- state ---
+  let state = {
+    query: "",
+    sort: "relevance",
+    specialities: new Set(),
+    booking: null, // { doctor, date, time }
+  };
+
+  const els = {};
+
+  // --- helpers ---
+  const $ = (sel) => document.querySelector(sel);
+
+  function toast(message, type = "info") {
+    const container = $("#toastContainer");
+    if (!container) return;
+    const icon =
+      type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-circle-info";
+    const node = document.createElement("div");
+    node.className = "toast " + type;
+    node.innerHTML = `<i class="fa-solid ${icon} toast-icon"></i><span></span>`;
+    node.querySelector("span").textContent = message;
+    container.appendChild(node);
+    requestAnimationFrame(() => node.classList.add("show"));
+    setTimeout(() => {
+      node.classList.remove("show");
+      setTimeout(() => node.remove(), 350);
+    }, 3200);
+  }
+
+  // --- filtering / sorting ---
+  function getVisibleDoctors() {
+    let list = window.DOCTORS.slice();
+
+    if (state.specialities.size > 0) {
+      list = list.filter((d) => state.specialities.has(d.speciality));
+    }
+
+    if (state.query) {
+      const q = state.query.toLowerCase();
+      list = list.filter((d) => d.name.toLowerCase().includes(q) || d.speciality.toLowerCase().includes(q) || (d.language || "").toLowerCase().includes(q));
+    }
+
+    switch (state.sort) {
+
+      case "feeLowHigh":
+        list.sort((a, b) => a.hourlyFee - b.hourlyFee);
+        break;
+      case "feeHighLow":
+        list.sort((a, b) => b.hourlyFee - a.hourlyFee);
+        break;
+      default:
+        // Show bookable doctors first; preserve server order within each group.
+        list.sort((a, b) => Number(b.acceptingAppointments) - Number(a.acceptingAppointments));
+    }
+    return list;
+  }
+
+  // --- rendering ---
+  function renderCards() {
+    const list = getVisibleDoctors();
+    const grid = els.teamContainer;
+    grid.innerHTML = "";
+
+    $("#resultsCount").textContent = `${list.length} doctor${list.length === 1 ? "" : "s"}`;
+    $("#resultsTitle").textContent =
+      state.specialities.size > 0 ? "Filtered specialists" : "All specialists";
+    $("#noResults").hidden = list.length !== 0;
+    if (list.length === 0) $("#noResults p").textContent = window.DOCTORS.length ? "No doctors match these filters. Try another search or speciality." : "No approved doctors are listed yet. Try again later.";
+
+    const frag = document.createDocumentFragment();
+    list.forEach((doc) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="profile">
+          <img src="./Asset/Illustrations/doctor.svg" alt="" loading="lazy" />
+          <span class="rating-pill" hidden></span>
+          <span class="status-dot ${doc.acceptingAppointments ? "online" : "offline"}">
+            ${doc.acceptingAppointments ? "Accepting visits" : "Not booking"}
+          </span>
+        </div>
+        <div class="description">
+          <h2></h2>
+          <div class="spec"></div>
+          <p class="doctor-bio"></p>
+          <div class="meta">
+            <div><strong></strong><span>Consultation fee</span></div>
+          </div>
+          <div class="next-slot"><i class="fa-regular fa-clock"></i><span></span></div>
+          <div class="card-actions">
+            <button class="btn btn-primary" type="button" data-book ${doc.acceptingAppointments ? "" : "disabled"}>
+              <i class="fa-regular fa-calendar-plus"></i>${doc.acceptingAppointments ? "View times" : "Not booking"}
+            </button>
+          </div>
+        </div>`;
+      card.querySelector("[data-book]").dataset.book = String(doc.id);
+      card.querySelector(".description h2").textContent = doc.name;
+      card.querySelector(".description .spec").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
+      const bio = card.querySelector(".doctor-bio");
+      bio.textContent = doc.bio || "";
+      bio.hidden = !doc.bio;
+      card.querySelector(".meta strong").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
+      card.querySelector(".next-slot span").textContent = doc.nextSlot ? `Next: ${doc.nextSlot}` : doc.acceptingAppointments ? "View times for availability" : "Appointments currently unavailable";
+      frag.appendChild(card);
+    });
+    grid.appendChild(frag);
+  }
+
+  function renderChips() {
+    const wrap = els.chips;
+    wrap.innerHTML = "";
+    window.SPECIALITIES.forEach((spec) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip" + (state.specialities.has(spec) ? " active" : "");
+      chip.textContent = spec;
+      chip.addEventListener("click", () => {
+        if (state.specialities.has(spec)) state.specialities.delete(spec);
+        else state.specialities.add(spec);
+        chip.classList.toggle("active");
+        syncFilterCount();
+        renderCards();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function syncFilterCount() {
+    const n = state.specialities.size;
+    const badge = $("#filterCount");
+    badge.hidden = n === 0;
+    badge.textContent = n;
+  }
+
+  // --- booking modal ---
+  // The last button that opened the booking modal. We store it on the overlay
+  // so both the close path and any focus-restore path can return focus there.
+  let bookingTrigger = null;
+
+  async function openBooking(doc, fromBtn) {
+    // `fromBtn` is the button the visitor used to open the modal. If it is
+    // not provided we fall back to the current active element so focus can be
+    // restored later.
+    bookingTrigger = fromBtn || (document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null);
+
+    state.booking = { doctor: doc, date: null, time: null, slots: [], idempotencyKey: crypto.randomUUID() };
+    try {
+      const response = await fetch(`/api/doctors/${doc.id}/slots`);
+      if (!response.ok) throw new Error("Could not load available slots");
+      state.booking.slots = await response.json();
+    } catch (error) { state.booking = null; toast(error.message, "error"); return; }
+    $("#bookingImg").src = doc.image;
+    $("#bookingImg").alt = doc.name;
+    $("#bookingTitle").textContent = doc.name;
+    $("#bookingSpeciality").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
+    $("#bookingFee").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
+    $("#bookingReason").value = "";
+    buildDateRow();
+    buildSlotGrid();
+    syncConfirm();
+    els.overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+
+    // Remember where to return focus when the modal closes.
+    els.overlay._focusRestorer = { trigger: bookingTrigger };
+
+    // Focus the first interactive control inside the modal so keyboard users
+    // land inside it immediately. The close button is the first tab stop.
+    const firstControl = $("#bookingClose");
+    if (firstControl && typeof firstControl.focus === "function") {
+      firstControl.focus();
+    }
+  }
+
+  function closeBooking() {
+    els.overlay.classList.remove("open");
+    document.body.style.overflow = "";
+    state.booking = null;
+
+    const trigger = els.overlay._focusRestorer?.trigger || bookingTrigger;
+    if (trigger && typeof trigger.focus === "function" && trigger.offsetParent !== null) {
+      trigger.focus();
+    }
+    els.overlay._focusRestorer = null;
+    bookingTrigger = null;
+  }
+
+  function buildDateRow() {
+    const row = $("#dateRow");
+    row.innerHTML = "";
+    const localDate = (value) => {
+      const day = new Date(value);
+      return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    };
+    const dates = [...new Set(state.booking.slots.map((slot) => localDate(slot.startsAt)))];
+    if (!dates.length) { row.textContent = "No available slots yet."; return; }
+    dates.forEach((iso) => {
+      const d = new Date(iso + "T12:00:00");
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "date-chip";
+      chip.dataset.date = iso;
+      chip.innerHTML = `
+        <span class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+        <span class="dnum">${d.getDate()}</span>
+        <span class="mon">${d.toLocaleDateString(undefined, { month: "short" })}</span>`;
+      chip.addEventListener("click", () => {
+        row.querySelectorAll(".date-chip").forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        state.booking.date = iso;
+        state.booking.time = null;
+        buildSlotGrid();
+        syncConfirm();
+      });
+      row.appendChild(chip);
+    });
+  }
+
+  function buildSlotGrid() {
+    const grid = $("#slotGrid");
+    grid.innerHTML = "";
+    const slots = state.booking.slots.filter((slot) => {
+      const date = new Date(slot.startsAt);
+      const localDay = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return localDay === state.booking.date;
+    });
+    slots.forEach((slot) => {
+      const btnTime = new Date(slot.startsAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot";
+      btn.textContent = btnTime;
+      btn.addEventListener("click", () => {
+        grid.querySelectorAll(".slot").forEach((s) => s.classList.remove("active"));
+        btn.classList.add("active");
+        state.booking.time = slot.id;
+        syncConfirm();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function syncConfirm() {
+    const ok = state.booking && state.booking.date && state.booking.time;
+    $("#bookingConfirm").disabled = !ok;
+  }
+
+  async function confirmBooking() {
+    const b = state.booking;
+    if (!b || !b.date || !b.time) return;
+    const confirm = $("#bookingConfirm");
+    confirm.disabled = true;
+    try {
+      const result = await window.Appointments.add({ slotId: b.time, idempotencyKey: b.idempotencyKey, reason: $("#bookingReason").value.trim() });
+      const message = result.refreshFailed ? "Appointment saved, but the list could not refresh. Reload My Appointments to check it." : `Appointment requested with ${b.doctor.name}. View its status in My Appointments.`;
+      announce(message);
+      closeBooking();
+      toast(message, "success");
+    } catch (error) {
+      toast(error.message === "Not authenticated" ? "Log in to request an appointment." : error.message, "error");
+    } finally { if (state.booking) syncConfirm(); }
+  }
+
+  // --- user greeting (auth state itself is handled by nav.js) ---
+  function setHeroGreeting(name) {
+    const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    $("#heroGreeting").textContent = `Hi ${pretty}, find the right doctor`;
+  }
+
+  function initGreeting() {
+    // Update when nav.js resolves the session during this page load.
+    window.addEventListener("hellodoc:user", (e) => {
+      if (e.detail && e.detail.name) setHeroGreeting(e.detail.name);
+    });
+  }
+
+  // --- toolbar behaviour ---
+  function initToolbar() {
+    els.search.addEventListener("input", (e) => {
+      state.query = e.target.value.trim();
+      renderCards();
+    });
+
+    const dropdown = $("#sortDropdown");
+    $("#sortMenu").addEventListener("click", (e) => {
+      const opt = e.target.closest(".sort-option");
+      if (!opt) return;
+      e.preventDefault();
+      $("#sortMenu").querySelectorAll(".sort-option").forEach((o) => o.classList.remove("active"));
+      opt.classList.add("active");
+      state.sort = opt.dataset.value;
+      $("#sortLabel").textContent = "Sort: " + opt.textContent;
+      dropdown.classList.remove("open");
+      renderCards();
+    });
+    $("#sortDropdown .dropbtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+    document.addEventListener("click", () => dropdown.classList.remove("open"));
+
+    $("#filterToggle").addEventListener("click", () => {
+      els.chips.hidden = !els.chips.hidden;
+    });
+
+    $("#clearFilters").addEventListener("click", () => {
+      state.query = "";
+      state.specialities.clear();
+      els.search.value = "";
+      renderChips();
+      syncFilterCount();
+      renderCards();
+    });
+  }
+
+  // --- card actions (delegated) ---
+  function initCards() {
+    els.teamContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-book]");
+      if (!btn) return;
+      const doc = window.DOCTORS.find((d) => String(d.id) === btn.dataset.book);
+      if (doc) openBooking(doc, btn);
+    });
+  }
+
+  // Every interactive control the visitor could reach while the booking
+  // overlay is open. When focus would leave the modal we move it back in,
+  // so keyboard navigation stays inside the dialog.
+  function modalFocusableControls() {
+    if (!els.overlay || !els.overlay.classList.contains("open")) return [];
+    return Array.from(els.overlay.querySelectorAll(
+      "button, input, select, textarea, a[href], [tabindex]:not([tabindex='-1'])"
+    )).filter((el) => {
+      if (!el || el.disabled) return false;
+      if (el.style.display === "none" || el.hidden) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+  }
+
+  function trapTab(e) {
+    if (!els.overlay || !els.overlay.classList.contains("open") || e.key !== "Tab") return;
+    const traps = modalFocusableControls();
+    if (traps.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = traps[0];
+    const last = traps[traps.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function announce(message) {
+    let region = $("#bookingAnnounce");
+    if (!region) {
+      region = document.createElement("div");
+      region.id = "bookingAnnounce";
+      region.setAttribute("aria-live", "polite");
+      region.setAttribute("aria-atomic", "true");
+      region.className = "visually-hidden";
+      const footer = els.overlay && els.overlay.querySelector(".modal-footer");
+      if (footer && footer.parentNode) {
+        footer.parentNode.insertBefore(region, footer);
+      } else if (els.overlay && els.overlay.parentNode) {
+        els.overlay.appendChild(region);
+      }
+    }
+    region.textContent = message;
+  }
+
+  // --- modal wiring ---
+  function initModal() {
+    $("#bookingClose").addEventListener("click", closeBooking);
+    $("#bookingCancel").addEventListener("click", closeBooking);
+    $("#bookingConfirm").addEventListener("click", confirmBooking);
+    els.overlay.addEventListener("click", (e) => {
+      if (e.target === els.overlay) closeBooking();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (!els.overlay || !els.overlay.classList.contains("open")) return;
+      if (e.key === "Escape") {
+        closeBooking();
+        return;
+      }
+      if (e.key === "Tab") trapTab(e);
+    });
+
+    // Restore focus to the trigger button after the modal closes for any reason.
+    document.addEventListener("focusin", (e) => {
+      const trigger = els.overlay && els.overlay._focusRestorer?.trigger;
+      if (trigger && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+        if (trigger.offsetParent !== null) trigger.focus();
+      }
+    });
+
+    // When the DOM inside the modal changes, keep focus inside it.
+    if (typeof MutationObserver !== "undefined") {
+      const observer = new MutationObserver(() => {
+        const first = modalFocusableControls()[0];
+        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+          first.focus();
+        }
+      });
+      observer.observe(els.overlay, { childList: true, subtree: true });
+      els.overlay._bookingObserver = observer;
+    }
+
+    // Announce the modal opening for assistive tech.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // If motion is reduced, we still focus on open; no need to announce twice.
+    } else {
+      // Delay briefly so the announce message is read after the visual settles.
+      setTimeout(() => {
+        if (els.overlay && els.overlay.classList.contains("open")) {
+          const title = $("#bookingTitle");
+          if (title) announce("Booking dialog opened.");
+        }
+      }, 50);
+    }
+
+    // When the DOM inside the modal changes, restore focus to the first
+    // control if focus is no longer inside the modal.
+    if (typeof MutationObserver !== "undefined") {
+      const observer = new MutationObserver(() => {
+        const first = modalFocusableControls()[0];
+        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+          first.focus();
+        }
+      });
+      observer.observe(els.overlay, { childList: true, subtree: true });
+      els.overlay._bookingObserver = observer;
+    }
+  }
+
+  // --- init ---
+  document.addEventListener("DOMContentLoaded", () => {
+    els.teamContainer = $("#teamContainer");
+    els.search = $("#search");
+    els.chips = $("#chips");
+    els.overlay = $("#bookingOverlay");
+
+    window.DOCTORS = [];
+    window.SPECIALITIES = [];
+    $("#statDoctors").textContent = "0";
+    $("#noResults").hidden = true;
+    $("#resultsCount").textContent = "Loading doctors…";
+    fetch("/api/doctors").then((response) => {
+      if (!response.ok) throw new Error("Directory unavailable");
+      return response.json();
+    }).then((doctors) => {
+      if (!Array.isArray(doctors)) throw new Error("Directory unavailable");
+      window.DOCTORS = doctors.map((d) => ({ ...d, speciality: d.specialty, hourlyFee: d.fee == null ? null : Number(d.fee), acceptingAppointments: d.accepting_appointments !== false, nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null, image: "./Asset/Illustrations/doctor.svg" }));
+      window.SPECIALITIES = [...new Set(window.DOCTORS.map((d) => d.speciality))];
+      $("#statDoctors").textContent = window.DOCTORS.length;
+      renderChips(); renderCards();
+    }).catch(() => { $("#resultsCount").textContent = "Unavailable"; $("#noResults").hidden = false; $("#noResults p").textContent = "Doctor directory is unavailable. Please try again later."; });
+
+    initToolbar();
+    initCards();
+    initModal();
+    initGreeting();
+
+    renderChips();
+  });
+})();

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Sign up</title>
+    <meta name="description" content="Create a HelloDoc account to book appointments and keep your details in one place. Signing up takes a minute. Doctor applications require a separate approval process." />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/signup.css?v=blue2" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+
+    <script src="./Scripts/form-validation.js" defer></script>
+    <script src="./Scripts/signup.js" defer></script>
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
+  <body>
+   <!-- Modern Navigation Bar -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <main>
+        <!-- novalidate hands validation to Scripts/form-validation.js, which
+             explains each problem in place instead of showing browser bubbles.
+             method="post" keeps entered values out of the URL if the script
+             never loads. -->
+        <form class="signup-form" method="post" novalidate>
+          <h2>Create a patient account</h2>
+          <p class="form-sub">Already registered? <a href="index.html?login=patient">Log in as a patient</a>. Doctors can <a href="doctor-apply.html">apply for approval</a> after creating an account.</p>
+
+          <div class="lower">
+            <div class="name">
+              <div>
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" required />
+              </div>
+
+              <div>
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required />
+              </div>
+            </div>
+
+            <div class="form-grp">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required />
+            </div>
+
+            <div class="form-grp">
+              <label for="password">password</label>
+              <input type="password" id="password" name="password" minlength="8" required />
+            </div>
+
+            <div class="form-grp">
+              <label for="dob">Date of Birth</label>
+              <input type="date" id="dob" name="dob" required />
+            </div>
+
+            <div class="form-grp">
+              <label>Sex</label>
+              <div class="radio-group">
+                <div class="radio-left">
+                  <div class="radio-btns">
+                    <input
+                      type="radio"
+                      id="male"
+                      name="sex"
+                      value="male"
+                      required
+                    />
+                    <label for="male">Male</label>
+                  </div>
+
+                  <div class="radio-btns">
+                    <input
+                      type="radio"
+                      id="female"
+                      name="sex"
+                      value="female"
+                      required
+                    />
+                    <label for="female">Female</label>
+                  </div>
+                </div>
+
+                <div class="others">
+                  <input
+                    type="radio"
+                    id="other"
+                    name="sex"
+                    value="other"
+                    required
+                  />
+                  <label for="other">Others</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live region: the validation summary is announced from here -->
+            <div
+              class="form-summary"
+              data-form-summary
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+              hidden
+            ></div>
+            <button type="submit" class="btn-primary">Continue</button>
+            <div class="line-container">
+              <div class="line"></div>
+              <p>or</p>
+              <div class="line"></div>
+            </div>
+
+            <button type="button" class="btn-google" disabled aria-disabled="true" title="Coming soon">
+              <i class="fa-brands fa-google" style="color: #FFD43B;"></i> Continue with Google (coming soon)
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
+    </div>
+  </footer>
+
+  <script src="./Scripts/appointments.js"></script>
+    <script src="./Scripts/nav.js"></script>
+    </body>
+</html>

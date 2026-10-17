@@ -1,0 +1,214 @@
+/* ============================================================
+   HelloDoc - Signup form (uses app.css tokens and controls)
+   Loaded after app.css by signup.html.
+   ============================================================ */
+
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.signup-form {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 2rem;
+  animation: hs-rise 0.3s var(--ease) both;
+}
+
+.signup-form h2 {
+  font-size: var(--text-scale-6);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.signup-form .form-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-scale-4);
+  margin-bottom: 1.75rem;
+}
+
+.signup-form .lower {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.signup-form .name {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.signup-form .name > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.signup-form .name label {
+  font-size: var(--text-scale-3);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.signup-form .name input {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.signup-form .form-grp {
+  gap: 0.4rem;
+}
+
+.signup-form .form-grp label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.signup-form .form-grp .hint {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.signup-form .form-grp input {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.signup-form .radio-group {
+  margin-top: 0.2rem;
+}
+
+.signup-form .radio-group .option {
+  font-weight: 500;
+}
+
+.signup-form .submit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.signup-form .btn-primary {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: var(--text-scale-4);
+  box-shadow: 0 6px 16px var(--brand-glow);
+}
+
+.signup-form .divider {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: var(--text-scale-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.signup-form .divider::before,
+.signup-form .divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.signup-form .divider::before {
+  margin-right: 0.75rem;
+}
+
+.signup-form .divider::after {
+  margin-left: 0.75rem;
+}
+
+.signup-form .social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.signup-form .btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--text-scale-4);
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease),
+    box-shadow 0.18s var(--ease);
+  box-shadow: var(--shadow-xs);
+}
+
+.signup-form .btn-google:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.signup-form .btn-google .fa-google {
+  font-size: 1.05rem;
+  background: conic-gradient(from -45deg, #ea4335 0%, #fbbc05 33%, #34a853 66%, #4285f4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.signup-form .btn-google:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signup-form .signup-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-scale-3);
+  margin-top: 1.25rem;
+}
+
+.signup-form .signup-note a {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+@keyframes hs-rise {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .signup-form {
+    padding: 1.5rem;
+  }
+
+  .signup-form .name {
+    grid-template-columns: 1fr;
+  }
+}
