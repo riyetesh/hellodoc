@@ -1,50 +1,105 @@
-# Supabase cutover (prototype; not approved for patient data)
+# HelloDoc Supabase backend — setup and verification
 
-The connected Supabase project was identified as **Hellodoc**, ref `fsqtjdavnfjnwsbswqel`, region `eu-west-1`. At the latest read-only audit it was healthy, with **zero public tables and zero tracked migrations**. No migration was applied to the live project. [003_supabase_foundation.sql](003_supabase_foundation.sql) is the first PostgreSQL migration; [001](001_patient_foundation.sql) and [002](002_doctor_workspace.sql) are **MySQL-only**, not Supabase migrations. Test 003 in an isolated project before applying it to this project. SQL DDL is not a safe substitute for a backup.
+## Applied database
 
-## Architecture and identity
+Connected project: **Hellodoc**, `fsqtjdavnfjnwsbswqel` (eu-west-1). Inspected before changes: no public tables, migrations or Auth accounts. No legacy import or fictional clinician directory was created.
 
-Static HelloDoc pages → same-origin Express `/api` → Supabase Auth (`signUp`, `signInWithPassword`, `getUser`, `refreshSession`, `resetPasswordForEmail`, `verifyOtp`, `updateUser`) → PostgREST using a **verified user's JWT**, with RLS applied. Tokens reside in HTTP-only SameSite=Lax cookies; the browser receives no service-role key, access token, refresh token or password hash. Configure HTTPS and `APP_ORIGIN` in production. Roles are stored in `profiles`, not in editable user metadata. The Auth trigger inserts every new signup as `patient`. A patient account may submit one pending `doctor_applications` record through the authenticated form; this does not grant a doctor role. A trusted administrator must review the license and identity, then in a privileged transaction update `profiles.role='doctor'`, remove the auto-created patient profile, insert a `doctor_profiles` row with **pending** status, and set `verification_status='approved'` and `is_accepting_appointments=true` only after verification. No public doctor provisioning endpoint exists. License numbers are private to the applicant and trusted administrators; no review UI exists. This project has no admin UI; never grant the service key to a browser. Profiles do not store duplicate emails; verified address stays in Auth.
+Applied via connected migration API on 2026-10-17:
+- `003_supabase_foundation.sql`: profiles, patient_profiles, doctor_profiles, doctor_applications, doctor_availability, appointments, appointment_status_history; Auth trigger, RLS, scoped RPCs and GiST conflict constraints.
+- `005_admin_management.sql`: admin_audit_logs, private.admin_bootstrap, profile phone/suspension, qualification/review fields, restricted admin RPCs, repair for missing profiles and idempotent first-admin operation.
+- `006_directory_suspension.sql`: suspended clinicians excluded from directory/slots/booking, clinician locking during booking and qualification/evidence application RPC.
 
+`001` and `002` are retained **MySQL-only** history; do not execute in PostgreSQL. `004` is an older test specification, not a migration. `007_security_regression.sql` is a rollback-only executable **test**, not a migration. Remote migration versions are API-generated timestamps; names map to the files above. An initial 005 attempt failed on an alias and rolled back; the corrected transaction succeeded.
+
+## Runtime and authentication
+
+Existing static pages → same-origin Express → Supabase Auth/PostgREST. Routine API requests use only `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, with verified user JWTs. Tokens are HTTP-only SameSite=Lax cookies, Secure in production. Session restoration uses getUser/refreshSession. Roles come from PostgreSQL, never editable metadata. Auth trigger always creates patient identity/profile rows. Public signup rejects role assignments. Suspension denies private API access and database operations. Profile fields cannot be directly updated by clients, including role.
+
+Signup returns confirmation instructions unless an authenticated session exists. Email confirmation remains enabled. Sign in after confirming; this server-cookie app does not consume the confirmation redirect's implicit browser session. Recovery supports both the standard Supabase recovery fragment and a token_hash fragment; fragments are removed from the URL immediately, are not stored in browser storage, and are sent only to same-origin password completion. Logout attempts Supabase session revocation and clears cookies; failures are reported rather than claimed successful. Existing access JWTs may remain valid until expiry after refresh-session revocation, as with standard Supabase Auth.
+
+Supabase Site URL now uses `https://hellodoc-r1-e09f.vercel.app`; exact root/recover URLs for production and this VM preview were allowlisted. Password minimum is eight. Auth health was ACTIVE_HEALTHY. No custom SMTP is configured; built-in email limits/restrictions remain. Email delivery, confirmation and recovery must be tested with a real controlled mailbox. Never disable confirmation to get a passing test.
+
+Local start:
 ```
-auth.users 1—1 profiles 1—0..1 patient_profiles
-                          1—0..1 doctor_profiles 1—many doctor_availability
-patient_profiles 1—many appointments many—1 doctor_profiles
-appointments 1—many appointment_status_history
+npm ci --prefix backend
+# Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and APP_ORIGIN privately.
+FLASK_AUTOSTART=false PORT=3000 npm start --prefix backend
 ```
+Environment is loaded by dotenv relative to the working directory. Use exported variables, or deliberately launch from the directory containing your ignored .env. Never expose service keys in public variables. Production fails closed if Supabase or APP_ORIGIN are missing. Legacy MySQL code is retained for old tests/local use but is not mounted when Supabase is configured.
 
-30-minute slots and appointments use UTC `timestamptz`. Active (`pending`/`confirmed`) doctor and patient ranges cannot overlap via GiST exclusion constraints. Booking locks an eligible slot, inserts the appointment and status history atomically; the idempotency UUID is unique per patient. Cancelled slots become bookable again. `pending → confirmed/cancelled`; `confirmed → cancelled/completed/no_show`. Patients may cancel their own future active visits only; approved doctors control their assigned transitions. No patient can confirm or complete. There are no automatic notifications yet. No clinical records were moved to PostgreSQL.
+## First administrator — not yet provisioned
 
-## Permissions (Data API)
+No administrator email or password was chosen, and no real administrator account was created. Bootstrap has no HTTP endpoint or public signup page.
 
-| Relation | Anonymous | Patient | Approved doctor | Admin |
+1. Register the intended administrator email through HelloDoc and confirm the mailbox. This initially creates a patient account. Choose your own strong password; do not send credentials in chat.
+2. On a trusted machine or private CI job, configure these **private process environment** values:
+   - `SUPABASE_URL=https://fsqtjdavnfjnwsbswqel.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (server-only; never commit or paste in chat).
+   - `ADMIN_EMAIL` equal to the confirmed email.
+   - `ADMIN_BOOTSTRAP_CONFIRM=provision-first-admin`
+3. Run `node backend/bootstrap-admin.js` from the repository root after `npm ci --prefix backend`.
+4. Clear the privileged key and bootstrap variables from the shell/job. The running web application does not need them.
+5. Log in through the normal HelloDoc login form. Admin login redirects to `/admin`; existing logged-in users can visit `/admin` directly.
+
+The script looks up an existing confirmed Auth account; it never creates a password, automatically confirms a mailbox or silently promotes an unconfirmed email. A locked database singleton makes reruns for the same user idempotent, blocks a different first admin after consumption, and records an audit entry. Existing admins also block initial bootstrap. Only service_role may execute it. Do not use bootstrap as a general admin invitation system.
+
+## Admin management
+
+`/admin` reuses app.css typography, colors, buttons, header and panels. Its static document contains no private records; every `/api/admin/*` operation independently requires verified Auth identity plus active database admin role. Database RPCs check this again. Patients/doctors get 403; signed-out users get 401.
+
+- Real counts: patient/doctor registrations, pending applications, approved clinicians, upcoming/status counts.
+- Inclusive UTC date range up to 367 days for appointment metrics/trends; account counts are all-time.
+- Cancellation rate = cancelled appointments / all appointments scheduled in the range (zero for empty range).
+- Utilization = non-cancelled bookings / offered 30-minute slots scheduled in range. First 100 clinicians, explicitly labelled; not revenue or clinical outcomes.
+- Name-searchable patient, application and appointment lists, 25/page; status filtering on applications/appointments.
+- Application specialty, private license, qualifications, evidence reference, reason and reviewer history. Evidence is a reference, not a file upload. Administrators must independently verify the clinician. Software does not validate a medical license itself.
+- Approve/reject with mandatory reason; approval requires explicit verification attestation. Approvals atomically assign doctor role and create approved clinician profile.
+- Suspend/reactivate non-admin accounts; suspension disables new doctor bookings. Reactivation does not silently re-enable booking; set availability deliberately.
+- Fee/accepting updates through UI; specialty/bio supported by the restricted action RPC.
+- Admin cancellation only for future pending/confirmed appointments; immutable history and audit entry. No arbitrary medical-note changes.
+- Audit browser shows acting administrator, action, target, time and minimal reason. Do not put medical details in reasons.
+
+Remaining UI gaps: appointment date/UUID filters beyond status/name search, detailed appointment inspector, evidence uploads, full specialty/bio edit controls, aggregate trend zero-filling, utilization pagination beyond first 100 clinicians. Rejected applicants cannot resubmit yet.
+
+## Role-permission matrix
+
+| Resource / action | Anonymous | Patient | Approved doctor | Active admin |
 |---|---|---|---|---|
-| profiles | none; public approved doctor names via `public_doctors` | own SELECT | own SELECT, assigned patient names via RPC | own SELECT; trusted SQL-only administration |
-| patient_profiles | none | own SELECT | none | no general client access |
-| doctor_profiles | approved/accepting directory columns | approved/accepting SELECT | own and approved/accepting SELECT | trusted SQL-only administration |
-| doctor_applications | none | own SELECT; one application via RPC | none | trusted SQL-only review |
-| doctor_availability | published future open slots SELECT | same | own slots SELECT; add via `add_doctor_slot` | no general client writes |
-| appointments | none | own SELECT, book/cancel via RPC | assigned SELECT and status via RPC | no cross-patient client access |
-| appointment_status_history | none | own SELECT | assigned SELECT | no general client access |
+| Public directory/eligible slots | approved only | same | same | same |
+| Profile | none | own read | own read | own read; minimal patients through admin RPC |
+| Patient profile | none | own read | none | no clinical fields via admin UI |
+| Applications | none | own read/submit | own read | paginated review via RPC |
+| Availability | eligible public slots | same | own read/add | no arbitrary raw writes |
+| Appointments | none | own read/book/future cancel | assigned read/status | paginated minimal list/future cancellation |
+| Admin metrics / actions / audit | none | denied | denied | restricted RPCs |
+| Role updates | none | denied | denied | only defined doctor approval; first admin via private bootstrap |
+| Direct application table writes | denied | denied | denied | denied |
 
-No table has a client-side INSERT/UPDATE/DELETE grant. Security-definer functions have empty search paths, schema-qualified relation names, limited EXECUTE grants, and use `auth.uid()`. Run [004_supabase_rls_tests.sql](004_supabase_rls_tests.sql) against a **disposable** test project using anon/user JWTs; SQL editor/admin queries bypass RLS and do not test isolation.
+RLS enabled on every public application table. No ordinary client writes bypass RPCs. SECURITY DEFINER functions use empty search_path and qualified relations; internal functions cannot be executed by anon/authenticated. Suspension restricts reads and wrapper RPCs. JWT roles are not trusted as application roles.
 
-## Setup and deployment
+## Bookings
 
-1. Create a disposable Supabase project. Review SQL and apply 003 through Supabase migration tooling **once**, after taking a backup and recording its version. Never run MySQL scripts in PostgreSQL. Run `select * from public.public_doctors()` and RLS probes using user JWTs. The directory RPC exposes only approved profiles (including non-bookable approved doctors), with specialty, consultation fee, professional bio and booking status; it never exposes license numbers. If 003 was already applied, change its return type with a reviewed follow-up migration rather than rerunning the foundation migration. Configure Auth Site URL and allowlisted redirect `https://your-host/recover.html`, confirmation email template redirect, SMTP sender, and email verification policy. For password recovery, configure a template that sends the `token_hash` in a URL fragment as `#token_hash={{ .TokenHash }}` on `recover.html`; default recovery templates commonly use `?code=` and will not work with this form without adjustment. Confirm this with a synthetic account before rollout.
-2. Set server environment from [backend/.env.example](../.env.example): `SUPABASE_URL`, **publishable** `SUPABASE_PUBLISHABLE_KEY`, `APP_ORIGIN`, and optionally `FLASK_ORIGIN` / prediction token. No service-role key is used at runtime. `backend/.env` is ignored. Install with `npm ci --prefix backend`; start Express with `FLASK_AUTOSTART=false npm start --prefix backend`. Keep the Flask service separate. Set variables in Vercel backend environment; confirm routing, origin, TLS and static pages on the actual deployment. Existing [vercel.json](../../vercel.json) multi-service configuration has not been verified for Supabase.
-3. With a synthetic verified patient and approved synthetic doctor, test sign-up, confirmation, login, recovery, refresh, booking, conflicting concurrent bookings, cancellation and dashboard reload on a second browser. Compare `auth.uid()` policy results to HTTP API results. Do **not** use actual patient information before compliance review.
+Appointments persist in PostgreSQL, not localStorage. Eligible approved clinicians + future open slots only. Thirty-minute UTC timestamptz slots; exclusion constraints protect both clinician and patient overlapping pending/confirmed ranges. Slot lock and account lock protect booking against competing reservations/suspension; per-patient advisory lock serializes retries. Same idempotency key returns the same booking. Patients cannot confirm; doctors can confirm/cancel assigned future appointments, complete/no-show confirmed finished appointments. No fabricated booking confirmations or notifications are emitted. Notifications/clinical tables from the old MySQL implementation are not available in Supabase; corresponding screens show no records, not imported/demo records.
 
-## Old data / rollback
+## Checks actually performed
 
-The MySQL `users` table has integer IDs, bcrypt hashes and sessions; [001](001_patient_foundation.sql) and [002](002_doctor_workspace.sql) add doctor, appointment and clinical tables. MySQL could not be inspected live (access denied). Browser booking storage was previously used in older builds; current appointment scripts request the API. Do not copy hashes into Supabase Auth. Export schema/counts/duplicates under authorized access; invite users to recover/reset their identity, verify ownership, create a secure old-ID → Auth-UUID mapping offline, and reconcile doctor approvals separately. Detect duplicate emails, invalid/out-of-range dates, overlaps and orphaned clinical rows before migration. Import only consented validated records in a transaction with a reconciliation report; current code has **no import tool**. Keep backed-up MySQL and browser data read-only until checks pass. Roll back application traffic/config to backed-up legacy environment only if no newer Supabase writes would be lost; reconcile deltas and preserve audit evidence. Never drop old tables for rollback. Current local legacy fallback is for old tests and development only; production requires Supabase configuration.
+- 22 Node tests passed: legacy regression stubs, Supabase route stubs, admin role/validation/suspension tests, live HTTP and anonymous Data API permission checks.
+- Live PostgreSQL rollback regression passed under SET LOCAL ROLE authenticated and explicit synthetic subjects: trigger metadata role ignored, own profiles only, role mutation denied, patient/doctor admin denied, public bootstrap denied, audit denied, doctor application/approval, approved count, booking persistence within transaction, idempotency, patient-confirmation denied, cross-patient reads denied, overlapping booking rejected, suspended reads/RPCs denied. SQL fixtures are not Auth API signup tests. All fixtures rolled back; zero Auth users remained.
+- Static allowlisted build succeeded. JS syntax checks passed. No project TypeScript/typecheck script exists.
+- Live directory returned `[]` from actual Supabase (no approved clinician seeded). Admin/private endpoints return 401 signed out; foreign-origin writes and role escalation rejected.
+- Python test attempt blocked: pytest is not installed in restored environment. No Python tests claimed passed.
+- Dependency install reported **11 vulnerabilities (2 moderate, 7 high, 2 critical)** in backend dependencies. Lockfile preserved; no blind dependency upgrade. Audit remediation remains required.
 
-## Analytics query catalogue
+NOT VERIFIED: complete Auth signup/confirmation/login/refresh/recovery/logout using controlled mailbox, real bootstrap/sign-in, authenticated PostgREST JWT matrix, simultaneous competing transactions, second-device persistence, interactive browser behavior, new deployed Vercel runtime. Database sequential exclusion testing is not a concurrent-request measurement. Browser automation is unavailable; owner must perform interactive checks. Do not enter real patient information.
 
-`patient_activity()` counts the signed-in patient's future pending/confirmed appointments and their completed/cancelled appointments across all dates; it returns no identifiers. The patient portal displays these counts only after the scoped query succeeds. `doctor_activity(p_since,p_until)` counts appointments in the inclusive **UTC calendar-day** range, grouped by **current status**, for only `auth.uid()` (verified doctor). `total` is all statuses; `cancellationRate=cancelled/total`, zero when total is zero. It never returns patient identifiers. Index `appointments_doctor_start` supports the range. Admin metrics (no authorized admin interface exists), utilization, trend series, and conversion metrics have **not** been implemented; there is no admin client interface or event stream. Do not infer diagnoses from the predictor or claim these counts represent outcomes.
+## Vercel status and remaining deployment
 
-## Security and remaining work
+Existing project `hellodoc`, `prj_jFbKTPOO82ObVUAvEHvFu96ZfO7s`; no duplicate created. Latest inspected production `dpl_F2H8Z8nurmAFvwDN78rvBZvtbABp` is ERROR: root Python bundle **625.04 MB**, above 500 MB. Existing Supabase-linked URL/publishable env names target preview/production; secret values were not decrypted.
 
-The old public `/predict` page (GET and POST) is now denied by Flask and by the local Express proxy. Approved doctors may use the existing internal token-protected prediction workflow in legacy mode, but there is no patient-facing symptom check or Supabase doctor UI for prediction. Flask `/` is also denied; only the internal token-protected prediction API remains. A hidden link is not an access control boundary.
+Added only production `APP_ORIGIN=https://hellodoc-r1-e09f.vercel.app` and preview/production `FLASK_AUTOSTART=false`; no unrelated env values overwritten. Preview APP_ORIGIN must match the exact preview host before testing mutations. Multiple production aliases require an explicit trusted origin configuration; currently only the canonical hostname above is supported for mutations.
 
-The table reads are RLS-scoped, but privileged functions must also be penetration-tested through the Data API. Rate limiting is process-local only; replace with a shared edge limiter before multi-instance rollout. Cookies are HTTP-only, Secure on HTTPS and Lax; sign-out clears browser cookies but **does not revoke the refresh token server-side**. Any leaked refresh token should be revoked via Supabase Auth administration. Backend also still contains a local-only legacy MySQL workflow, with its separate session store; do not deploy it to production. Clinical documents, patient profile editing, admin verification UI, durable notifications, doctor scheduling beyond 30-minute slots, aggregates beyond doctor status totals, and migration/import are not delivered. Supabase migration has not been applied nor tested on a live database; no real Auth or RLS tests, concurrent transactions, SMTP recovery, production routing or second-device persistence have been verified. The existing Vercel `hellodoc` project (`prj_jFbKTPOO82ObVUAvEHvFu96ZfO7s`) uses a multi-service framework with Express backend, Flask app/algo and Vite chatbot. Supabase-linked environment entries include SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY for preview and production, but their values and runtime behavior were not verified. Configure APP_ORIGIN for the actual target host in Vercel Project Settings → Environment Variables before using production; do not repurpose service-role/secret keys. The most recent production deployment (dpl_F2H8Z8nurmAFvwDN78rvBZvtbABp) failed because the Python function bundle was 625.04 MB (500 MB maximum); fix the bundle packaging and verify deployment before considering any cutover. No remote deployment or settings were changed. Obtain healthcare privacy, data residency, retention/deletion, backup and contractual reviews before any real patient data.
+Local vercel.json now proposes an allowlisted static web service plus existing Express backend. The oversized Python root/experimental ML/chatbot services are excluded from this deployment configuration, **not deleted from source**. Prediction returns unavailable unless a separately configured private model service exists. Do not imply medical model validation. This packaging change requires Vercel build verification; only local static build has run.
+
+No new Vercel deployment was created. The integration cannot upload this workspace as a directory; it accepts inline files or a Git source. The current workspace changes are not in GitHub, and deploying main would redeploy old code. Review, commit and push the changes through your normal workflow (not performed without authorization), then deploy the existing project and inspect build/runtime logs. Verify the multi-service schema is accepted by the installed Vercel builder; production routing and 500 MB resolution remain pending, not established by local build.
+
+Before launch: configure SMTP, complete mailbox/browser and concurrent-booking tests, provision first admin, remove obsolete preview redirect after VM retirement, remediate dependency audit, enforce distributed rate limiting, add admin MFA enforcement, review privacy/retention/audit access/backups and legal/clinical requirements. No healthcare compliance is claimed.

@@ -34,6 +34,24 @@ const post = async (path,body,cookie='hd_access=valid') => {
   const response=await fetch(origin+path,{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie},body:JSON.stringify(body)});
   return {status:response.status,body:await response.json()};
 };
+test('admin APIs enforce identity, role, validation and RPC authorization', async () => {
+  assert.equal((await fetch(origin+'/api/admin/patients')).status,401);
+  for (const role of ['patient','doctor']) {
+    profile={...profile,role};
+    assert.equal((await fetch(origin+'/api/admin/patients',{headers:{Cookie:'hd_access=valid'}})).status,403);
+    assert.equal((await post('/api/admin/actions',{action:'suspend',target:profile.id,reason:'Test reason'})).status,403);
+  }
+  profile={...profile,role:'admin'};
+  assert.equal((await fetch(origin+'/api/admin/patients',{headers:{Cookie:'hd_access=valid'}})).status,200);
+  assert.equal((await post('/api/admin/actions',{action:'suspend',target:'bad',reason:'Test reason'})).status,400);
+  rpcError={code:'42501'};
+  assert.equal((await post('/api/admin/actions',{action:'suspend',target:profile.id,reason:'Test reason'})).status,409);
+  rpcError=null;
+  assert.equal((await post('/api/admin/actions',{action:'suspend',target:profile.id,reason:'Test reason'})).status,200);
+  profile={...profile,role:'patient',suspended:true};
+  assert.equal((await fetch(origin+'/api/auth/current-user',{headers:{Cookie:'hd_access=valid'}})).status,403);
+  profile={...profile,suspended:false};
+});
 test('only patient registration; no password sent to application tables',async () => {
   assert.equal((await post('/api/auth/signup',{role:'doctor',firstName:'Synthetic',lastName:'Test',email:'test@example.invalid',password:'password123'})).status,403);
   assert.equal((await post('/api/auth/signup',{firstName:'Synthetic',lastName:'Test',email:'test@example.invalid',password:'password123'})).status,201);
