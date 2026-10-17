@@ -80,6 +80,43 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       res.status(201).json({ message: data.session ? 'Account created' : 'Check your email to confirm your account before logging in.' });
     } catch (error) { report('signup', error); res.status(503).json({ message: 'Registration unavailable' }); }
   });
+  router.post('/auth/doctor-signup', async (req, res) => {
+    const { firstName, lastName, email, password, specialty, licenseNumber, qualifications, evidenceReference } = req.body || {};
+    const clean = (value) => typeof value === 'string' ? value.trim() : '';
+    const values = { firstName:clean(firstName), lastName:clean(lastName), email:clean(email), password, specialty:clean(specialty), licenseNumber:clean(licenseNumber), qualifications:clean(qualifications), evidenceReference:clean(evidenceReference) };
+    if (!values.firstName || values.firstName.length > 100 || !values.lastName || values.lastName.length > 100 ||
+        !/^\\S+@\\S+\\.\\S+$/.test(values.email) || values.email.length > 254 ||
+        typeof values.password !== 'string' || values.password.length < 8 || values.password.length > 1024 ||
+        values.specialty.length < 2 || values.specialty.length > 120 ||
+        values.licenseNumber.length < 3 || values.licenseNumber.length > 120 ||
+        values.qualifications.length < 5 || values.qualifications.length > 2000 ||
+        values.evidenceReference.length < 5 || values.evidenceReference.length > 1000) {
+      return res.status(400).json({ message: 'Complete every field with valid details. Passwords must be at least 8 characters.' });
+    }
+    try {
+      const { data, error } = await client().auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: { emailRedirectTo: `${origin}/`, data: {
+          full_name: `${values.firstName} ${values.lastName}`.trim(),
+          account_type: 'doctor_applicant',
+          specialty: values.specialty,
+          license_number: values.licenseNumber,
+          qualifications: values.qualifications,
+          evidence_reference: values.evidenceReference
+        } }
+      });
+      if (error) return res.status(400).json({ message: error.message });
+      if (data.session) save(res, data.session);
+      return res.status(201).json({ message: data.session ? 'Doctor application created.' : 'Check your email to confirm your account. Your doctor application is saved as pending.' });
+    } catch (error) { report('doctor_signup', error); return res.status(503).json({ message: 'Doctor registration unavailable. Please try again later.' }); }
+  });
+  router.get('/doctor/application-status', ...guard(null, async (req, res, { db, profile, user }) => {
+    if (!['doctor_applicant','doctor'].includes(profile.role)) return res.status(403).json({ message: 'This portal is for doctor applicants and approved doctors.' });
+    const result = await db.from('doctor_applications').select('status,specialty,created_at,review_reason').eq('applicant_id', user.id).single();
+    if (result.error) return res.status(503).json({ message: 'Application status is unavailable.' });
+    res.json({ role: profile.role, application: result.data });
+  }));
   router.post('/auth/login', async (req, res) => {
     const { email, password } = req.body || {};
     if (typeof email !== 'string' || typeof password !== 'string' || email.length > 254 || password.length > 1024) return res.status(400).json({ message: 'Invalid credentials' });
