@@ -112,3 +112,18 @@ Vercel. After pushing the feature branch, inspect its preview build result and
 verify HTML/CSS/JS plus auth/status API routes on the deployed origin. A local
 build alone does not establish that Vercel accepts this multi-service config.
 No production deployment is authorized by these instructions.
+
+Preview verification outcome: commit `bdbce70` deployed successfully as
+`dpl_8ywGHRtbikNo9gdZh8FxS3QdwRCj` (READY), at
+https://hellodoc-abmtmcozc-r1-e09f.vercel.app . The second observed failure,
+`MULTIPLE_FRAMEWORKS_SERVICE` (root Flask/Django detection), was fixed by the
+isolated dependency-free `web` workspace. Its build generates `web/dist` using
+the same static allowlist; backend builds only the Express entrypoint. Vercel
+completed its build in 6 seconds with one Node function; the oversized Python
+function is no longer part of this preview. No exact compressed bundle size was
+reported. Deployment Protection redirects the browser to Vercel login, so
+post-deployment HTML/API tests are blocked until an authorized reviewer signs in.
+Protection was not disabled, and production was not deployed. Existing PR:
+https://github.com/riyetesh/hellodoc/pull/3 . Its branch now includes these fixes.
+The build still reports 11 dependency vulnerabilities (2 moderate, 7 high,
+2 critical); dependency remediation and mailbox E2E remain launch blockers.
