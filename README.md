@@ -34,3 +34,81 @@ The existing [vercel.json](vercel.json) describes a multi-service deployment, bu
 ## Privacy and clinical limitations
 
 This is a prototype; **do not enter real patient information** until security, clinical, privacy and operational reviews are completed. Obtain and record meaningful consent for health data, define lawful access and retention periods, audit clinical read/write access, limit privileged DB users, test backup/restore and incident response, enforce transport security, add durable shared sessions and distributed rate limits, and verify role/ownership behavior against a real migrated database. Medical information in the current API includes free-text inputs; notifications deliberately avoid symptom details but are in-app only. File upload/document management, full break/leave/duration-aware scheduling, active reminders, clinician verification workflow, linked amendments, reliable timing/feedback analytics, medical model validation and end-to-end integration tests remain incomplete. No legal or regulatory compliance is claimed.
+
+## Doctor onboarding and isolated demos
+
+Patients register at `signup.html`; clinicians register independently at
+`doctor-apply.html` (no patient account). Supabase Auth's signup trigger atomically
+creates a `doctor_applicant` profile and one pending application, not a patient
+profile or an approved clinician. Public metadata can select only the
+least-privilege applicant path, never doctor/admin authority. Email confirmation
+remains enabled. Keep the confirmation instructions on screen; after confirming,
+use the doctor sign-in link. Existing cookie-based login, refresh and logout are
+shared across roles. Server-verified roles route patients to `patient.html`,
+applicants to `doctor-portal.html`, approved doctors to `doctor.html`, and admins
+to `/admin`. Pending/rejected applicants have no clinical permissions.
+
+Administrators independently verify credentials before approval, using the
+existing audited admin workflow. The status API reads only the authenticated
+applicant's application under RLS and verifies approved doctor profiles before
+workspace redirection. Suspended accounts are denied access; missing/inconsistent
+applications require retry/support, never implicit approval.
+
+`demo.html` is public and contains fictional patient/doctor views, keyboard tab
+navigation (arrows/Home/End), example fees and schedules. Actions only update the
+page, explicitly save nothing, and make no API calls. Real registration links
+are separate from simulated actions.
+
+### Database reconciliation (2026-10-17)
+
+Apply PostgreSQL migrations in order: 003, 005, 006, 008. Files 001/002 are legacy
+MySQL; 004/007 are tests, not migrations. Live migration history confirms 008's
+effects are already applied as `20261017101108 / doctor_applicant_role`; do not
+reapply it blindly. The live trigger and four-role constraint match 008.
+Primary keys enforce one profile/application per Auth user. No additional schema
+migration was necessary for the portal corrections. Rollback-only synthetic SQL
+checks verified applicant creation, absence of patient/doctor profiles, role
+escalation denial and cross-account application isolation. No records retained.
+
+### Local development and verification
+
+```
+npm ci --prefix backend
+cd backend
+# Create ignored .env using .env.example placeholders:
+# SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+# SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_KEY
+# APP_ORIGIN=http://localhost:5000
+FLASK_AUTOSTART=false npm start
+```
+
+From the repository root:
+```
+node --test tests/supabase_routes.test.js tests/patient_api.test.js tests/doctor_api.test.js tests/production.test.js
+python -m pytest -q
+node backend/build-static.js
+```
+
+There is no TypeScript/typecheck script. Current verification: 24 Node tests and
+77 Python tests passed. Python reports the existing serialized model version
+warning. Browser verification confirmed keyboard demo switching and schedule
+toggling without any `/api/` requests. Auth API tests use stubs; SQL tests exercise
+real PostgreSQL policies but not a full Auth mailbox flow. Confirmation delivery,
+authenticated browser refresh/logout/revocation and two-device behavior still
+need controlled-mailbox E2E testing. The in-process auth limiter is not a durable
+multi-instance rate limiter; Supabase Auth's own limits also apply.
+
+### Vercel preview deployment
+
+Use the existing linked project and feature branch, never merge/main or promote
+to production without approval. `vercel.json` defines static allowlisted output
+and a separate Express `backend/production.js` entrypoint. The latest inspected
+failure was schema validation of `services.web.framework: null`; omit that
+optional field instead. Environment names `SUPABASE_URL` and
+`SUPABASE_PUBLISHABLE_KEY` must exist for preview/production. Production requires
+`APP_ORIGIN`; preview derives its trusted origin from Vercel's `VERCEL_URL` when
+APP_ORIGIN is absent. Never derive it from request Host. Keep Flask disabled on
+Vercel. After pushing the feature branch, inspect its preview build result and
+verify HTML/CSS/JS plus auth/status API routes on the deployed origin. A local
+build alone does not establish that Vercel accepts this multi-service config.
+No production deployment is authorized by these instructions.

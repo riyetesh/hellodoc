@@ -192,7 +192,7 @@
     const chip = $("#userChip");
     if (!chip) return;
     chip.addEventListener("click", () => {
-      window.location.href = chip.dataset.role === 'admin' ? '/admin' : chip.dataset.role === 'doctor' ? 'doctor.html' : 'patient.html';
+      window.location.href = chip.dataset.role === 'admin' ? '/admin' : chip.dataset.role === 'doctor' ? 'doctor.html' : chip.dataset.role === 'doctor_applicant' ? 'doctor-portal.html' : 'patient.html';
     });
   }
 

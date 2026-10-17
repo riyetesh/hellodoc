@@ -18,9 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.message || 'Doctor registration could not be completed.');
-      message.textContent = result.message + (result.authenticated ? ' Opening your doctor portal…' : ' Redirecting to sign in…');
+      message.textContent = result.message;
       form.reset();
-      window.setTimeout(() => { window.location.assign(result.authenticated ? '/doctor-portal.html' : '/index.html?login=doctor'); }, 1800);
+      if (result.authenticated) window.location.assign('/doctor-portal.html');
+      else {
+        const link = document.createElement('a');
+        link.href = '/index.html?login=doctor';
+        link.textContent = ' Sign in after confirming your email';
+        message.append(link);
+      }
     } catch (error) {
       message.textContent = error.message || 'Could not reach HelloDoc. Please try again.';
       button.disabled = false;

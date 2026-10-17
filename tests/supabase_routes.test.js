@@ -6,11 +6,14 @@ let profile = { id:'11111111-1111-4111-8111-111111111111',role:'patient',full_na
 let rpcError = null;
 let directory = [];
 let calls = [];
+let signupPayload;
+let application = {status:'pending',specialty:'Cardiology',created_at:'2026-10-17',review_reason:null};
+let applicationError = null;
 const makeQuery = (table) => {
   const query = {
     select() { return this; }, eq() { return this; },
     order() { return this; }, limit() { return Promise.resolve({data:[],error:null}); },
-    async single() { return { data:table === 'profiles' ? profile : {verification_status:'approved'},error:null }; },
+    async single() { return { data:table === 'profiles' ? profile : table === 'doctor_applications' ? application : {verification_status:'approved'},error:table === 'doctor_applications' ? applicationError : null }; },
   };
   return query;
 };
@@ -18,7 +21,7 @@ const fake = () => ({
   auth: {
     async getUser(token) { return { data:{user:token==='valid' ? {id:profile.id,email:'test@example.invalid'} : null} }; },
     async refreshSession() { return { data:{session:null} }; },
-    async signUp() { return {data:{session:null},error:null}; },
+    async signUp(payload) { signupPayload = payload; return {data:{session:null},error:null}; },
     async signInWithPassword() { return {data:{session:{access_token:'valid',refresh_token:'refresh',expires_in:3600},user:{id:profile.id}},error:null}; },
   },
   from:makeQuery,
@@ -115,4 +118,37 @@ test('protected booking verifies Auth identity and role; failed writes never suc
   assert.equal(result.status,201);
   assert.equal(result.body.status,'pending');
   assert.ok(calls.some((call) => call.name==='book_appointment' && call.args.p_key===idempotencyKey));
+});
+
+test('independent doctor signup uses only applicant metadata and rejects privilege input', async () => {
+  const payload = {firstName:'Synthetic',lastName:'Applicant',email:'synthetic@example.invalid',password:'Synthetic-password-123',specialty:'Cardiology',licenseNumber:'SYNTHETIC-123',qualifications:'Synthetic qualification',evidenceReference:'Synthetic registry reference'};
+  assert.equal((await post('/api/auth/doctor-signup', {...payload,role:'admin'}, '')).status,403);
+  assert.equal((await post('/api/auth/doctor-signup', {...payload,specialty:'x'}, '')).status,400);
+  const response = await post('/api/auth/doctor-signup', payload, '');
+  assert.equal(response.status,201);
+  assert.equal(response.body.authenticated,false);
+  assert.match(response.body.message,/confirm/);
+  assert.equal(signupPayload.options.data.account_type,'doctor_applicant');
+  assert.equal(signupPayload.options.data.role,undefined);
+  assert.equal(signupPayload.options.data.license_number,payload.licenseNumber);
+});
+
+test('application status is authenticated, applicant-only, and distinguishes missing and suspended accounts', async () => {
+  const status = () => fetch(origin+'/api/doctor/application-status',{headers:{Cookie:'hd_access=valid'}});
+  assert.equal((await fetch(origin+'/api/doctor/application-status')).status,401);
+  profile={...profile,role:'patient'};
+  assert.equal((await status()).status,403);
+  profile={...profile,role:'doctor_applicant'};
+  assert.equal((await status()).status,200);
+  assert.equal((await fetch(origin+'/api/doctor/dashboard',{headers:{Cookie:'hd_access=valid'}})).status,403);
+  application={...application,status:'rejected',review_reason:'Synthetic review'};
+  assert.equal((await (await status()).json()).application.review_reason,'Synthetic review');
+  applicationError={code:'PGRST116'};
+  assert.equal((await status()).status,404);
+  applicationError=null;
+  profile={...profile,suspended:true};
+  assert.equal((await (await status()).json()).code,'ACCOUNT_SUSPENDED');
+  profile={...profile,role:'doctor',suspended:false};
+  assert.equal((await (await status()).json()).approved,true);
+  profile={...profile,role:'patient'};
 });

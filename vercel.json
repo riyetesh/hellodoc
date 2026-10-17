@@ -3,7 +3,6 @@
   "services": {
     "web": {
       "root": ".",
-      "framework": null,
       "installCommand": "npm ci --prefix backend --ignore-scripts",
       "buildCommand": "node backend/build-static.js",
       "outputDirectory": "dist"

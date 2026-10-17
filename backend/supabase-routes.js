@@ -43,7 +43,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       // without creating a second session or exposing it to browser JavaScript.
       const scoped = createClient(url, key, { ...options, accessToken: async () => token });
       const result = await scoped.from('profiles').select('id,full_name,role,suspended').eq('id', user.id).single();
-      if (result.error || !result.data || result.data.suspended) return res.status(403).json({ message: 'Profile unavailable' });
+      if (result.data?.suspended) return res.status(403).json({ code: 'ACCOUNT_SUSPENDED', message: 'Account restricted. Contact HelloDoc support.' });
+      if (result.error || !result.data) return res.status(403).json({ code: 'PROFILE_UNAVAILABLE', message: 'Profile unavailable. Contact support.' });
       req.care = { db: scoped, user, profile: result.data };
       next();
     } catch (error) { report('identity', error); res.status(503).json({ message: 'Authentication unavailable' }); }
@@ -81,6 +82,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     } catch (error) { report('signup', error); res.status(503).json({ message: 'Registration unavailable' }); }
   });
   router.post('/auth/doctor-signup', async (req, res) => {
+    if (['role','status','approved','approvalStatus','permissions','account_type'].some((field) => Object.hasOwn(req.body || {}, field))) return res.status(403).json({ message: 'Roles and approval permissions cannot be assigned at registration' });
     const { firstName, lastName, email, password, specialty, licenseNumber, qualifications, evidenceReference } = req.body || {};
     const clean = (value) => typeof value === 'string' ? value.trim() : '';
     const values = { firstName:clean(firstName), lastName:clean(lastName), email:clean(email), password, specialty:clean(specialty), licenseNumber:clean(licenseNumber), qualifications:clean(qualifications), evidenceReference:clean(evidenceReference) };
@@ -113,8 +115,15 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   });
   router.get('/doctor/application-status', ...guard(null, async (req, res, { db, profile, user }) => {
     if (!['doctor_applicant','doctor'].includes(profile.role)) return res.status(403).json({ message: 'This portal is for doctor applicants and approved doctors.' });
+    if (profile.role === 'doctor') {
+      const approval = await db.from('doctor_profiles').select('verification_status').eq('user_id', user.id).single();
+      if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ code: 'DOCTOR_NOT_APPROVED', message: 'Doctor approval could not be verified. Contact support.' });
+      return res.json({ role: 'doctor', approved: true });
+    }
     const result = await db.from('doctor_applications').select('status,specialty,created_at,review_reason').eq('applicant_id', user.id).single();
-    if (result.error) return res.status(503).json({ message: 'Application status is unavailable.' });
+    if (result.error?.code === 'PGRST116' || (!result.error && !result.data)) return res.status(404).json({ code: 'APPLICATION_MISSING', message: 'No application was found. Retry or contact support; do not create another account.' });
+    if (result.error) return res.status(503).json({ message: 'Application status is unavailable. Please retry.' });
+    if (!['pending','rejected'].includes(result.data.status)) return res.status(409).json({ code: 'APPLICATION_INCONSISTENT', message: 'Your application needs administrator attention. Contact support.' });
     res.json({ role: profile.role, application: result.data });
   }));
   router.post('/auth/login', async (req, res) => {
