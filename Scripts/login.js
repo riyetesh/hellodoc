@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (response.ok) {
           done = true;
-          window.location.href = data.role === "admin" ? "/admin" : data.role === "doctor" ? "./doctor.html" : "./patient.html";
+          window.location.href = data.role === "admin" ? "/admin" : data.role === "doctor" ? "./doctor.html" : data.role === "doctor_applicant" ? "./doctor-portal.html" : "./patient.html";
           return;
         }
 
