@@ -424,6 +424,9 @@ app.use("/api/auth", router);
 app.use("/auth", router);
 } // end legacy MySQL mode
 
+// Admin document contains no private data; every data/action request is authorized separately.
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '..', 'admin.html')));
+
 // Health check (useful to confirm the function is live on Vercel).
 app.get(["/health", "/api/health", "/api/auth/health"], (req, res) => {
   res.json({ status: "ok" });
@@ -576,7 +579,7 @@ function stopFlaskService() {
 }
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
     startFlaskService();
   });

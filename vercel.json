@@ -1,40 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
-    "app": {
+    "web": {
       "root": ".",
-      "framework": "flask"
-    },
-    "algo": {
-      "root": "Algo",
-      "framework": "flask"
+      "framework": null,
+      "installCommand": "npm ci --prefix backend --ignore-scripts",
+      "buildCommand": "node backend/build-static.js",
+      "outputDirectory": "dist"
     },
     "backend": {
       "root": "backend",
-      "framework": "express"
-    },
-    "chatbot": {
-      "root": "chatbot",
-      "framework": "vite"
+      "framework": "express",
+      "entrypoint": "production.js",
+      "installCommand": "npm ci --ignore-scripts"
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": {
-        "service": "backend"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "service": "app"
-      }
-    }
-  ],
-  "functions": {
-    "Algo/main.py": {
-      "excludeFiles": "{backend/**,chatbot/**,Login-and-dashboard/**,**/node_modules/**,**/.git/**,**/__pycache__/**,**/*.pyc,tests/**,**/tests/**,**/*.test.*,**/test_*.py}"
-    }
-  }
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/admin", "destination": { "service": "web", "path": "/admin.html" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
 }

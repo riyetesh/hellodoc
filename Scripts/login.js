@@ -98,18 +98,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (response.ok) {
           done = true;
-          window.location.href = data.role === "doctor" ? "./doctor.html" : "./patient.html";
+          window.location.href = data.role === "admin" ? "/admin" : data.role === "doctor" ? "./doctor.html" : "./patient.html";
           return;
         }
 
         if (response.status === 503) {
-          api.setSummary("The service is unavailable right now. Please try again in a few minutes.");
+          api.setSummary(data.message || "The service is unavailable right now. Please try again in a few minutes.");
           return;
         }
 
         // The API replies the same way for an unknown account and a wrong
         // password, so this message deliberately does not say which is wrong.
-        api.setFieldError("password", "Check the email and password you entered, then try again.");
+        if (response.status === 401) api.setFieldError("password", data.message || "Check the email and password you entered, then try again.");
+        else api.setSummary(data.message || "Unable to sign in. Please try again.");
       } catch (error) {
         console.error("Login request failed");
         api.setSummary("We could not reach the server. Check your connection and try again.");

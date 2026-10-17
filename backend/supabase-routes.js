@@ -5,9 +5,10 @@ const { modelRequest, validSymptoms } = require('./model-client');
 const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const cookieOptions = () => ({ httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
-module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY }) {
+module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY, origin = process.env.APP_ORIGIN }) {
   if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY required');
   const client = () => createClient(url, key, options);
+  const report = (operation, error) => console.error(JSON.stringify({ event: 'supabase_operation_failed', operation, code: typeof error?.code === 'string' ? error.code : undefined, status: error?.status, errorType: error?.name }));
   const router = express.Router();
   router.use((req, res, next) => { res.set('Cache-Control', 'private, no-store'); next(); });
   const cookies = (req) => Object.fromEntries((req.get('cookie') || '').split(';').map((part) => {
@@ -41,11 +42,11 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       // The access token has already been checked by getUser; pass it to PostgREST
       // without creating a second session or exposing it to browser JavaScript.
       const scoped = createClient(url, key, { ...options, accessToken: async () => token });
-      const result = await scoped.from('profiles').select('id,full_name,role').eq('id', user.id).single();
-      if (result.error || !result.data) return res.status(403).json({ message: 'Profile unavailable' });
+      const result = await scoped.from('profiles').select('id,full_name,role,suspended').eq('id', user.id).single();
+      if (result.error || !result.data || result.data.suspended) return res.status(403).json({ message: 'Profile unavailable' });
       req.care = { db: scoped, user, profile: result.data };
       next();
-    } catch { res.status(503).json({ message: 'Authentication unavailable' }); }
+    } catch (error) { report('identity', error); res.status(503).json({ message: 'Authentication unavailable' }); }
   }
   const guard = (role, handler) => [identity, async (req, res) => {
     if (role && req.care.profile.role !== role) return res.status(403).json({ message: 'Access denied' });
@@ -73,11 +74,11 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (role !== undefined) return res.status(403).json({ message: 'Roles cannot be assigned at registration' });
     if (![firstName,lastName,email,password].every((v) => typeof v === 'string') || !firstName.trim() || !lastName.trim() || !/^\S+@\S+\.\S+$/.test(email) || email.length > 254 || firstName.length > 100 || lastName.length > 100 || password.length < 8 || password.length > 1024) return res.status(400).json({ message: 'Invalid account details' });
     try {
-      const { data, error } = await client().auth.signUp({ email, password, options: { data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim() } } });
+      const { data, error } = await client().auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/`, data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim() } } });
       if (error) return res.status(400).json({ message: error.message });
       if (data.session) save(res, data.session);
       res.status(201).json({ message: data.session ? 'Account created' : 'Check your email to confirm your account before logging in.' });
-    } catch { res.status(503).json({ message: 'Registration unavailable' }); }
+    } catch (error) { report('signup', error); res.status(503).json({ message: 'Registration unavailable' }); }
   });
   router.post('/auth/login', async (req, res) => {
     const { email, password } = req.body || {};
@@ -86,26 +87,29 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const { data, error } = await client().auth.signInWithPassword({ email, password });
       if (error || !data.session) return res.status(401).json({ message: 'Invalid email or password, or email not confirmed' });
       const db = createClient(url, key, { ...options, accessToken: async () => data.session.access_token });
-      const profile = await db.from('profiles').select('role').eq('id', data.user.id).single();
-      if (profile.error) return res.status(503).json({ message: 'Profile unavailable' });
+      const profile = await db.from('profiles').select('role,suspended').eq('id', data.user.id).single();
+      if (profile.data?.suspended) return res.status(403).json({ message: 'Account suspended. Contact support.' });
+      if (profile.error) { report('login_profile', profile.error); return res.status(503).json({ message: 'Profile unavailable. Contact support.' }); }
       save(res, data.session);
       res.json({ role: profile.data.role, message: 'Login successful' });
-    } catch { res.status(503).json({ message: 'Login unavailable' }); }
+    } catch (error) { report('login', error); res.status(503).json({ message: 'Login unavailable' }); }
   });
   router.post('/auth/recover', async (req, res) => {
     if (typeof req.body?.email !== 'string') return res.status(400).json({ message: 'Email required' });
     try {
-      const { error } = await client().auth.resetPasswordForEmail(req.body.email, { redirectTo: `${process.env.APP_ORIGIN}/recover.html` });
+      const { error } = await client().auth.resetPasswordForEmail(req.body.email, { redirectTo: `${origin}/recover.html` });
       if (error) return res.status(503).json({ message: 'Recovery unavailable' });
       res.json({ message: 'If the account exists, a recovery email will arrive.' });
     } catch { res.status(503).json({ message: 'Recovery unavailable' }); }
   });
   router.post('/auth/recover/complete', async (req, res) => {
-    const { token_hash: tokenHash, password } = req.body || {};
-    if (typeof tokenHash !== 'string' || !/^[a-f0-9]{64}$/i.test(tokenHash) || typeof password !== 'string' || password.length < 8 || password.length > 1024) return res.status(400).json({ message:'Invalid recovery details' });
+    const { token_hash: tokenHash, password, access_token: access, refresh_token: refresh } = req.body || {};
+    const validHash = typeof tokenHash === 'string' && /^[a-f0-9]{64}$/i.test(tokenHash);
+    const validSession = typeof access === 'string' && access.length < 8192 && typeof refresh === 'string' && refresh.length < 8192;
+    if ((!validHash && !validSession) || typeof password !== 'string' || password.length < 8 || password.length > 1024) return res.status(400).json({ message:'Invalid recovery details' });
     const api = client();
     try {
-      const verified = await api.auth.verifyOtp({ token_hash:tokenHash,type:'recovery' });
+      const verified = validHash ? await api.auth.verifyOtp({ token_hash:tokenHash,type:'recovery' }) : await api.auth.setSession({ access_token:access,refresh_token:refresh });
       if (verified.error || !verified.data.session) return res.status(400).json({ message:'Recovery link expired or invalid' });
       const changed = await api.auth.setSession({ access_token:verified.data.session.access_token,refresh_token:verified.data.session.refresh_token });
       if (changed.error) return res.status(503).json({message:'Recovery unavailable'});
@@ -114,20 +118,34 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       clear(res); res.json({message:'Password changed. Sign in with your new password.'});
     } catch { res.status(503).json({ message:'Recovery unavailable' }); }
   });
-  router.post('/auth/logout', (req, res) => { clear(res); res.json({ message: 'Logged out' }); });
+  router.post('/auth/logout', async (req, res) => {
+    try {
+      const { hd_access: access, hd_refresh: refresh } = cookies(req);
+      if (refresh) {
+        const api = client();
+        const restored = await api.auth.setSession({ access_token: access || '', refresh_token: refresh });
+        if (restored.error) { clear(res); return res.status(503).json({ message: 'Local session cleared; server revocation unavailable.' }); }
+        const result = await api.auth.signOut();
+        if (result.error) { clear(res); return res.status(503).json({ message: 'Local session cleared; server revocation unavailable.' }); }
+      }
+      clear(res); res.json({ message: 'Logged out' });
+    } catch { clear(res); res.status(503).json({ message: 'Local session cleared; server revocation unavailable.' }); }
+  });
   router.get('/auth/current-user', ...guard(null, async (req, res, { user, profile }) => res.json({ userId: user.id, email: user.email, role: profile.role, user: { firstName: profile.full_name.split(' ')[0] } })));
   router.get('/auth/profile', ...guard('patient', async (req, res, { user, profile }) => res.json({ id: user.id, firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email })));
   router.post('/doctor/apply', ...guard('patient', async (req, res, { db }) => {
-    const { specialty, licenseNumber } = req.body || {};
+    const { specialty, licenseNumber, qualifications = '', evidenceReference = '' } = req.body || {};
     if (typeof specialty !== 'string' || typeof licenseNumber !== 'string' || specialty.trim().length < 2 || specialty.length > 120 || licenseNumber.trim().length < 3 || licenseNumber.length > 120) return res.status(400).json({ message:'Valid specialty and license number required' });
-    const result = await db.rpc('apply_as_doctor', { p_specialty:specialty.trim(), p_license_number:licenseNumber.trim() });
+    const hasEvidence = qualifications !== '' || evidenceReference !== '';
+    if (hasEvidence && (typeof qualifications !== 'string' || qualifications.trim().length < 5 || qualifications.length > 2000 || typeof evidenceReference !== 'string' || evidenceReference.trim().length < 5 || evidenceReference.length > 1000)) return res.status(400).json({ message: 'Valid qualifications and evidence reference required' });
+    const result = hasEvidence ? await db.rpc('submit_doctor_application', { p_specialty:specialty.trim(), p_license:licenseNumber.trim(), p_qualifications:qualifications, p_evidence:evidenceReference }) : await db.rpc('apply_as_doctor', { p_specialty:specialty.trim(), p_license_number:licenseNumber.trim() });
     if (result.error) return res.status(result.error.code === '23505' ? 409 : 503).json({ message:result.error.code === '23505' ? 'Application already submitted' : result.error.code === 'PGRST202' || result.error.code === '42P01' ? 'Doctor applications are not configured in this database. Contact the site administrator.' : 'Application unavailable. Please try again later.' });
     res.status(201).json({ status:result.data.status });
   }));
   router.get('/doctors', async (req, res) => {
     const api = client();
     const result = await api.rpc('public_doctors');
-    if (result.error) return res.status(503).json({ message: 'Directory unavailable' });
+    if (result.error) { report('directory', result.error); return res.status(503).json({ message: 'Directory unavailable' }); }
     res.json(result.data.map((d) => ({ ...d, nextSlot: null })));
   });
   router.get('/doctors/:id/slots', async (req, res) => {
@@ -138,7 +156,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   });
   router.get('/patient/overview', ...guard('patient', async (req, res, { db, user, profile }) => {
     const result = await db.from('appointments').select('id,doctor_id,scheduled_start,status,reason').eq('patient_id',user.id).order('scheduled_start',{ ascending:false }).limit(100);
-    if (result.error) return res.status(503).json({ message: 'Appointments unavailable' });
+    if (result.error) { report('patient_appointments', result.error); return res.status(503).json({ message: 'Appointments unavailable' }); }
     const activity = await db.rpc('patient_activity');
     if (activity.error) return res.status(503).json({ message:'Metrics unavailable' });
     const directory = await db.rpc('public_doctors');
@@ -214,6 +232,28 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const result = await db.rpc('doctor_activity',{p_since:since,p_until:until});
     if (result.error) return res.status(503).json({message:'Analytics unavailable'});
     res.json(result.data);
+  }));
+  router.get('/admin/overview', ...guard('admin', async (req, res, { db }) => {
+    const { since, until } = req.query;
+    if (![since, until].every((v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) || since > until) return res.status(400).json({ message: 'Valid UTC date range required' });
+    const result = await db.rpc('admin_metrics', { p_since: since, p_until: until });
+    if (result.error) return res.status(400).json({ message: 'Metrics unavailable; use a range of at most 367 days.' });
+    res.json(result.data);
+  }));
+  router.get('/admin/:kind', ...guard('admin', async (req, res, { db }) => {
+    if (!['patients','doctors','appointments','audit'].includes(req.params.kind)) return res.status(404).json({ message: 'Not found' });
+    const page = Number(req.query.page || 1), search = req.query.search || '', status = req.query.status || '';
+    if (!Number.isInteger(page) || page < 1 || page > 10000 || typeof search !== 'string' || search.length > 120 || typeof status !== 'string') return res.status(400).json({ message: 'Invalid filters' });
+    const result = await db.rpc('admin_list', { p_kind: req.params.kind, p_page: page, p_search: search, p_status: status });
+    if (result.error) return res.status(503).json({ message: 'List unavailable' });
+    res.json(result.data);
+  }));
+  router.post('/admin/actions', ...guard('admin', async (req, res, { db }) => {
+    const { action, target, reason, details = {} } = req.body || {};
+    if (!['approve_doctor','reject_doctor','suspend','reactivate','update_doctor','cancel_appointment'].includes(action) || !isUuid(target) || typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 500 || !details || typeof details !== 'object' || Array.isArray(details)) return res.status(400).json({ message: 'Valid target, action and review reason required' });
+    const result = await db.rpc('admin_action', { p_action: action, p_target: target, p_reason: reason.trim(), p_details: details });
+    if (result.error) return res.status(409).json({ message: 'Action refused. Check verification, account and appointment state.' });
+    res.json({ message: 'Administrative action saved and audited.' });
   }));
   return router;
 };

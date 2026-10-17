@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch('/api/doctor/apply', {
         method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ specialty:fields.get('specialty'), licenseNumber:fields.get('licenseNumber') })
+        body:JSON.stringify({ specialty:fields.get('specialty'), licenseNumber:fields.get('licenseNumber'), qualifications:fields.get('qualifications'), evidenceReference:fields.get('evidenceReference') })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(response.status === 401 ? 'Sign in with your patient account before applying.' : response.status === 404 ? 'Doctor application endpoint is not available on this server. Contact the site administrator.' : result.message || 'Application unavailable. Please try again later.');
