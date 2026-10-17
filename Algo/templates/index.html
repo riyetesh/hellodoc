@@ -3,48 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Predictor</title>
+    <title>HelloDoc | Symptoms</title>
+    <meta
+      name="description"
+      content="Pick the symptoms you are experiencing and get a preliminary suggestion of what they might point to, with precautions and general guidance. An experimental prototype, not a diagnosis."
+    />
 
 
     <!-- Page styles first, so the shared app.css below wins any conflict. -->
-    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="stylesheet" href="../static/styles.css?v=blue2" />
 
     <!-- Shared site styles, fonts and icons — the same as every other page. -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="../../Styles/app.css" />
-  </head>
+    <link rel="stylesheet" href="../../Styles/app.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
   <body>
 
     <!-- Shared site navbar: identical markup to every other page. -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
-        <a href="index.html" class="navbar-brand">
+        <a href="../../index.html" class="navbar-brand">
           <img src="../Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
         </a>
 
         <ul class="nav-links" id="navLinks">
+          <li><a href="../../index.html#about" class="nav-link">About</a></li>
           <li><a href="../../dashboard.html" class="nav-link">Find a doctor</a></li>
-          <li><a href="/predict" class="nav-link active">Check symptoms</a></li>
+          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
             <a href="../../appointments.html" class="nav-link">
               Appointments
               <span class="nav-badge" data-appt-badge>0</span>
             </a>
           </li>
-          <li><a href="../../help.html" class="nav-link">Help</a></li>
           <li><a href="../../story.html" class="nav-link">My Story</a></li>
+          <li><a href="../../help.html" class="nav-link">Help</a></li>
         </ul>
 
         <div class="navbar-actions" id="navActions">
-          <a href="../index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
-          <a href="../signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <a href="../../index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="../../signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
             <span class="user-name" id="userName">Guest</span>
@@ -73,11 +82,14 @@
     <div class="container-wrapper">
       <div class="content">
         <img
-          src="../static/left-main.png"
+          src="../Asset/Illustrations/care.svg"
+          alt=""
           class="leftmain"
         />
         <div class="form-container">
-          <form action="/predict" method="post">
+          <!-- novalidate hands validation to Scripts/form-validation.js, which
+               shows each problem beside the field with an explanation. -->
+          <form action="/predict" method="post" novalidate>
             <div class="form-group">
               <label for="symptoms">Select Symptoms</label>
               <div class="tags-container" id="tagsContainer">
@@ -118,6 +130,20 @@
                 rows="4"
                 placeholder="Describe your symptoms in detail..."
               ></textarea>
+            </div>
+
+            <!-- Live region: validation problems and server feedback are both
+                 announced from here. The server passes a generic message only -
+                 internal details are never shown to the visitor. -->
+            <div
+              class="form-summary"
+              data-form-summary
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+              {% if not message %}hidden{% endif %}
+            >
+              {% if message %}<p class="form-summary__title">{{ message }}</p>{% endif %}
             </div>
 
             <button type="submit" class="btn btn-danger btn-lg submit-btn">
@@ -337,6 +363,11 @@
 
           // Store selected symptoms in hidden input
           hiddenInput.value = selectedSymptoms.join(",");
+
+          // Adding a symptom clears the "select at least one" error at once.
+          if (validator && selectedSymptoms.length > 0) {
+            validator.clearFieldError("symptoms");
+          }
         }
 
         function removeSymptom(symptom) {
@@ -346,17 +377,32 @@
         }
 
         // Ensure form submits only if symptoms are selected
-        form.addEventListener("submit", function (event) {
-          if (selectedSymptoms.length === 0) {
-            alert("Please select at least one symptom before submitting.");
-            event.preventDefault(); // Prevent form submission if empty
-          }
-        });
+        // Inline validation instead of a browser alert. The hidden #symptoms
+        // field is what the server reads; the visible tag box is marked with it
+        // so the message and the highlight land next to what the visitor sees.
+        const validator = window.HelloDocForms
+          ? window.HelloDocForms.attach(form, {
+              fields: [
+                {
+                  name: "symptoms",
+                  label: "Symptoms",
+                  alsoMarks: ["symptomsInput"],
+                  rules: [
+                    window.HelloDocForms.rules.required(
+                      "Symptoms",
+                      "type a symptom and pick it from the list — you can add up to four"
+                    ),
+                  ],
+                },
+              ],
+            })
+          : null;
       });
     </script>
 
     <!-- Shared navbar behaviour: the same scripts every other page loads. -->
     <script src="../../Scripts/appointments.js"></script>
     <script src="../../Scripts/nav.js"></script>
+    <script src="../../Scripts/form-validation.js"></script>
   </body>
 </html>

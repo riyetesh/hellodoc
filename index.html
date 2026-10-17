@@ -4,96 +4,136 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>HelloDoc</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./Styles/app.css" />
-    <link rel="stylesheet" href="./Styles/login.css" />
+    <title>HelloDoc | Home</title>
+    <meta
+      name="description"
+      content="HelloDoc is a digital front door to everyday healthcare: find an in-network doctor, book and manage appointments, and run a quick machine-learning symptom check."
+    />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
 
     
-  </head>
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
   <body>
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
     <nav class="navbar" id="navbar">
-  <div class="container navbar-inner">
-    <a href="index.html" class="navbar-brand">
-      <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
-    </a>
-
-    <ul class="nav-links" id="navLinks">
-      <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
-      <li><a href="/predict" class="nav-link">Check symptoms</a></li>
-      <li>
-        <a href="appointments.html" class="nav-link">
-          Appointments
-          <span class="nav-badge" data-appt-badge>0</span>
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
         </a>
-      </li>
-      <li><a href="help.html" class="nav-link">Help</a></li>
-      <li><a href="story.html" class="nav-link">My Story</a></li>
-    </ul>
 
-    <div class="navbar-actions" id="navActions">
-      <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
-      <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
-      <button class="user-chip" id="userChip" hidden>
-        <span class="avatar" id="userAvatar">U</span>
-        <span class="user-name" id="userName">Guest</span>
-        <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
-      </button>
-    </div>
-  </div>
-</nav>
-    <main>
-      <!-- Left side image -->
-      <img src="./Asset/Login/med-right.png" alt="Medical illustration" class="med-right">
-      
-      <!-- Right side image -->
-      <img src="./Asset/Login/med-left.png" alt="Medical illustration" class="med-left">
-      
-      <!-- Bottom right image -->
-      <img src="./Asset/Login/doc_bottom.png" alt="Doctor illustration" class="doc-bottom">
-
-      <div class="hero-section">
-        <div class="hero-content">
-          <h1>Expert Healthcare at Your Doorstep</h1>
-          <div class="contact-btn-container">
-            <a href="./team.html" class="contact-btn">
-              Contact Our Team 
-              <i class="fas fa-arrow-right"></i> <!-- Font Awesome icon -->
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
             </a>
-          </div>
-          
+          </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+
+        <div class="navbar-actions" id="navActions">
+          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+          </button>
         </div>
       </div>
-
-      
+    </nav>
+    <main class="home-hero">
+      <div class="home-hero-main">
+        <div class="home-copy">
+          <h1>A little help.<br>A healthier you.</h1>
+          <p class="home-lead">Find a doctor, plan a visit, or make sense of your symptoms. One simple place to start.</p>
+          <div class="home-cta-row">
+            <a href="dashboard.html" class="btn btn-primary">Find a doctor</a>
+            <a href="/predict" class="btn btn-outline">Check symptoms</a>
+          </div>
+          <a href="./story.html#builder" class="contact-btn">Meet the builder</a>
+        </div>
+        <div class="home-art" aria-hidden="true">
+          <div class="home-art-main"><img src="./Asset/Illustrations/doctor.svg" alt="" class="doc-bottom"></div>
+          <img src="./Asset/Illustrations/medicine.svg" alt="" class="med-right">
+          <img src="./Asset/Illustrations/care.svg" alt="" class="med-left">
+        </div>
+      </div>
     </main>
-    <p class="hero-description">
-      Find an in-network doctor from over 1,000+ registered doctors pool.
-      Register yourself as an authorized doctor and connect with your patients.
-    </p>
-    <div class="contact-info">
-      <div>Contact us at: hellodoc.com</div>
-      <div>+91-7608093320</div>
-    </div>
+
+    <!-- About describes the product; My Story introduces its builder. -->
+    <section class="about-section" id="about" aria-labelledby="about-title">
+      <h2 id="about-title">About HelloDoc</h2>
+      <p class="about-lead">
+        HelloDoc is a digital front door to everyday healthcare: search a pool of
+        registered doctors, book an appointment, and run a fast symptom check when
+        something feels wrong.
+      </p>
+
+      <div class="about-grid">
+        <article class="about-card">
+          <h3>Find a doctor</h3>
+          <p>Browse in network doctors by speciality and fee, and see who is available today.</p>
+        </article>
+        <article class="about-card">
+          <h3>Book appointments</h3>
+          <p>Choose a slot and keep track of upcoming visits so nothing gets missed.</p>
+        </article>
+        <article class="about-card">
+          <h3>Check symptoms</h3>
+          <p>Describe what you feel and a machine learning model suggests likely conditions, with precautions and general guidance.</p>
+        </article>
+      </div>
+
+      <p class="about-note">
+        The symptom check is an experimental prototype: its suggestions are not a
+        diagnosis and never replace advice from a qualified healthcare professional.
+      </p>
+    </section>
 
     <footer>
       <div class="container">
-        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
       </div>
     </footer>
 
     <!-- Login Modal -->
-    <div id="login-modal">
+    <div id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
       <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2>To log in, enter your email address</h2>
-        <form>
-          <label for="email">E-mail</label>
+        <span class="close-btn" role="button" tabindex="0" aria-label="Close login">&times;</span>
+        <h2 id="login-modal-title">Welcome back</h2>
+        <!-- novalidate hands validation to Scripts/form-validation.js, which
+             explains each problem in place instead of showing browser bubbles.
+             method="post" keeps entered values out of the URL if the script
+             never loads. -->
+        <form method="post" novalidate>
+          <label for="email">Email</label>
           <input type="email" id="email" placeholder="Enter your email" required>
 
           <label for="password">Password</label>
           <input type="password" id="password" placeholder="Enter your password" required>
 
+          <!-- Live region: the validation summary is announced from here -->
+          <div
+            class="form-summary"
+            data-form-summary
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            hidden
+          ></div>
           <button type="submit" class="continue-btn">Continue</button>
           <!-- TODO: implement password reset flow -->
           <a href="#" class="forgot-password" disabled aria-disabled="true" title="Coming soon">Forgot Password? (coming soon)</a>
@@ -107,6 +147,7 @@
     </div>
     <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js"></script>
+    <script src="./Scripts/form-validation.js" defer></script>
     <script src="./Scripts/login.js" defer></script>
   </body>
 </html>

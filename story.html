@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>HelloDoc — The Story Behind the Project</title>
+    <title>HelloDoc | My Story</title>
     <meta
       name="description"
       content="Discover the personal motivation, engineering, machine-learning approach, and future vision behind HelloDoc, a digital healthcare project exploring more accessible care."
@@ -13,7 +13,7 @@
          production domain. Add an absolute <link rel="canonical"> and og:url once the
          deployed origin is known. og:image is relative for the same reason. -->
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="HelloDoc — The Story Behind the Project" />
+    <meta property="og:title" content="My Story: Why I Built HelloDoc" />
     <meta
       property="og:description"
       content="The motivation, engineering, machine-learning approach, and future vision behind HelloDoc, a project exploring more accessible digital healthcare."
@@ -24,21 +24,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./Styles/app.css" />
-    <link rel="stylesheet" href="./Styles/story.css" />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/story.css?v=blue2" />
 
     <!-- Progressive enhancement: story.js adds .hs-tabs and .hs-anim only after the
          timeline and scroll reveals are wired up, so without JavaScript nothing is
          hidden and the entire story remains readable. -->
-  </head>
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
 
   <body class="hellodoc-story-page">
     <a class="hs-skip" href="#story-main">Skip to the story</a>
 
     <!-- ===================== Existing navbar (unchanged) ===================== -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
         <a href="index.html" class="navbar-brand">
@@ -46,6 +54,7 @@
         </a>
 
         <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
           <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
           <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
@@ -54,8 +63,8 @@
               <span class="nav-badge" data-appt-badge>0</span>
             </a>
           </li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
           <li><a href="help.html" class="nav-link">Help</a></li>
-          <li><a href="story.html" class="nav-link active">My Story</a></li>
         </ul>
 
         <div class="navbar-actions" id="navActions">
@@ -78,8 +87,8 @@
       <section class="hs-hero" id="top" aria-labelledby="hs-hero-title">
         <div class="hs-wrap hs-hero__grid">
           <div class="hs-hero__copy">
-            <p class="hs-eyebrow">The story behind HelloDoc</p>
-            <h1 class="hs-display" id="hs-hero-title">Healthcare should never be out of reach.</h1>
+            <p class="hs-eyebrow">My Story ,  why I built HelloDoc</p>
+            <h1 class="hs-display" id="hs-hero-title">Why I built HelloDoc</h1>
             <p class="hs-lede">
               An idea shaped by growing up around gaps in healthcare access, and a journey to explore
               how technology could help bridge them.
@@ -89,6 +98,12 @@
               <a class="hs-btn hs-btn--primary" href="#origin">Discover the story</a>
               <a class="hs-btn hs-btn--ghost" href="#technology">Explore the technology</a>
             </div>
+
+            <!-- The story is personal; About describes the product. -->
+            <p class="hs-crosslink">
+              This page is the personal account. What the platform does is on
+              <a href="index.html#about">About HelloDoc</a>.
+            </p>
 
             <dl class="hs-meta">
               <div class="hs-meta__item">
@@ -101,7 +116,7 @@
               </div>
               <div class="hs-meta__item">
                 <dt>Built with</dt>
-                <dd>JavaScript, Node.js, Python, Flask and scikit-learn</dd>
+                <dd>JavaScript, Node.js, Python, Flask and scikit learn</dd>
               </div>
             </dl>
           </div>
@@ -129,7 +144,7 @@
       <section class="hs-section" id="origin" aria-labelledby="hs-origin-title">
         <div class="hs-wrap">
           <p class="hs-eyebrow">01 / The beginning</p>
-          <h2 class="hs-h2" id="hs-origin-title">It started with a problem I had seen growing up.</h2>
+          <h2 class="hs-h2" id="hs-origin-title">Where it began</h2>
 
           <div class="hs-split">
             <div class="hs-prose">
@@ -151,7 +166,7 @@
                   <p>
                     The gap I kept noticing was not only about buildings or equipment. It was about
                     information: knowing whether a symptom is something to watch, something to ask
-                    about, or something that needs care today — and knowing who to ask when the
+                    about, or something that needs care today ,  and knowing who to ask when the
                     nearest doctor is a long way away.
                   </p>
                   <p>
@@ -161,7 +176,7 @@
                   </p>
                   <p>
                     I am not a clinician, and this project is not a clinical claim. It is an attempt to
-                    explore — carefully and honestly — what a small piece of software can and cannot
+                    explore ,  carefully and honestly ,  what a small piece of software can and cannot
                     do for someone trying to take the first step.
                   </p>
                 </div>
@@ -193,10 +208,10 @@
       <section class="hs-section hs-section--tint" id="build" aria-labelledby="hs-build-title">
         <div class="hs-wrap">
           <p class="hs-eyebrow">02 / The build</p>
-          <h2 class="hs-h2" id="hs-build-title">From a question to something I could build.</h2>
+          <h2 class="hs-h2" id="hs-build-title">Building the idea</h2>
           <p class="hs-lede hs-lede--tight">
             I wanted to explore how software could bring symptom guidance, doctor discovery, and
-            appointment-related experiences together in one place. HelloDoc became a way to turn that
+            appointment related experiences together in one place. HelloDoc became a way to turn that
             question into an engineering project.
           </p>
 
@@ -281,7 +296,7 @@
               <div class="hs-panel" role="tabpanel" id="hs-panel-3" aria-labelledby="hs-tab-3" tabindex="0">
                 <h3 class="hs-h3">The engineering</h3>
                 <p>
-                  Building a web interface, backend services, and a machine-learning-based symptom
+                  Building a web interface, backend services, and a machine learning based symptom
                   prediction pipeline.
                 </p>
                 <p class="hs-note">
@@ -294,7 +309,7 @@
                 <h3 class="hs-h3">The next chapter</h3>
                 <p>
                   Improving the experience through better validation, accessibility, and potential
-                  real-world collaboration.
+                  real world collaboration.
                 </p>
                 <p class="hs-note">
                   These are intentions, not finished work. The honest next steps are evaluation on
@@ -311,7 +326,7 @@
       <section class="hs-section" id="philosophy" aria-labelledby="hs-philosophy-title">
         <div class="hs-wrap">
           <p class="hs-eyebrow">03 / The philosophy</p>
-          <h2 class="hs-h2" id="hs-philosophy-title">Technology only matters when people can use it.</h2>
+          <h2 class="hs-h2" id="hs-philosophy-title">Made for people</h2>
 
           <div class="hs-principles">
             <article class="hs-principle" data-reveal>
@@ -337,10 +352,10 @@
                   <path d="M8 8h7M8 12h5" />
                 </svg>
               </span>
-              <h3 class="hs-h3">Designed for real-world constraints</h3>
+              <h3 class="hs-h3">Designed for real world constraints</h3>
               <p>
                 Connectivity, device limitations, affordability, and the needs of underserved
-                communities have to be considered from the beginning — not retrofitted at the end.
+                communities have to be considered from the beginning ,  not retrofitted at the end.
               </p>
             </article>
 
@@ -361,11 +376,11 @@
           </div>
 
           <details class="hs-details hs-details--wide">
-            <summary>The trade-offs behind the design</summary>
+            <summary>The trade offs behind the design</summary>
             <div class="hs-details__body">
               <p>
                 Accessibility, privacy, reliability, and medical safety are engineering requirements
-                here, not optional enhancements — and each one costs something.
+                here, not optional enhancements ,  and each one costs something.
               </p>
               <ul class="hs-list">
                 <li>
@@ -380,12 +395,12 @@
                 </li>
                 <li>
                   <strong>Reliability versus ambition.</strong> A feature that fails silently in a
-                  low-connectivity setting is worse than a smaller feature that behaves predictably.
+                  low connectivity setting is worse than a smaller feature that behaves predictably.
                   Graceful error states matter more than extra capability.
                 </li>
                 <li>
                   <strong>Safety versus simplicity.</strong> Communicating uncertainty makes an
-                  interface less decisive and less satisfying — and it is still the honest thing to
+                  interface less decisive and less satisfying ,  and it is still the honest thing to
                   do when the output is a preliminary signal rather than a diagnosis.
                 </li>
               </ul>
@@ -402,10 +417,10 @@
       <section class="hs-section hs-section--tint" id="technology" aria-labelledby="hs-tech-title">
         <div class="hs-wrap">
           <p class="hs-eyebrow">04 / Under the hood</p>
-          <h2 class="hs-h2" id="hs-tech-title">The engineering behind HelloDoc.</h2>
+          <h2 class="hs-h2" id="hs-tech-title">How it works</h2>
           <p class="hs-lede hs-lede--tight">
             Behind the interface is a combination of web technologies, backend services, structured
-            health-related datasets, and a machine-learning classifier.
+            health related datasets, and a machine learning classifier.
           </p>
 
           <!-- 5.0 Verified stack -->
@@ -418,14 +433,14 @@
             <li>Express.js</li>
             <li>Python</li>
             <li>Flask</li>
-            <li>scikit-learn</li>
+            <li>scikit learn</li>
             <li>NumPy</li>
             <li>pandas</li>
             <li>MySQL</li>
             <li>Vercel</li>
           </ul>
           <p class="hs-note">
-            Accounts additionally use bcrypt password hashing, JSON Web Tokens, and server-side
+            Accounts additionally use bcrypt password hashing, JSON Web Tokens, and server side
             sessions. A separate React + Vite chatbot app lives in the repository and talks to a
             generative API endpoint configured through an environment variable.
           </p>
@@ -572,14 +587,14 @@
                   <h5>Binary feature vector</h5>
                   <p>
                     A dictionary maps each known symptom name to a position. The service builds a
-                    zero-filled array of 132 positions and sets a 1 for every recognised symptom, so
+                    zero filled array of 132 positions and sets a 1 for every recognised symptom, so
                     the model receives a sparse binary vector. Unknown names are simply ignored.
                   </p>
                 </div>
                 <div id="flow-model">
                   <h5>Saved linear SVC</h5>
                   <p>
-                    The vector is handed to a scikit-learn Support Vector Classifier loaded from
+                    The vector is handed to a scikit learn Support Vector Classifier loaded from
                     <code>Algo/models/svc.pkl</code>. The shipped model was trained with
                     <code>kernel="linear"</code> and <code>C=1.0</code>, classifies 41 categories,
                     and contains 267 support vectors.
@@ -590,7 +605,7 @@
                   <p>
                     <code>predict()</code> returns the index of one class, which is mapped back to a
                     disease name through a lookup table. Because the model was fitted with
-                    <code>probability=False</code>, the service can only report a single label — it
+                    <code>probability=False</code>, the service can only report a single label ,  it
                     has no calibrated confidence score to show.
                   </p>
                 </div>
@@ -599,7 +614,7 @@
                   <p>
                     The predicted name is used to filter pandas data frames for a description,
                     precautions, medications, diet, and workout guidance. These are lookups on
-                    reference tables, not further machine-learning inference.
+                    reference tables, not further machine learning inference.
                   </p>
                 </div>
                 <div id="flow-results">
@@ -612,9 +627,9 @@
                 <div id="auth-express">
                   <h5>Express authentication</h5>
                   <p>
-                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/current-user</code>,
+                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/current user</code>,
                     and <code>/logout</code> hash passwords with bcrypt, issue a JSON Web Token, and
-                    keep a server-side session. The legacy <code>/auth/*</code> prefix is mounted on
+                    keep a server side session. The legacy <code>/auth/*</code> prefix is mounted on
                     the same router.
                   </p>
                 </div>
@@ -650,7 +665,7 @@
                 <h4 class="hs-h4"><span>Step 2</span> Classify the feature vector</h4>
                 <p>
                   The service loads a saved model from <code>Algo/models/svc.pkl</code> and calls its
-                  <code>predict()</code> method. The classifier is a scikit-learn Support Vector
+                  <code>predict()</code> method. The classifier is a scikit learn Support Vector
                   Classifier (SVC) with a linear kernel, fitted with <code>C=1.0</code> over
                   <strong>41</strong> categories.
                 </p>
@@ -660,7 +675,7 @@
                 <p>
                   The predicted category is used to pull matching records from datasets holding
                   descriptions, precautions, medications, diets, and workouts. Those rows are
-                  reference data retrieved after classification — not additional model predictions.
+                  reference data retrieved after classification ,  not additional model predictions.
                 </p>
               </li>
             </ol>
@@ -668,10 +683,10 @@
             <div class="hs-demo" data-svc-demo>
               <div class="hs-demo__head">
                 <h4 class="hs-h4">Illustrative pipeline</h4>
-                <p class="hs-badge">Illustrative — not a model output</p>
+                <p class="hs-badge">Illustrative ,  not a model output</p>
               </div>
               <p class="hs-note">
-                The animation below uses a simplified three-feature example to show the shape of the
+                The animation below uses a simplified three feature example to show the shape of the
                 process. It is not a real prediction from the shipped model, and nothing here has
                 been reviewed clinically.
               </p>
@@ -741,15 +756,15 @@
             <div class="hs-disclosure">
               <p>
                 <strong>Technical disclosure.</strong> The current implementation uses a saved SVC
-                model for preliminary symptom-based classification. Its predictions are not confirmed
+                model for preliminary symptom based classification. Its predictions are not confirmed
                 diagnoses. Clinical accuracy and suitability require independent evaluation and
                 appropriate medical oversight.
               </p>
               <p class="hs-note">
-                One detail worth stating plainly: the training notebook records a held-out accuracy of
-                1.0 on its own 30% test split, and re-running that protocol reproduces both the score
+                One detail worth stating plainly: the training notebook records a held out accuracy of
+                1.0 on its own 30% test split, and re running that protocol reproduces both the score
                 and the model's 267 support vectors. A perfect score on a small, highly separable
-                dataset is a sign that the benchmark is easy — not evidence that the tool is
+                dataset is a sign that the benchmark is easy ,  not evidence that the tool is
                 clinically accurate. No external or clinical validation has been performed.
               </p>
               <p>
@@ -768,7 +783,7 @@
               <div class="hs-details__body">
                 <p>
                   <strong>Think of it as drawing a line.</strong> Every row of training data is a
-                  point in space — here, a list of 132 zeros and ones. Each point already carries a
+                  point in space ,  here, a list of 132 zeros and ones. Each point already carries a
                   label: the disease it belongs to. A classifier's job is to find boundaries that
                   separate points with different labels.
                 </p>
@@ -782,13 +797,13 @@
                 <p>
                   <strong>Why a linear kernel.</strong> A linear kernel searches for straight
                   boundaries. With 132 binary features and 41 classes, the implementation trains one
-                  boundary per class in a one-versus-rest scheme
+                  boundary per class in a one versus rest scheme
                   (<code>decision_function_shape="ovr"</code>) and returns the strongest match.
                 </p>
                 <p>
                   <strong>What it cannot tell you.</strong> This model was fitted with
                   <code>probability=False</code>, so it does not produce calibrated probabilities.
-                  You get one label, not a confidence level — which is exactly the kind of uncertainty
+                  You get one label, not a confidence level ,  which is exactly the kind of uncertainty
                   an interface for real people should be careful about.
                 </p>
               </div>
@@ -837,7 +852,7 @@
               </details>
 
               <details class="hs-details">
-                <summary>MySQL-backed account functionality</summary>
+                <summary>MySQL backed account functionality</summary>
                 <div class="hs-details__body">
                   <p>
                     Account records live in a <code>users</code> table reached through a
@@ -853,7 +868,7 @@
                 <div class="hs-details__body">
                   <p>
                     Passwords are hashed with bcrypt. A successful login issues a JSON Web Token with
-                    a configurable expiry and also records a server-side session in an
+                    a configurable expiry and also records a server side session in an
                     <code>httpOnly</code> cookie. Login failures return the same message whether the
                     address is unknown or the password is wrong, so the API does not reveal which
                     emails are registered.
@@ -868,7 +883,7 @@
                     The model is deserialised with <code>pickle</code> at startup. The symptom
                     dictionary and disease list are kept in the same module, so the encoding used at
                     prediction time mirrors the ordering used during training. The saved model expects
-                    132 features and was serialised with an earlier scikit-learn release than the one
+                    132 features and was serialised with an earlier scikit learn release than the one
                     currently pinned, which produces a version warning at load time.
                   </p>
                 </div>
@@ -902,36 +917,42 @@
         </div>
       </section>
 
-      <!-- ==================== 6. The challenges and lessons ==================== -->
-      <section class="hs-section" id="lessons" aria-labelledby="hs-lessons-title">
+      <!-- ==================== 6. The builder ==================== -->
+      <section class="hs-section hs-section--tint" id="builder" aria-labelledby="hs-builder-title">
         <div class="hs-wrap">
-          <p class="hs-eyebrow">05 / What I&rsquo;m learning</p>
-          <h2 class="hs-h2" id="hs-lessons-title">Building it is only the beginning.</h2>
+          <p class="hs-eyebrow">05 / The builder</p>
+          <h2 class="hs-h2" id="hs-builder-title">Meet the builder</h2>
 
-          <div class="hs-lessons">
-            <article class="hs-lesson" data-reveal>
-              <h3 class="hs-h3">The problem comes before the technology.</h3>
-              <p>
-                A technically impressive solution is not useful unless it addresses the constraints
-                people actually face — travel, cost, connectivity, and uncertainty about whether a
-                symptom is worth acting on.
+          <div class="hs-builder">
+            <figure class="hs-builder__photo">
+              <img
+                src="./Asset/Team/Ritesh.png"
+                width="430"
+                height="430"
+                loading="lazy"
+                decoding="async"
+                alt="Ritesh Yadav, the creator and lead developer of HelloDoc."
+              />
+            </figure>
+
+            <div class="hs-builder__bio">
+              <p class="hs-builder__role">Ritesh Yadav ,  Creator &amp; Lead Developer</p>
+              <p class="hs-builder__lead">
+                HelloDoc is designed, built, and maintained by one developer today. What started as a
+                simple idea to make healthcare accessible from home grew into a full featured web app
+                with doctor search, appointment booking, symptom prediction, and user authentication.
               </p>
-            </article>
-            <article class="hs-lesson" data-reveal>
-              <h3 class="hs-h3">Healthcare requires a higher standard of responsibility.</h3>
               <p>
-                A prediction is not proof. Sensitive information, uncertainty, validation, and
-                appropriate escalation all have to be considered before anything is put in front of a
-                person who is worried about their health.
+                I designed the interface from scratch and implemented the login and signup flows with
+                form validation and session management. The frontend uses HTML5, CSS3, JavaScript
+                (ES6+), the Inter typeface, Font Awesome icons, and responsive design.
               </p>
-            </article>
-            <article class="hs-lesson" data-reveal>
-              <h3 class="hs-h3">Real-world usefulness requires more than code.</h3>
-              <p>
-                Accessibility, trust, local context, reliable infrastructure, and collaboration all
-                influence whether a digital health tool can work outside a development environment.
-              </p>
-            </article>
+              <nav class="hs-builder__links" aria-label="Follow Ritesh Yadav">
+                <a href="https://www.instagram.com/riye_tesh" target="_blank" rel="noopener noreferrer">Instagram</a>
+                <a href="https://www.linkedin.com/in/theriteshyadav/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://github.com/riyetesh" target="_blank" rel="noopener noreferrer">GitHub</a>
+              </nav>
+            </div>
           </div>
 
           <details class="hs-details hs-details--wide">
@@ -970,7 +991,7 @@
         <div class="hs-wrap">
           <p class="hs-eyebrow">06 / The future</p>
           <h2 class="hs-h2" id="hs-future-title">
-            What if access to healthcare became less dependent on geography?
+            What comes next
           </h2>
           <p class="hs-lede hs-lede--tight">
             I want to keep exploring how responsible technology could make the first step toward
@@ -991,7 +1012,7 @@
                 <div class="hs-details__body">
                   <dl class="hs-facts">
                     <dt>Objective</dt>
-                    <dd>Improve usability, accessibility, error handling, and the clarity of symptom-guidance results.</dd>
+                    <dd>Improve usability, accessibility, error handling, and the clarity of symptom guidance results.</dd>
                     <dt>Why it matters</dt>
                     <dd>A person who cannot complete the flow, or cannot understand the result, receives no help from it.</dd>
                     <dt>Main challenge</dt>
@@ -1011,13 +1032,13 @@
                 <div class="hs-details__body">
                   <dl class="hs-facts">
                     <dt>Objective</dt>
-                    <dd>Investigate offline-friendly interactions and SMS-based access for suitable, carefully scoped features.</dd>
+                    <dd>Investigate offline friendly interactions and SMS based access for suitable, carefully scoped features.</dd>
                     <dt>Why it matters</dt>
                     <dd>A tool that only works with a good connection excludes many of the people it is meant to serve.</dd>
                     <dt>Main challenge</dt>
-                    <dd>Working within the hard limits of SMS and low-bandwidth devices without losing clarity or safety.</dd>
+                    <dd>Working within the hard limits of SMS and low bandwidth devices without losing clarity or safety.</dd>
                     <dt>Next steps</dt>
-                    <dd>Prototype one narrow, low-risk interaction and test it with users on basic handsets.</dd>
+                    <dd>Prototype one narrow, low risk interaction and test it with users on basic handsets.</dd>
                   </dl>
                 </div>
               </details>
@@ -1037,7 +1058,7 @@
                     <dt>Main challenge</dt>
                     <dd>Trust, responsibility, and referral pathways that do not depend on one student project.</dd>
                     <dt>Next steps</dt>
-                    <dd>Conversations with local professionals about what would be useful — and what would not.</dd>
+                    <dd>Conversations with local professionals about what would be useful ,  and what would not.</dd>
                   </dl>
                 </div>
               </details>
@@ -1053,11 +1074,11 @@
                     <dt>Objective</dt>
                     <dd>Investigate representative data, appropriate evaluation, clinical review, and better ways to communicate uncertainty.</dd>
                     <dt>Why it matters</dt>
-                    <dd>Without honest evaluation and visible uncertainty, a confident-looking output can do harm.</dd>
+                    <dd>Without honest evaluation and visible uncertainty, a confident looking output can do harm.</dd>
                     <dt>Main challenge</dt>
                     <dd>Obtaining representative data and expert review while keeping expectations realistic.</dd>
                     <dt>Next steps</dt>
-                    <dd>Define an evaluation protocol, document its limitations, and publish results as they are — including poor ones.</dd>
+                    <dd>Define an evaluation protocol, document its limitations, and publish results as they are ,  including poor ones.</dd>
                   </dl>
                 </div>
               </details>
@@ -1080,7 +1101,7 @@
         <div class="hs-closing__scrim" aria-hidden="true"></div>
         <div class="hs-wrap hs-closing__content">
           <h2 class="hs-h2 hs-h2--invert" id="hs-closing-title">
-            Technology should bring healthcare closer to the people who need it most.
+            Bringing care closer
           </h2>
           <p class="hs-closing__copy">
             HelloDoc began with a question about access to healthcare. I want to keep building,
@@ -1105,12 +1126,11 @@
     <!-- ===================== Existing footer (unchanged) ===================== -->
     <footer>
       <div class="container">
-        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
       </div>
     </footer>
 
     <!-- Same shared scripts every other page uses, so the navbar behaves identically. -->
-    <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js"></script>
     <script src="./Scripts/story.js" defer></script>
   </body>

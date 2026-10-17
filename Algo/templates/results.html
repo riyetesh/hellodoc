@@ -3,37 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
+    <title>HelloDoc | Results</title>
+    <meta
+      name="description"
+      content="Your symptom check result: the likely condition, what it means, and general precautions, medication, diet and exercise guidance. A preliminary suggestion, not a diagnosis."
+    />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='results.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../Styles/app.css" />
+    <link rel="stylesheet" href="../../Styles/app.css?v=blue2" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="../../Scripts/nav.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
 </head>
 <body>
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
-        <a href="index.html" class="navbar-brand">
+        <a href="../../index.html" class="navbar-brand">
           <img src="../Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
         </a>
 
         <ul class="nav-links" id="navLinks">
+          <li><a href="../../index.html#about" class="nav-link">About</a></li>
           <li><a href="../../dashboard.html" class="nav-link">Find a doctor</a></li>
-          <li><a href="/predict" class="nav-link active">Check symptoms</a></li>
+          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
             <a href="../../appointments.html" class="nav-link">
               Appointments
               <span class="nav-badge" data-appt-badge>0</span>
             </a>
           </li>
-          <li><a href="../../help.html" class="nav-link">Help</a></li>
           <li><a href="../../story.html" class="nav-link">My Story</a></li>
+          <li><a href="../../help.html" class="nav-link">Help</a></li>
         </ul>
 
         <div class="navbar-actions" id="navActions">
-          <a href="../index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
-          <a href="../signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <a href="../../index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="../../signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
             <span class="user-name" id="userName">Guest</span>
@@ -46,58 +58,64 @@
     <header>
         <div>
             <h1>Results</h1>
-      
+        </div>
     </header>
 
-
-    
-    
+    {# Patient information is rendered ONLY from report.patient, which the #}
+    {# server fills exclusively with fields it verified for the signed in   #}
+    {# user. Anonymous visitors never get this block, and a partial profile  #}
+    {# shows just the fields that actually exist: never placeholders.      #}
+    {% if report.patient %}
     <div class="patient-wrapper">
         <div class="patient-container">
             <div class="patient-header">
                 <h2>Patient Information</h2>
             </div>
+            {% if report.patient.get('firstName') or report.patient.get('lastName') %}
             <div class="patient-info">
-                <h3>Ritesh Yadav</h3>
+                <h3>{{ report.patient.get('firstName', '') }} {{ report.patient.get('lastName', '') }}</h3>
             </div>
+            {% endif %}
             <div class="patient-data">
                 <table>
+                    {% if report.patient.get('firstName') or report.patient.get('lastName') %}
                     <tr>
-                        <th>Age</th>
-                        <td>24</td>
+                        <th>Name</th>
+                        <td>{{ report.patient.get('firstName', '') }} {{ report.patient.get('lastName', '') }}</td>
                     </tr>
+                    {% endif %}
+                    {% if report.patient.get('email') %}
                     <tr>
-                        <th>Blood Type</th>
-                        <td>O+</td>
+                        <th>Email</th>
+                        <td>{{ report.patient.get('email') }}</td>
                     </tr>
-                    <tr>
-                        <th>Allergies</th>
-                        <td>None</td>
-                    </tr>
+                    {% endif %}
                 </table>
             </div>
         </div>
     </div>
+    {% endif %}
     <br>
-    <h1>Predicted Disease: {{ predicted_disease }}</h1>
-    <p>Description: {{ dis_des }}</p> <br><br>
+    <h1>Predicted Disease: {{ report.prediction.disease }}</h1>
+    <p>Description: {{ report.description }}</p>
+    <p class="report-disclaimer">{{ report.disclaimer }}</p> <br><br>
 
     
     <div class="grid-container">
         <button onclick="openModal('precautionsModal')">
-            <img src="{{ url_for('static', filename='Precautions.png') }}" alt="Precautions" class="button-icon"> Precautions
+            <img src="../Asset/Illustrations/care.svg" alt="" class="button-icon"> Precautions
         </button>
     
         <button onclick="openModal('medicationsModal')">
-            <img src="{{ url_for('static', filename='medicine.png') }}" alt="Medications" class="button-icon"> Medications
+            <img src="../Asset/Illustrations/medicine.svg" alt="" class="button-icon"> Medications
         </button>
     
         <button onclick="openModal('dietModal')">
-            <img src="{{ url_for('static', filename='diet.png') }}" alt="Diet" class="button-icon"> Diet
+            <img src="../Asset/Illustrations/diet.svg" alt="" class="button-icon"> Diet
         </button>
     
         <button onclick="openModal('workoutsModal')">
-            <img src="{{ url_for('static', filename='workout.png') }}" alt="Workouts" class="button-icon"> Workouts
+            <img src="../Asset/Illustrations/workout.svg" alt="" class="button-icon"> Workouts
         </button>
     </div>
     
@@ -108,7 +126,7 @@
             <span class="close" onclick="closeModal('precautionsModal')">&times;</span>
             <h2>Precautions</h2>
             <ul>
-                {% for precaution in my_precautions %}
+                {% for precaution in report.precautions %}
                 <li>{{ precaution }}</li>
                 {% endfor %}
             </ul>
@@ -121,7 +139,7 @@
         <span class="close" onclick="closeModal('medicationsModal')">&times;</span>
         <h2>Medications</h2>
         <ul>
-            {% for med in medications %}
+            {% for med in report.medications %}
             <li>{{ med }}</li>
             {% endfor %}
         </ul>
@@ -134,14 +152,12 @@
         <span class="close" onclick="closeModal('dietModal')">&times;</span>
         <h2>Recommended Diet</h2>
         <ul>
-            {% for diet in my_diet %}
+            {% for diet in report.diet %}
             <li>{{ diet }}</li>
             {% endfor %}
         </ul>
     </div>
 </div>
-
-    </div>
 
     <!-- Workouts Modal -->
     <div id="workoutsModal" class="modal">
@@ -149,7 +165,7 @@
             <span class="close" onclick="closeModal('workoutsModal')">&times;</span>
             <h2>Suggested Workouts</h2>
             <ul>
-                {% for wrk in workout %}
+                {% for wrk in report.workout %}
                 <li>{{ wrk }}</li>
                 {% endfor %}
             </ul>
@@ -167,7 +183,7 @@
 
     <footer>
         <div class="footer-content">
-            &copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320
+            &copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320
         </div>
     </footer>
 
@@ -203,183 +219,125 @@ function goBack() {
       window.location.href = "/";
     }
   }
+    // ------------------------------------------------------------------
+    // Report data - ONE server-validated object for page and PDF
+    // ------------------------------------------------------------------
+    // The server rendered this page from the same object serialised below, so
+    // the downloaded PDF can never disagree with what is on screen. Nothing
+    // about the patient is hardcoded or guessed: when report.patient is null
+    // the patient block is omitted entirely.
+    const REPORT = {{ report | tojson }};
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const backButton = document.getElementById("backButton");
-    if (backButton) {
-      backButton.addEventListener("click", function (event) {
-        event.preventDefault();
-        goBack();
-      });
-    }
-  });
+    document.addEventListener("DOMContentLoaded", function () {
+      const backButton = document.getElementById("backButton");
+      if (backButton) {
+        backButton.addEventListener("click", function (event) {
+          event.preventDefault();
+          goBack();
+        });
+      }
 
+      const downloadBtn = document.getElementById("downloadPdfBtn");
+      if (!downloadBtn) return;
 
-
-
-
-
-//Timer
-
-let timer;
-    let timeLeft = 1200; // 20 minutes in seconds
-    let running = false;
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-
-    function updateTimerDisplay() {
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
-        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-    }
-
-    function toggleTimer() {
-        if (running) {
-            clearInterval(timer);
-            playPauseBtn.textContent = '▶'; // Change to play icon
-        } else {
-            timer = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timer);
-                    playPauseBtn.textContent = '▶';
-                    running = false;
-                }
-            }, 1000);
-            playPauseBtn.textContent = '❚❚'; // Change to pause icon
-        }
-        running = !running;
-    }
-
-    function resetTimer() {
-        clearInterval(timer);
-        timeLeft = 600; // Reset to 10:00
-        running = false;
-        playPauseBtn.textContent = '▶'; // Change back to play icon
-        updateTimerDisplay();
-    }
-
-    playPauseBtn.addEventListener('click', toggleTimer);
-    resetBtn.addEventListener('click', resetTimer);
-
-    updateTimerDisplay(); // Initialize display
-
-
-
-
-
-    document.getElementById("downloadPdfBtn").addEventListener("click", function () {
+      downloadBtn.addEventListener("click", function () {
         const { jsPDF } = window.jspdf;
-        let doc = new jsPDF();
-        let pageHeight = doc.internal.pageSize.height;
-        let y = 40; // **More gap after the header**
-        let lastPage = 1;
-    
-        function addHeaderFooter(doc, pageNumber) {
-            let img = new Image();
-            img.src = "/static/Logo.png";
-            doc.addImage(img, "PNG", 10, 15, 35, 14.5);
-    
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(18);
-            doc.setTextColor(0, 102, 204);
-            doc.text("Hellodoc Private Limited", 50, 20);
-    
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("helvetica", "normal");
-            doc.text("KIIT, Bhubaneswar, Odisha | Ph: +91 7608093320", 50, 27);
-            doc.text("Email: contact@hellodoc.com | Website: www.hellodoc.com", 50, 33);
-            doc.line(10, 40, 200, 40);
-        }
-    
-        function addTable(doc, title, dataArray, titleColor, rowColor) {
-            y += 5; // **Reduced gap before each table**
-            if (y > pageHeight - 50) {
-                doc.addPage();
-                y = 40;
-                lastPage = doc.internal.getNumberOfPages();
-                addHeaderFooter(doc, lastPage);
-            }
-    
-            doc.autoTable({
-                startY: y,
-                head: [[title]],
-                body: dataArray.map(item => [item]),
-                theme: "grid",
-                headStyles: { fillColor: titleColor, textColor: 255, fontSize: 14, fontStyle: "bold" },
-                bodyStyles: { textColor: 0 },
-                alternateRowStyles: { fillColor: rowColor },
-                columnStyles: { 0: { fontStyle: "normal", cellWidth: 180 } }
-            });
-    
-            y = doc.lastAutoTable.finalY + 5; // **Less space between tables**
-            if (y > pageHeight - 50) {
-                doc.addPage();
-                y = 40;
-                lastPage = doc.internal.getNumberOfPages();
-                addHeaderFooter(doc, lastPage);
-            }
-        }
-    
-        addHeaderFooter(doc, 1);
-        y += 5; // **More space after header**
-    
-        addTable(doc, "Doctor Details", ["Dr. {{ doctor_name }}"], [255, 0, 0], [255, 230, 230]);
-        addTable(doc, "Patient Details", [
-            "Name: {{ patient_name }}",
-            "Age: {{ patient_age }}",
-            "Gender: {{ patient_gender }}",
-            "Date: {{ current_date }}",
-            "Contact: {{ patient_contact }}"
-        ], [0, 128, 0], [230, 255, 230]);
-    
-        addTable(doc, "Predicted Disease", [
-            "{{ predicted_disease }}",
-            "Description: {{ dis_des }}"
-        ], [0, 51, 153], [230, 230, 255]);
-    
-        addTable(doc, "Precautions", [
-             {% for precaution in my_precautions %}
-             "{{ precaution }}",
-             {% endfor %}
-         ], [255, 102, 0], [255, 235, 215]);
-     
-         addTable(doc, "Medications", [
-             {% for med in medications %}
-             "{{ med }}",
-             {% endfor %}
-         ], [153, 51, 255], [245, 230, 255]);
-     
-         addTable(doc, "Recommended Diet", [
-             {% for food in my_diet %}
-             "{{ food }}",
-             {% endfor %}
-         ], [0, 153, 76], [230, 255, 240]);
-     
-         addTable(doc, "Suggested Workouts", [
-             {% for wrk in workout %}
-             "{{ wrk }}",
-             {% endfor %}
-         ], [0, 102, 204], [230, 240, 255]);
+        const doc = new jsPDF();
+        const pageHeight = doc.internal.pageSize.height;
+        const pageWidth = doc.internal.pageSize.width;
+        let y = 46;
 
-    
-        if (doc.internal.getNumberOfPages() === 1) {
-            doc.addPage();
-            lastPage = 2;
-            addHeaderFooter(doc, 2);
+        function drawHeader() {
+          try {
+            const logo = new Image();
+            logo.src = "{{ url_for('static', filename='Logo.png') }}";
+            doc.addImage(logo, "PNG", 10, 12, 30, 12);
+          } catch (err) {
+            // A missing logo must never block the report.
+          }
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.setTextColor(0, 102, 204);
+          doc.text("HelloDoc", 46, 18);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text("Symptom guidance report (experimental prototype)", 46, 25);
+          doc.text("Predictions are preliminary and are not confirmed diagnoses.", 46, 31);
+          doc.line(10, 40, pageWidth - 10, 40);
         }
-    
-        lastPage = doc.internal.getNumberOfPages();
-        doc.setPage(lastPage);
+
+        function addPageWithHeader() {
+          doc.addPage();
+          y = 46;
+          drawHeader();
+        }
+
+        function addTable(title, rows, titleColor, rowColor) {
+          const body = (rows || []).map(function (row) { return [String(row)]; });
+          if (!body.length) return; // omit empty sections instead of padding them
+          if (y > pageHeight - 55) addPageWithHeader();
+          doc.autoTable({
+            startY: y,
+            head: [[title]],
+            body: body,
+            theme: "grid",
+            headStyles: { fillColor: titleColor, textColor: 255, fontSize: 12, fontStyle: "bold" },
+            bodyStyles: { textColor: 0, fontSize: 10 },
+            alternateRowStyles: { fillColor: rowColor },
+            // Exactly the printable width (page minus the 12mm margins), so
+            // autotable never has to clamp the column; a mismatch makes it
+            // log "units width could not fit page" and squeeze the text.
+            columnStyles: { 0: { cellWidth: pageWidth - 24 } },
+            margin: { left: 12, right: 12 }
+          });
+          // autoTable paginates long content itself and reports where it ended.
+          const finalY = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : y;
+          y = finalY + 8;
+          if (y > pageHeight - 55) addPageWithHeader();
+        }
+
+        drawHeader();
+
+        // Patient details: only the fields the server verified for this user.
+        if (REPORT.patient) {
+          const patient = REPORT.patient;
+          const rows = [];
+          const fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ");
+          if (fullName) rows.push("Name: " + fullName);
+          if (patient.email) rows.push("Email: " + patient.email);
+          addTable("Patient Details", rows, [0, 128, 0], [230, 255, 230]);
+        }
+
+        addTable(
+          "Predicted Disease",
+          [REPORT.prediction.disease, "Description: " + REPORT.description],
+          [0, 51, 153],
+          [230, 230, 255]
+        );
+
+        addTable("Precautions", REPORT.precautions, [255, 102, 0], [255, 235, 215]);
+        addTable("Medications", REPORT.medications, [153, 51, 255], [245, 230, 255]);
+        addTable("Recommended Diet", REPORT.diet, [0, 153, 76], [230, 255, 240]);
+        addTable("Suggested Workouts", REPORT.workout, [0, 102, 204], [230, 240, 255]);
+
+        // Footer: generation time plus the shared prototype disclaimer, wrapped
+        // so a long disclaimer never runs off the page or overlaps the tables.
+        const footer = "Report generated: " + REPORT.generatedAt + " | " + REPORT.disclaimer;
+        const footerLines = doc.splitTextToSize
+          ? doc.splitTextToSize(footer, pageWidth - 30)
+          : [footer];
         doc.setFont("helvetica", "italic");
-        doc.setFontSize(12);
-        doc.text("Doctor's Signature:_________________", 120, pageHeight - 30);
-    
-        doc.save("Patient_Report.pdf");
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        const footerTop = pageHeight - 12 - (footerLines.length - 1) * 4.5;
+        footerLines.forEach(function (line, index) {
+          doc.text(line, 15, footerTop + index * 4.5);
+        });
+
+        doc.save("HelloDoc_Report.pdf");
+      });
     });
     
     

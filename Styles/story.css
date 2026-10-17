@@ -18,21 +18,21 @@
 
 /* ---------- Page-scoped tokens ---------- */
 .hellodoc-story {
-  --hs-paper: #ffffff;
-  --hs-paper-tint: #f1f4ef;
-  --hs-ink: #14171a;
-  --hs-body: #333b36;
-  --hs-muted: #565f57;
-  --hs-green: #1c4a3a;
-  --hs-green-deep: #123326;
+  --hs-paper: var(--bg);
+  --hs-paper-tint: var(--surface-2);
+  --hs-ink: var(--text);
+  --hs-body: var(--text-soft);
+  --hs-muted: var(--muted);
+  --hs-green: var(--brand);
+  --hs-green-deep: var(--brand-700);
   --hs-sage: #7f9c8b;
-  --hs-sage-soft: #e3ebe5;
-  --hs-blue: #2f5d7c;
-  --hs-line: #e2ddd3;
-  --hs-line-strong: #cfc7b9;
-  --hs-surface: #ffffff;
-  --hs-focus: #1c4a3a;
-  --hs-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --hs-sage-soft: var(--brand-soft);
+  --hs-blue: var(--teal);
+  --hs-line: var(--border);
+  --hs-line-strong: var(--border-strong);
+  --hs-surface: var(--surface);
+  --hs-focus: var(--brand);
+  --hs-serif: var(--font-display);
   --hs-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --hs-wrap: 1120px;
   --hs-gutter: clamp(1.25rem, 5vw, 3rem);
@@ -300,6 +300,21 @@ body.hellodoc-story-page {
   margin-bottom: 2.25rem;
 }
 
+/* Cross-link that keeps this page distinct from About HelloDoc (the product
+   overview) and Team (who builds it). */
+.hs-crosslink {
+  max-width: 48ch;
+  margin: 0 0 1.75rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--hs-muted);
+}
+
+.hs-crosslink a {
+  color: var(--hs-green);
+  text-decoration: underline;
+}
+
 .hs-btn {
   display: inline-flex;
   align-items: center;
@@ -308,7 +323,7 @@ body.hellodoc-story-page {
   min-height: 48px;
   padding: 0.8rem 1.35rem;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: inherit;
   font-size: 0.98rem;
   font-weight: 600;
@@ -439,6 +454,7 @@ body.hellodoc-story-page {
 .hs-hero__copy > .hs-display,
 .hs-hero__copy > .hs-lede,
 .hs-hero__copy > .hs-cta-row,
+.hs-hero__copy > .hs-crosslink,
 .hs-hero__copy > .hs-meta {
   animation: hs-rise 0.85s var(--ease) both;
 }
@@ -461,6 +477,10 @@ body.hellodoc-story-page {
   animation-delay: 0.24s;
 }
 
+.hs-hero__copy > .hs-crosslink {
+  animation-delay: 0.3s;
+}
+
 .hs-hero__copy > .hs-meta {
   animation-delay: 0.32s;
 }
@@ -468,7 +488,7 @@ body.hellodoc-story-page {
 @keyframes hs-rise {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: none;
   }
   to {
     opacity: 1;
@@ -554,7 +574,7 @@ body.hellodoc-story-page {
 .hs-details {
   margin-top: 1.5rem;
   border: 1px solid var(--hs-line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--hs-surface);
   overflow: hidden;
 }
@@ -571,7 +591,7 @@ body.hellodoc-story-page {
   padding: 1rem 1.25rem;
   font-weight: 600;
   font-size: 0.98rem;
-  color: var(--hs-green);
+  color: var(--hs-ink);
   cursor: pointer;
   list-style: none;
 }
@@ -597,6 +617,7 @@ body.hellodoc-story-page {
 
 .hs-details > summary:hover {
   background: var(--hs-sage-soft);
+  color: var(--hs-green);
 }
 
 .hs-details__body {
@@ -637,7 +658,7 @@ body.hellodoc-story-page {
 
 .hs-step:hover {
   border-color: var(--hs-sage);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .hs-step__num {
@@ -1134,6 +1155,19 @@ body.hellodoc-story-page {
   max-width: 52ch;
 }
 
+/* Creator portrait belongs to the editorial story, not a separate team page. */
+.hs-builder { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); align-items: center; gap: clamp(1.5rem, 5vw, 4rem); margin: var(--space-5) 0 var(--space-6); }
+.hs-builder__photo { margin: 0; padding: 0.6rem; border: 1px solid var(--hs-line); border-radius: 40% 40% var(--radius-lg) var(--radius-lg); background: var(--iris-soft); transform: rotate(-2deg); }
+.hs-builder__photo img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 40% 40% var(--radius) var(--radius); transform: rotate(2deg); }
+.hs-builder__bio { max-width: 65ch; }
+.hs-builder__bio p + p { margin-top: var(--space-3); }
+.hs-builder__role { color: var(--hs-green); font-weight: 700; }
+.hs-builder__lead { font-family: var(--hs-serif); font-size: clamp(1.25rem, 2.5vw, 1.7rem); line-height: 1.4; color: var(--hs-ink); }
+.hs-builder__links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.hs-builder__links a { padding: .5rem 1rem; border: 1px solid var(--hs-line-strong); border-radius: var(--radius-pill); color: var(--hs-green); font-weight: 600; }
+.hs-builder__links a:hover { background: var(--hs-sage-soft); }
+@media (max-width: 620px) { .hs-builder { grid-template-columns: 1fr; } .hs-builder__photo { max-width: 240px; } }
+
 /* ---------- Roadmap ---------- */
 .hs-roadmap-key {
   display: flex;
@@ -1272,6 +1306,8 @@ body.hellodoc-story-page {
   color: rgba(255, 255, 255, 0.78);
 }
 
+.hellodoc-story .hs-closing .hs-h2--invert { color: #fff; }
+
 .hs-closing__copy {
   max-width: 54ch;
   margin-bottom: 2rem;
@@ -1287,8 +1323,8 @@ body.hellodoc-story-page {
    on-screen elements have been marked visible, so content can never be left
    hidden by a missing or failing script. */
 .hs-anim .hellodoc-story [data-reveal] {
-  opacity: 0;
-  transform: translateY(18px);
+  opacity: 1;
+  transform: none;
   transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
 }
 
@@ -1400,5 +1436,5 @@ body.hellodoc-story-page {
    when motion is allowed, so the transform never applies on its own. The figure
    clips the slight scale so it cannot bleed past its rounded corners. */
 .hellodoc-story .hs-hero__figure.is-parallax .hs-hero__img {
-  transform: translate3d(0, var(--hs-parallax, 0px), 0) scale(1.05);
+  transform: none;
 }

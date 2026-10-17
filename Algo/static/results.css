@@ -160,6 +160,20 @@ button:not(.report-download-btn):not(.backbutton):not(.timer-buttons button):hov
     transition: none;
 }
 
+/* Experimental-prototype disclaimer: shown on the page and in the PDF */
+.report-disclaimer {
+    max-width: 820px;
+    margin: 16px auto 0;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: left;
+    color: #4a4a4a;
+    background-color: #f4f7f4;
+    border-left: 4px solid #31C975;
+    border-radius: 4px;
+}
+
 
 
 /* Ensure Timer Buttons Have Unique Styling */
@@ -558,6 +572,15 @@ padding-right: 30rem;    z-index: 0; /* Ensures it is behind the footer */
 footer p {
     margin: 0;
 }
+
+/* Shared palette and typography after legacy result-page rules. */
+body { background: var(--bg); color: var(--text); font-family: var(--font); }
+h1, h2, h3 { font-family: var(--font-display); color: var(--text); }
+.grid-container button:not(.report-download-btn):not(.backbutton) { background: var(--surface); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow-sm); }
+.grid-container button:not(.report-download-btn):not(.backbutton):hover { background: var(--brand-soft); border-color: var(--brand); }
+.report-download-btn, .timer-buttons button { background: var(--brand); border-radius: var(--radius-pill); color: #fff; }
+.backbutton { border-color: var(--border); border-radius: var(--radius-pill); color: var(--brand); }
+.backbutton:hover, .backbutton:focus-visible { border-color: var(--brand); color: var(--brand); }
 
 
 

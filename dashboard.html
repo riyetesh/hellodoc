@@ -3,23 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Find a Doctor | HelloDoc</title>
+    <title>HelloDoc | Doctors</title>
+    <meta name="description" content="Search HelloDoc's pool of registered doctors by speciality, fee and availability, then book an appointment with the one you choose." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
-    <link rel="stylesheet" href="./Styles/app.css" />
-    <link rel="stylesheet" href="./Styles/dashboard.css" />
-  </head>
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/dashboard.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+</head>
 
   <body>
     <!-- ===== Navbar ===== -->
+    <!-- ===== Shared navbar (canonical block) =====
+         Identical items in the same order on every page. The current page is
+         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
+         `active` class. The three story pages are distinct:
+           About   - what HelloDoc is (home page section)
+           My Story- why it was built (the personal account)
+    -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
         <a href="index.html" class="navbar-brand">
@@ -27,7 +32,8 @@
         </a>
 
         <ul class="nav-links" id="navLinks">
-          <li><a href="dashboard.html" class="nav-link active">Find a doctor</a></li>
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
           <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
             <a href="appointments.html" class="nav-link">
@@ -35,8 +41,8 @@
               <span class="nav-badge" data-appt-badge>0</span>
             </a>
           </li>
-          <li><a href="help.html" class="nav-link">Help</a></li>
           <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
         </ul>
 
         <div class="navbar-actions" id="navActions">
@@ -56,7 +62,7 @@
       <div class="container hero-inner">
         <div class="hero-copy">
           <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Trusted by 50k+ patients</span>
-          <h1 id="heroGreeting">Find the right doctor, book in seconds</h1>
+          <h1 id="heroGreeting">Find your doctor</h1>
           <p>
             Browse verified specialists, see live availability and book a video
             consultation, then run a symptom check to prepare for your visit.
@@ -70,7 +76,7 @@
         <div class="hero-art" aria-hidden="true">
           <div class="hero-card">
             <i class="fa-solid fa-stethoscope"></i>
-            <div><strong>AI symptom check</strong><span>Instant, evidence-based</span></div>
+            <div><strong>AI symptom check</strong><span>Instant, evidence based</span></div>
           </div>
           <div class="hero-card">
             <i class="fa-solid fa-video"></i>
@@ -176,7 +182,7 @@
 
     <footer>
       <div class="container">
-        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91-7608093320</p>
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
       </div>
     </footer>
 

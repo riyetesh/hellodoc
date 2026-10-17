@@ -117,7 +117,7 @@
 
 .appt-card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .appt-doc {

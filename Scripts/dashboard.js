@@ -149,7 +149,18 @@
   }
 
   // --- booking modal ---
-  function openBooking(doc) {
+  // The last button that opened the booking modal. We store it on the overlay
+  // so both the close path and any focus-restore path can return focus there.
+  let bookingTrigger = null;
+
+  function openBooking(doc, fromBtn) {
+    // `fromBtn` is the button the visitor used to open the modal. If it is
+    // not provided we fall back to the current active element so focus can be
+    // restored later.
+    bookingTrigger = fromBtn || (document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null);
+
     state.booking = { doctor: doc, date: null, time: null };
     $("#bookingImg").src = doc.image;
     $("#bookingImg").alt = doc.name;
@@ -162,12 +173,29 @@
     syncConfirm();
     els.overlay.classList.add("open");
     document.body.style.overflow = "hidden";
+
+    // Remember where to return focus when the modal closes.
+    els.overlay._focusRestorer = { trigger: bookingTrigger };
+
+    // Focus the first interactive control inside the modal so keyboard users
+    // land inside it immediately. The close button is the first tab stop.
+    const firstControl = $("#bookingClose");
+    if (firstControl && typeof firstControl.focus === "function") {
+      firstControl.focus();
+    }
   }
 
   function closeBooking() {
     els.overlay.classList.remove("open");
     document.body.style.overflow = "";
     state.booking = null;
+
+    const trigger = els.overlay._focusRestorer?.trigger || bookingTrigger;
+    if (trigger && typeof trigger.focus === "function" && trigger.offsetParent !== null) {
+      trigger.focus();
+    }
+    els.overlay._focusRestorer = null;
+    bookingTrigger = null;
   }
 
   function buildDateRow() {
@@ -250,9 +278,13 @@
       reason: $("#bookingReason").value.trim(),
       status: "upcoming",
     });
+    const date = record.date ? window.formatApptDate(record.date) : "the selected date";
+    const time = record.time ? window.formatApptTime(record.time) : "the selected time";
+    const message = `Appointment booked with ${record.doctorName} on ${date} at ${time}.`;
+    announce(message);
     closeBooking();
     window.refreshAppointmentBadge();
-    toast(`Appointment booked with ${record.doctorName}`, "success");
+    toast(message, "success");
   }
 
   // --- user greeting (auth state itself is handled by nav.js) ---
@@ -320,8 +352,61 @@
       const btn = e.target.closest("[data-book]");
       if (!btn) return;
       const doc = window.getDoctorById(btn.dataset.book);
-      if (doc) openBooking(doc);
+      if (doc) openBooking(doc, btn);
     });
+  }
+
+  // Every interactive control the visitor could reach while the booking
+  // overlay is open. When focus would leave the modal we move it back in,
+  // so keyboard navigation stays inside the dialog.
+  function modalFocusableControls() {
+    if (!els.overlay || !els.overlay.classList.contains("open")) return [];
+    return Array.from(els.overlay.querySelectorAll(
+      "button, input, select, textarea, a[href], [tabindex]:not([tabindex='-1'])"
+    )).filter((el) => {
+      if (!el || el.disabled) return false;
+      if (el.style.display === "none" || el.hidden) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+  }
+
+  function trapTab(e) {
+    if (!els.overlay || !els.overlay.classList.contains("open") || e.key !== "Tab") return;
+    const traps = modalFocusableControls();
+    if (traps.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = traps[0];
+    const last = traps[traps.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function announce(message) {
+    let region = $("#bookingAnnounce");
+    if (!region) {
+      region = document.createElement("div");
+      region.id = "bookingAnnounce";
+      region.setAttribute("aria-live", "polite");
+      region.setAttribute("aria-atomic", "true");
+      region.className = "visually-hidden";
+      const footer = els.overlay && els.overlay.querySelector(".modal-footer");
+      if (footer && footer.parentNode) {
+        footer.parentNode.insertBefore(region, footer);
+      } else if (els.overlay && els.overlay.parentNode) {
+        els.overlay.appendChild(region);
+      }
+    }
+    region.textContent = message;
   }
 
   // --- modal wiring ---
@@ -333,8 +418,59 @@
       if (e.target === els.overlay) closeBooking();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && els.overlay.classList.contains("open")) closeBooking();
+      if (!els.overlay || !els.overlay.classList.contains("open")) return;
+      if (e.key === "Escape") {
+        closeBooking();
+        return;
+      }
+      if (e.key === "Tab") trapTab(e);
     });
+
+    // Restore focus to the trigger button after the modal closes for any reason.
+    document.addEventListener("focusin", (e) => {
+      const trigger = els.overlay && els.overlay._focusRestorer?.trigger;
+      if (trigger && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+        if (trigger.offsetParent !== null) trigger.focus();
+      }
+    });
+
+    // When the DOM inside the modal changes, keep focus inside it.
+    if (typeof MutationObserver !== "undefined") {
+      const observer = new MutationObserver(() => {
+        const first = modalFocusableControls()[0];
+        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+          first.focus();
+        }
+      });
+      observer.observe(els.overlay, { childList: true, subtree: true });
+      els.overlay._bookingObserver = observer;
+    }
+
+    // Announce the modal opening for assistive tech.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // If motion is reduced, we still focus on open; no need to announce twice.
+    } else {
+      // Delay briefly so the announce message is read after the visual settles.
+      setTimeout(() => {
+        if (els.overlay && els.overlay.classList.contains("open")) {
+          const title = $("#bookingTitle");
+          if (title) announce("Booking dialog opened.");
+        }
+      }, 50);
+    }
+
+    // When the DOM inside the modal changes, restore focus to the first
+    // control if focus is no longer inside the modal.
+    if (typeof MutationObserver !== "undefined") {
+      const observer = new MutationObserver(() => {
+        const first = modalFocusableControls()[0];
+        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
+          first.focus();
+        }
+      });
+      observer.observe(els.overlay, { childList: true, subtree: true });
+      els.overlay._bookingObserver = observer;
+    }
   }
 
   // --- init ---

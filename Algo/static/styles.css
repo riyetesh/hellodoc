@@ -216,6 +216,12 @@ label {
   margin-bottom: 5px; /* Adds space below the label */
 }
 
+/*
+   Validation feedback on the symptom form (the .form-summary live region and
+   .field-error messages) is styled once in ../../Styles/app.css, which this
+   page also loads, so every form on the site looks the same.
+*/
+
 .submit-btn {
   background-color: #31C975; /* Green color */
   color: white;
@@ -321,3 +327,15 @@ label {
   padding: 5px;
   min-width: 150px;
 }
+
+/* Keep the predictor's legacy selectors from overriding the shared language. */
+body { font-family: var(--font); background: var(--bg); color: var(--text); padding: 0; text-align: left; }
+h1 { font-family: var(--font-display); color: var(--text); text-shadow: none; }
+.container-wrapper { padding: clamp(1rem, 4vw, 3rem); max-width: var(--maxw); margin: 0 auto; }
+.content { gap: clamp(1.5rem, 5vw, 4rem); }
+.form-container { padding: clamp(1.5rem, 3vw, 2.5rem); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.form-container label { color: var(--text); font-weight: 600; }
+.submit-btn, button.btn { min-height: 48px; height: auto; border-radius: var(--radius-pill); background: var(--brand); color: #fff; font: 600 1rem var(--font); box-shadow: none; }
+.submit-btn:hover, button.btn:hover { background: var(--brand-600); transform: none; opacity: 1; }
+.form-control { border-color: var(--border); border-radius: var(--radius-sm); color: var(--text); }
+@media (max-width: 760px) { .content { flex-direction: column; align-items: stretch; } .leftmain { max-width: 100%; margin-inline: auto; } }

@@ -191,6 +191,58 @@ router.get("/current-user", (req, res) => {
   return res.status(401).json({ message: "Not authenticated" });
 });
 
+// Own profile endpoint.
+//
+// The symptom-report service needs the authenticated user's own basic fields
+// to render an optional patient block. This route returns ONLY the caller's
+// own record, and only after the session cookie or Bearer JWT has been
+// verified. It never accepts a user id from the query string, body or any
+// other client-supplied value, so one account can never read another's row.
+router.get("/profile", (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  // Session first (server-side, cookie is httpOnly and signed).
+  let userId = req.session && req.session.userId ? req.session.userId : null;
+
+  // Otherwise a properly verified Bearer JWT.
+  if (!userId) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET);
+        userId = decoded.userId;
+      } catch {
+        userId = null;
+      }
+    }
+  }
+
+  if (!userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  pool.query(
+    "SELECT id, firstName, lastName, email FROM users WHERE id = ?",
+    [userId],
+    (err, results) => {
+      if (err) return dbError(res, err);
+      const user = results && results[0];
+      // The account no longer exists: do not fabricate a profile.
+      if (!user) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      // Only the caller's own identifying fields leave the API.
+      return res.json({
+        userId: user.id,
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      });
+    }
+  );
+});
+
 // Logout endpoint - clears session
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {

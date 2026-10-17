@@ -2,7 +2,8 @@
    HelloDoc - Shared navbar behavior
    Loaded by every page so the navbar acts the same everywhere:
    logo-triggered mobile menu, scroll shadow, live appointments badge,
-   and the logged-in user chip (fetched from the backend session).
+   the logged-in user chip (fetched from the backend session), and the
+   current-page highlight for the shared navbar.
    Requires app.css for markup/classes. Optionally uses
    appointments.js for the badge count.
    ============================================================ */
@@ -15,7 +16,9 @@
   // There is no hamburger button any more. Below the mobile breakpoint the
   // logo/wordmark is the menu trigger; on wider screens it stays a plain link
   // to the home page, so it only becomes a disclosure while that matches.
-  const mobileNav = window.matchMedia("(max-width: 900px)");
+  // Must match the nav-collapse breakpoint in Styles/app.css (1200px): the
+  // canonical navbar has seven items, so it stacks into the menu earlier.
+  const mobileNav = window.matchMedia("(max-width: 1200px)");
 
   function initMenu() {
     const brand = $(".navbar-brand");
@@ -101,6 +104,32 @@
     });
   }
 
+  // The navbar markup is the same canonical block on every page, so the
+  // current page is highlighted from the URL rather than by a class someone
+  // has to remember to add (or remove) on each page.
+  function initActiveLink() {
+    const links = document.querySelectorAll("#navLinks .nav-link");
+    if (!links.length) return;
+
+    const lastSegment = window.location.pathname.replace(/\/+$/, "").split("/").pop();
+    const current = (lastSegment || "index.html").toLowerCase();
+
+    links.forEach((link) => {
+      const href = (link.getAttribute("href") || "").split("#")[0].split("?")[0];
+      // "../../dashboard.html" and "/predict" both normalise to a bare name.
+      const target = href
+        .replace(/^(\.\.\/|\.\/)+/, "")
+        .replace(/^\/+/, "")
+        .replace(/\/+$/, "")
+        .toLowerCase();
+
+      const isCurrent = target !== "" && target === current;
+      link.classList.toggle("active", isCurrent);
+      if (isCurrent) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
   function initBadge() {
     if (typeof window.refreshAppointmentBadge === "function") {
       window.refreshAppointmentBadge();
@@ -164,6 +193,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     initMenu();
     initScrollShadow();
+    initActiveLink();
     initBadge();
     initUserChip();
     initAuth();

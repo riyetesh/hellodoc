@@ -3,12 +3,26 @@ import numpy as np
 import pandas as pd
 import pickle
 from pathlib import Path
+import json
 import os
 import secrets
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
 from flask import    redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+
+
+# Disclaimer shown on both the results page and the downloadable report.
+# It is part of the single report object so page and PDF cannot drift apart.
+REPORT_DISCLAIMER = (
+    "Experimental prototype: this symptom guidance is a preliminary machine-"
+    "learning suggestion, not a confirmed diagnosis, and it has not been "
+    "reviewed by a clinician. Always consult a qualified healthcare "
+    "professional about your symptoms."
+)
 
 
 # flask app
@@ -67,6 +81,145 @@ def get_predicted_value(patient_symptoms):
 
 
 
+#============================================================================
+# Authenticated identity (trusted server-side only)
+#============================================================================
+# The Express backend owns authentication: it verifies the signed session
+# cookie or a Bearer JWT and is the only component with the user records.
+# This service therefore never trusts an id/email from the query string, a
+# form field or client-side JavaScript. It forwards the caller's own
+# credentials to the backend and uses the identity the backend validates.
+#
+# BACKEND_ORIGIN must point at the backend service (local default:
+# http://127.0.0.1:5000). On Vercel set it to the public site origin, because
+# /api/* is rewritten to the Express service there. If it is unreachable the
+# caller is treated as anonymous, which only hides the optional patient block.
+BACKEND_ORIGIN = (os.environ.get("BACKEND_ORIGIN") or "http://127.0.0.1:5000").rstrip("/")
+BACKEND_TIMEOUT_SECONDS = float(os.environ.get("BACKEND_TIMEOUT_SECONDS", "2.0"))
+
+# Only these fields may ever reach the results page / PDF. Anything else the
+# backend might return (dob, sex, password hashes, internal ids) is dropped.
+PATIENT_FIELDS = ("firstName", "lastName", "email")
+
+
+def _same_identity(left, right):
+    """True only when both values identify the same account."""
+    if left is None or right is None:
+        return False
+    return str(left).strip() == str(right).strip()
+
+
+def _sanitize_patient(authenticated_user_id, backend_user):
+    """Return a verified patient dict, or None when nothing verified is available.
+
+    A profile is trusted only when the backend returned it for the very same
+    identity the backend authenticated. Only individually present fields are
+    kept, so a partial profile never gains invented values.
+    """
+    if authenticated_user_id is None or not isinstance(backend_user, dict):
+        return None
+
+    record_id = backend_user.get("id", backend_user.get("userId"))
+    if not _same_identity(record_id, authenticated_user_id):
+        # The record does not belong to the authenticated caller: refuse it.
+        return None
+
+    patient = {}
+    for field in PATIENT_FIELDS:
+        value = backend_user.get(field)
+        # Only non-empty strings are kept. Nothing is coerced, defaulted or
+        # guessed for a field the backend did not actually supply.
+        if isinstance(value, str) and value.strip():
+            patient[field] = value.strip()
+
+    return patient or None
+
+
+def fetch_verified_user(forward_headers=None):
+    """Resolve the authenticated user via the backend auth service.
+
+    Returns (user_id, profile_dict) or (None, None) when the caller is not
+    authenticated / the backend cannot be reached. Never logs credentials,
+    profile data or symptoms.
+    """
+    if forward_headers is None:
+        forward_headers = request.headers
+
+    headers = {"Accept": "application/json"}
+    cookie = forward_headers.get("Cookie")
+    authorization = forward_headers.get("Authorization")
+    if cookie:
+        headers["Cookie"] = cookie
+    if authorization:
+        headers["Authorization"] = authorization
+
+    # Nothing to authenticate with: skip the round trip entirely.
+    if "Cookie" not in headers and "Authorization" not in headers:
+        return None, None
+
+    req = urllib.request.Request(f"{BACKEND_ORIGIN}/api/auth/profile", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=BACKEND_TIMEOUT_SECONDS) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, ValueError, TimeoutError):
+        # Unauthenticated or auth service unavailable: treat as anonymous.
+        return None, None
+
+    if not isinstance(payload, dict):
+        return None, None
+
+    user_id = payload.get("userId", payload.get("id"))
+    if user_id is None:
+        return None, None
+    return user_id, payload
+
+
+def _clean_items(values):
+    """Normalise dataset values into a flat list of real, non-empty strings.
+
+    The datasets arrive as numpy arrays / pandas Series that mix real entries
+    with NaN padding, and the 2D precaution rows come wrapped in a list. This
+    flattens them and drops NaN/None so nothing like "nan" is ever presented to
+    a patient as guidance.
+    """
+    items = []
+    if values is None:
+        return items
+    try:
+        iterable = list(values)
+    except TypeError:
+        iterable = [values]
+    for item in iterable:
+        if isinstance(item, (list, tuple, np.ndarray)):
+            items.extend(_clean_items(item))
+            continue
+        text = str(item).strip()
+        if not text or text.lower() in ("nan", "none", "null"):
+            continue
+        items.append(text)
+    return items
+
+
+def build_report(predicted_disease, dis_des, precautions, medications, diet, workout,
+                 authenticated_user_id=None, backend_user=None, generated_at=None):
+    """Build the single validated report object used by BOTH the page and the PDF.
+
+    The template and the client-side PDF generator render from this exact
+    dictionary (serialised once), so they cannot disagree about what was
+    predicted or whose profile is shown.
+    """
+    return {
+        "patient": _sanitize_patient(authenticated_user_id, backend_user),
+        "prediction": {"disease": predicted_disease},
+        "description": dis_des or "",
+        "precautions": _clean_items(precautions),
+        "medications": _clean_items(medications),
+        "diet": _clean_items(diet),
+        "workout": _clean_items(workout),
+        "generatedAt": generated_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "disclaimer": REPORT_DISCLAIMER,
+    }
+
 
 # creating routes========================================
 
@@ -102,18 +255,31 @@ def predict():
 
             my_precautions = precautions[0] if len(precautions) > 0 else []  # This maintains the old functionality
 
-            return render_template(
-                'results.html',  
+            # Optional verified patient block. Anonymous visitors (or an
+            # unreachable auth service) simply get no patient section; the
+            # symptom check itself never requires an account.
+            authenticated_user_id, backend_user = fetch_verified_user()
+
+            report = build_report(
                 predicted_disease=predicted_disease,
                 dis_des=dis_des,
-                my_precautions=my_precautions,  # Now works as before
+                precautions=my_precautions,
                 medications=medications,
-                my_diet=rec_diet,
-                workout=workout
+                diet=rec_diet,
+                workout=workout,
+                authenticated_user_id=authenticated_user_id,
+                backend_user=backend_user,
             )
 
-        except Exception as e:
-            return render_template('index.html', message=f"An error occurred: {str(e)}")
+            # Both the page and the PDF render from this one report object.
+            return render_template('results.html', report=report)
+
+        except Exception:
+            # Log server-side without symptoms, patient data or tokens, and
+            # show the visitor a generic message (no internals leaked).
+            app.logger.exception("Prediction failed")
+            message = "Sorry, we could not process that request. Please try again."
+            return render_template('index.html', message=message), 500
 
     return render_template('index.html')
 
