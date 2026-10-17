@@ -1,23 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('#doctorApplication');
+  const form = document.querySelector('#doctorApplicationForm');
   const message = document.querySelector('#applicationMessage');
+  if (!form || !message) return;
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
     const button = form.querySelector('button[type="submit"]');
     const fields = new FormData(form);
+    const body = Object.fromEntries(['firstName','lastName','email','password','specialty','licenseNumber','qualifications','evidenceReference'].map((key) => [key, fields.get(key)]));
     button.disabled = true;
-    message.textContent = 'Submitting application…';
+    message.textContent = 'Creating your separate doctor applicant account…';
     try {
-      const response = await fetch('/api/doctor/apply', {
-        method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ specialty:fields.get('specialty'), licenseNumber:fields.get('licenseNumber'), qualifications:fields.get('qualifications'), evidenceReference:fields.get('evidenceReference') })
+      const response = await fetch('/api/auth/doctor-signup', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in with your patient account before applying.' : response.status === 404 ? 'Doctor application endpoint is not available on this server. Contact the site administrator.' : result.message || 'Application unavailable. Please try again later.');
-      message.textContent = result.status === 'pending' ? 'Application received. Doctor access requires license review and approval.' : 'Application received.';
+      if (!response.ok) throw new Error(result.message || 'Doctor registration could not be completed.');
+      message.textContent = result.message + ' Redirecting to sign in…';
       form.reset();
-    } catch (error) { message.textContent = error.message; }
-    finally { button.disabled = false; }
+      window.setTimeout(() => { window.location.assign('/index.html?login=doctor'); }, 1800);
+    } catch (error) {
+      message.textContent = error.message || 'Could not reach HelloDoc. Please try again.';
+      button.disabled = false;
+    }
   });
 });
