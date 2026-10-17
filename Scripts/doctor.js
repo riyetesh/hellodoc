@@ -55,11 +55,14 @@
   }
   async function loadSymptoms() {
     const select = $('#modelSymptoms');
+    const button = $('#predictionForm').querySelector('button');
+    button.disabled = true;
     try {
       const data = await request('/symptoms');
       if (!Array.isArray(data.symptoms)) throw new Error('Symptom model unavailable');
       select.replaceChildren(...data.symptoms.map((value) => new Option(value.replaceAll('_',' '),value)));
       $('#predictionStatus').textContent = 'Model ready. Select symptoms to run it.';
+      button.disabled = false;
     } catch (error) {
       $('#predictionStatus').textContent = error.message;
     }
@@ -95,7 +98,14 @@
     try {
       const response = await fetch('/api/auth/current-user', { credentials:'same-origin' });
       if (!response.ok || (await response.json()).role !== 'doctor') throw new Error('Sign in as a doctor to view appointments.');
-      await load(); await availability(); $('#workspace').hidden = false; message(''); await loadSymptoms();
+      // Confirm clinical approval before revealing tools; load panels independently.
+      await request('/application-status');
+      $('#workspace').hidden = false; message('');
+      await Promise.all([
+        load().catch(() => { $('#appointments').textContent = 'Appointments or analytics unavailable. Retry using Apply filters.'; }),
+        availability().catch(() => { $('#slots').textContent = 'Availability unavailable. Please reload to retry.'; }),
+        loadSymptoms()
+      ]);
     } catch (error) { message(error.message); }
   })();
 })();

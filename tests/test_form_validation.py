@@ -130,10 +130,13 @@ class TestPageWiring:
     def test_signup_covers_every_input_on_the_page(self):
         html = _read("signup.html")
         script = _read("Scripts/signup.js")
-        for field_id in ("firstName", "lastName", "email", "password", "dob"):
+        for field_id in ("firstName", "lastName", "email", "password"):
             assert re.search(r'id="%s"' % field_id, html), f"signup.html lost #{field_id}"
             assert re.search(r'id:\s*"%s"' % field_id, script), f"signup.js does not validate #{field_id}"
-        assert re.search(r'name:\s*"sex"', script), "signup.js does not validate the sex radios"
+        # Registration must not collect clinical/demographic data the API does not store.
+        assert 'id="dob"' not in html
+        assert 'name="sex"' not in html
+        assert 'id: "dob"' not in script
 
     def test_login_covers_both_credentials(self):
         script = _read("Scripts/login.js")

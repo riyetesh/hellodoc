@@ -78,7 +78,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const { data, error } = await client().auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/`, data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim() } } });
       if (error) return res.status(400).json({ message: error.message });
       if (data.session) save(res, data.session);
-      res.status(201).json({ message: data.session ? 'Account created' : 'Check your email to confirm your account before logging in.' });
+      res.status(201).json({ authenticated: Boolean(data.session), redirectTo: data.session ? '/patient.html' : null, message: data.session ? 'Account created' : 'Check your email to confirm your account before logging in.' });
     } catch (error) { report('signup', error); res.status(503).json({ message: 'Registration unavailable' }); }
   });
   router.post('/auth/doctor-signup', async (req, res) => {
@@ -127,7 +127,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.json({ role: profile.role, application: result.data });
   }));
   router.post('/auth/login', async (req, res) => {
-    const { email, password } = req.body || {};
+    const { email, password, portal } = req.body || {};
+    if (portal !== undefined && !['patient','doctor'].includes(portal)) return res.status(400).json({ message: 'Choose patient or doctor login' });
     if (typeof email !== 'string' || typeof password !== 'string' || email.length > 254 || password.length > 1024) return res.status(400).json({ message: 'Invalid credentials' });
     try {
       const { data, error } = await client().auth.signInWithPassword({ email, password });
@@ -136,8 +137,18 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const profile = await db.from('profiles').select('role,suspended').eq('id', data.user.id).single();
       if (profile.data?.suspended) return res.status(403).json({ message: 'Account suspended. Contact support.' });
       if (profile.error) { report('login_profile', profile.error); return res.status(503).json({ message: 'Profile unavailable. Contact support.' }); }
+      const role = profile.data?.role;
+      const destinations = { patient:'/patient.html', doctor:'/doctor.html', doctor_applicant:'/doctor-portal.html', admin:'/admin' };
+      if (!destinations[role]) return res.status(403).json({ message: 'Account role unavailable. Contact support.' });
+      if (portal && role !== 'admin' && (portal === 'patient' ? role !== 'patient' : !['doctor','doctor_applicant'].includes(role))) {
+        return res.status(403).json({ code:'WRONG_PORTAL', message: role === 'patient' ? 'This is a patient account. Choose patient login.' : 'This is a doctor account. Choose doctor login.' });
+      }
+      if (role === 'doctor') {
+        const approval = await db.from('doctor_profiles').select('verification_status').eq('user_id',data.user.id).single();
+        if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ message:'Doctor approval required. Contact support.' });
+      }
       save(res, data.session);
-      res.json({ role: profile.data.role, message: 'Login successful' });
+      res.json({ role, redirectTo:destinations[role], message: 'Login successful' });
     } catch (error) { report('login', error); res.status(503).json({ message: 'Login unavailable' }); }
   });
   router.post('/auth/recover', async (req, res) => {
@@ -227,7 +238,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.get('/doctor/symptoms', ...guard('doctor', async (req, res) => {
     try { res.json(await modelRequest('/internal/symptoms')); }
-    catch { res.status(503).json({ message:'Symptom model unavailable' }); }
+    catch (error) { res.status(503).json({ code:error.code === 'MODEL_NOT_CONFIGURED' ? error.code : 'MODEL_UNAVAILABLE', message:error.code === 'MODEL_NOT_CONFIGURED' ? error.message : 'Model service is unreachable. Ask the administrator to start the private prediction service.' }); }
   }));
   router.post('/doctor/predict', ...guard('doctor', async (req, res) => {
     if (!validSymptoms(req.body?.symptoms)) return res.status(400).json({ message:'Select valid symptoms' });
@@ -235,7 +246,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const result = await modelRequest('/internal/predict', req.body.symptoms);
       if (typeof result.output !== 'string' || typeof result.modelVersion !== 'string') throw new Error('Invalid model response');
       res.json({output:result.output,modelVersion:result.modelVersion,label:'Experimental decision support, not a diagnosis'});
-    } catch { res.status(503).json({ message:'Symptom model unavailable or selection invalid' }); }
+    } catch (error) { res.status(error.code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code:error.code === 'INVALID_SYMPTOMS' ? error.code : 'MODEL_UNAVAILABLE', message:['INVALID_SYMPTOMS','MODEL_NOT_CONFIGURED'].includes(error.code) ? error.message : 'Model service unavailable. Please retry later.' }); }
   }));
   router.post('/doctor/availability', ...guard('doctor', async (req, res, { db }) => {
     const start = req.body?.startsAt;

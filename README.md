@@ -127,3 +127,34 @@ Protection was not disabled, and production was not deployed. Existing PR:
 https://github.com/riyetesh/hellodoc/pull/3 . Its branch now includes these fixes.
 The build still reports 11 dependency vulnerabilities (2 moderate, 7 high,
 2 critical); dependency remediation and mailbox E2E remain launch blockers.
+
+### Authentication/predictor architecture repair
+
+Patient and doctor registration remain distinct endpoints and trigger paths.
+Login uses one Supabase identity authority, but the UI now sends `portal` as
+`patient` or `doctor`. The server checks that intent against the database role
+before issuing cookies; it cannot grant a role. Applicants use doctor login and
+are routed to the status portal. Approved clinicians additionally need an
+approved doctor profile. Administrators retain their existing dashboard.
+Legacy API callers may omit portal; all protected APIs still enforce roles.
+Patient signup collects only name/email/password, not unused demographics, and
+retains confirmation instructions instead of auto-dismissing them. HTTP-only
+cookies, refresh, logout and RLS are retained; this is not a second auth system.
+
+The doctor predictor now initializes independently of appointment analytics and
+availability failures. Model failures distinguish missing configuration,
+unreachable service and invalid symptom selections. Run local Express with
+`FLASK_AUTOSTART=true` (or omit that opt-out) and installed project Python
+dependencies; it generates a shared per-run internal token and starts Flask on
+loopback. The current repair preview is on http://localhost:5003 . A real private
+HTTP prediction was verified with synthetic symptoms, including 132 available
+features, model version, output and anonymous 403 denial.
+
+Vercel does not run the Python model in the existing Node deployment. Its
+predictor requires BOTH server-only `FLASK_ORIGIN` (a reachable private model
+service) and `PREDICTION_INTERNAL_TOKEN` (matching the model service). Never put
+the token in browser variables or expose unprotected Flask routes. No model
+hosting was provisioned or deployed during this repair. Full authenticated
+browser prediction, mailbox confirmation/refresh/revocation and deployed model
+connectivity remain unverified. Do not remove approval checks to test with
+fictional seeded doctors: those identities are deliberately banned from login.

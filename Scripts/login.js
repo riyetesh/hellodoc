@@ -14,12 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const emailInput = modal.querySelector("#email");
   let api = null;
   let opener = loginBtn;
+  let portal = 'patient';
 
   function isOpen() {
     return modal.style.display === "flex";
   }
 
   function openModal(role = 'patient') {
+    portal = role === 'doctor' ? 'doctor' : 'patient';
     document.getElementById('login-modal-title').textContent = role === 'doctor' ? 'Log in as a doctor' : 'Log in as a patient';
     document.getElementById('login-role-description').textContent = role === 'doctor' ? 'Approved doctors open their workspace; applicants can check their application status.' : 'Sign in to book visits and view your patient dashboard.';
     modal.style.display = "flex";
@@ -102,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify({ ...values, portal }),
         });
         const data = await response.json().catch(function () {
           return {};

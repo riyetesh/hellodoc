@@ -49,21 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
           rules.minLength(8, "Password", "Try a short phrase you can remember, or add a few more characters."),
         ],
       },
-      {
-        id: "dob",
-        label: "Date of birth",
-        rules: [
-          rules.required("Date of birth", "pick the date you were born"),
-          rules.dateISO("Date of birth"),
-          rules.notFuture("Date of birth", "choose the date you were born"),
-        ],
-      },
-      {
-        name: "sex",
-        type: "radio",
-        label: "Sex",
-        rules: [rules.oneOf(["male", "female", "other"], "Sex", "select one of the options", ["Male", "Female", "Others"])],
-      },
+
     ],
 
     onSubmit: async function (values, api) {
@@ -85,9 +71,13 @@ document.addEventListener("DOMContentLoaded", function () {
           // confirmation is announced and the redirect starts.
           done = true;
           api.setNotice(data.message || "Account created — taking you to the home page to log in.");
-          window.setTimeout(function () {
-            window.location.href = "index.html";
-          }, 1200);
+          if (data.authenticated) window.location.assign('/patient.html');
+          else {
+            const link = document.createElement('a');
+            link.href = '/index.html?login=patient';
+            link.textContent = 'Sign in after confirming your email';
+            form.append(link);
+          }
           return;
         }
 

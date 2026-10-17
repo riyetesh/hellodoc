@@ -42,7 +42,8 @@
         </ul>
 
         <div class="navbar-actions" id="navActions">
-          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="index.html?login=patient" class="btn btn-ghost" id="loginBtn">Log in as a patient</a>
+          <a href="index.html?login=doctor" class="btn btn-outline" id="doctorLoginBtn">Log in as a doctor</a>
           <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
@@ -84,51 +85,6 @@
             <div class="form-grp">
               <label for="password">password</label>
               <input type="password" id="password" name="password" minlength="8" required />
-            </div>
-
-            <div class="form-grp">
-              <label for="dob">Date of Birth</label>
-              <input type="date" id="dob" name="dob" required />
-            </div>
-
-            <div class="form-grp">
-              <label>Sex</label>
-              <div class="radio-group">
-                <div class="radio-left">
-                  <div class="radio-btns">
-                    <input
-                      type="radio"
-                      id="male"
-                      name="sex"
-                      value="male"
-                      required
-                    />
-                    <label for="male">Male</label>
-                  </div>
-
-                  <div class="radio-btns">
-                    <input
-                      type="radio"
-                      id="female"
-                      name="sex"
-                      value="female"
-                      required
-                    />
-                    <label for="female">Female</label>
-                  </div>
-                </div>
-
-                <div class="others">
-                  <input
-                    type="radio"
-                    id="other"
-                    name="sex"
-                    value="other"
-                    required
-                  />
-                  <label for="other">Others</label>
-                </div>
-              </div>
             </div>
 
             <!-- Live region: the validation summary is announced from here -->

@@ -152,3 +152,15 @@ test('application status is authenticated, applicant-only, and distinguishes mis
   assert.equal((await (await status()).json()).approved,true);
   profile={...profile,role:'patient'};
 });
+
+test('login validates selected portal against database role before issuing cookies', async () => {
+  const payload={email:'synthetic@example.invalid',password:'Synthetic-password',portal:'doctor'};
+  profile={...profile,role:'patient',suspended:false};
+  let response=await fetch(origin+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  assert.equal(response.status,403); assert.equal(response.headers.get('set-cookie'),null);
+  profile={...profile,role:'doctor_applicant'};
+  const result=await post('/api/auth/login',payload,'');
+  assert.equal(result.status,200); assert.equal(result.body.redirectTo,'/doctor-portal.html');
+  assert.equal((await post('/api/auth/login',{...payload,portal:'patient'},'')).status,403);
+  profile={...profile,role:'patient'};
+});
