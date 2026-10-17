@@ -85,7 +85,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const clean = (value) => typeof value === 'string' ? value.trim() : '';
     const values = { firstName:clean(firstName), lastName:clean(lastName), email:clean(email), password, specialty:clean(specialty), licenseNumber:clean(licenseNumber), qualifications:clean(qualifications), evidenceReference:clean(evidenceReference) };
     if (!values.firstName || values.firstName.length > 100 || !values.lastName || values.lastName.length > 100 ||
-        !/^\\S+@\\S+\\.\\S+$/.test(values.email) || values.email.length > 254 ||
+        !/^\S+@\S+\.\S+$/.test(values.email) || values.email.length > 254 ||
         typeof values.password !== 'string' || values.password.length < 8 || values.password.length > 1024 ||
         values.specialty.length < 2 || values.specialty.length > 120 ||
         values.licenseNumber.length < 3 || values.licenseNumber.length > 120 ||
