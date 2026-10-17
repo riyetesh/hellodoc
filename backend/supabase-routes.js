@@ -68,7 +68,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (attempts.size > 5000) { for (const [key,value] of attempts) if (value.expires < now) attempts.delete(key); }
     next();
   }
-  router.use(['/auth/signup','/auth/login','/auth/recover','/patient/appointments'], limit);
+  router.use(['/auth/signup','/auth/doctor-signup','/auth/login','/auth/recover','/patient/appointments'], limit);
   router.post('/auth/signup', async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body || {};
     if (role !== undefined) return res.status(403).json({ message: 'Roles cannot be assigned at registration' });
@@ -108,7 +108,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       });
       if (error) return res.status(400).json({ message: error.message });
       if (data.session) save(res, data.session);
-      return res.status(201).json({ message: data.session ? 'Doctor application created.' : 'Check your email to confirm your account. Your doctor application is saved as pending.' });
+      return res.status(201).json({ authenticated: Boolean(data.session), message: data.session ? 'Doctor application created.' : 'Check your email to confirm your account. Your doctor application is saved as pending.' });
     } catch (error) { report('doctor_signup', error); return res.status(503).json({ message: 'Doctor registration unavailable. Please try again later.' }); }
   });
   router.get('/doctor/application-status', ...guard(null, async (req, res, { db, profile, user }) => {
