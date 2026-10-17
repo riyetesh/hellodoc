@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (loginBtn) loginBtn.focus();
   }
 
+  if (window.location.search && /(?:^\?|&)login=(?:doctor|patient)(?:&|$)/.test(window.location.search)) openModal();
+
   if (loginBtn) {
     loginBtn.addEventListener("click", function (event) {
       event.preventDefault();
@@ -96,10 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (response.ok) {
           done = true;
-          if (data.userId) {
-            sessionStorage.setItem("hellodoc.userId", String(data.userId));
-          }
-          window.location.href = "./dashboard.html";
+          window.location.href = data.role === "doctor" ? "./doctor.html" : "./patient.html";
           return;
         }
 

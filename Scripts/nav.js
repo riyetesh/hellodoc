@@ -131,10 +131,8 @@
   }
 
   function initBadge() {
-    if (typeof window.refreshAppointmentBadge === "function") {
-      window.refreshAppointmentBadge();
-      // Keep the badge fresh when another tab books or cancels.
-      window.addEventListener("appointments:changed", window.refreshAppointmentBadge);
+    if (typeof window.Appointments?.all === "function") {
+      window.Appointments.all().catch(() => {});
     }
   }
 
@@ -154,16 +152,7 @@
       if (email) chip.title = email;
     }
 
-    // Let pages that care (the dashboard greeting) react when the session is
-    // resolved, whether it happens before or after they initialize.
-    try {
-      sessionStorage.setItem("hellodoc.userName", pretty);
-      window.dispatchEvent(
-        new CustomEvent("hellodoc:user", { detail: { name: pretty, email } })
-      );
-    } catch {
-      // sessionStorage unavailable, the event still fires.
-    }
+    window.dispatchEvent(new CustomEvent("hellodoc:user", { detail: { name: pretty, email } }));
   }
 
   async function initAuth() {
@@ -176,6 +165,23 @@
           (data.user && data.user.firstName) ||
           (email ? email.split("@")[0].replace(/[._]/g, " ") : "there");
         showUser(name, email);
+        const chip = $("#userChip");
+        if (chip) chip.dataset.role = data.role;
+        if (data.role === "doctor") {
+          const links = document.querySelector("#navLinks");
+          if (links && !links.querySelector('a[href="doctor.html"]')) {
+            const item = document.createElement('li');
+            const anchor = document.createElement('a');
+            anchor.href = 'doctor.html'; anchor.className = 'nav-link'; anchor.textContent = 'Doctor workspace';
+            item.append(anchor); links.append(item);
+          }
+        }
+        if (data.role === "patient") {
+          const link = document.createElement("li");
+          link.innerHTML = '<a href="patient.html" class="nav-link">My health</a>';
+          const links = document.querySelector("#navLinks");
+          if (links && !links.querySelector('a[href="patient.html"]')) links.appendChild(link);
+        }
       }
     } catch {
       // Backend unreachable, keep the guest buttons.
@@ -186,7 +192,7 @@
     const chip = $("#userChip");
     if (!chip) return;
     chip.addEventListener("click", () => {
-      window.location.href = "appointments.html";
+      window.location.href = chip.dataset.role === 'doctor' ? 'doctor.html' : 'patient.html';
     });
   }
 

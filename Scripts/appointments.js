@@ -1,142 +1,49 @@
-/* ============================================================
-   HelloDoc - Appointments store (localStorage-backed)
-   Shared by the dashboard (booking) and the appointments page.
-   Exposes a tiny API on `window.Appointments` so plain <script>
-   pages can use it without a bundler.
-
-   An appointment record:
-     {
-       id, doctorId, doctorName, speciality, image,
-       date: "YYYY-MM-DD", time: "HH:MM", fee,
-       reason, status: "upcoming" | "completed" | "cancelled",
-       createdAt
-     }
-   ============================================================ */
-
+/* HelloDoc appointment API: no health record is persisted in browser storage. */
 (function () {
-  const KEY = "hellodoc.appointments.v1";
-
-  function read() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? list : [];
-    } catch {
-      return [];
-    }
+  async function request(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || "Request failed");
+    return data;
   }
-
-  function write(list) {
-    localStorage.setItem(KEY, JSON.stringify(list));
-    // Let other tabs/pages know the data changed.
-    try {
-      window.dispatchEvent(new CustomEvent("appointments:changed"));
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function uid() {
-    return "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-
-  const Appointments = {
-    all() {
-      return read();
-    },
-
-    // Active appointments (scheduled or in-progress), soonest first.
-    upcoming() {
-      return read()
-        .filter((a) => a.status === "upcoming" || a.status === "in-progress")
-        .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    },
-
-    // Completed + cancelled, most recent first.
-    past() {
-      return read()
-        .filter((a) => a.status === "completed" || a.status === "cancelled")
-        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
-    },
-
-    countUpcoming() {
-      return this.upcoming().length;
-    },
-
-    get(id) {
-      return read().find((a) => a.id === id) || null;
-    },
-
-    add(appt) {
-      const list = read();
-      const record = Object.assign(
-        { id: uid(), status: "upcoming", createdAt: new Date().toISOString() },
-        appt
-      );
-      list.push(record);
-      write(list);
-      return record;
-    },
-
-    update(id, patch) {
-      const list = read();
-      const idx = list.findIndex((a) => a.id === id);
-      if (idx === -1) return null;
-      list[idx] = Object.assign({}, list[idx], patch);
-      write(list);
-      return list[idx];
-    },
-
-    cancel(id) {
-      return this.update(id, { status: "cancelled" });
-    },
-
-    complete(id) {
-      return this.update(id, { status: "completed" });
-    },
-
-    remove(id) {
-      write(read().filter((a) => a.id !== id));
-    },
-
-    clear() {
-      write([]);
-    },
+  let current = [];
+  const notify = () => {
+    window.dispatchEvent(new Event("appointments:changed"));
+    window.refreshAppointmentBadge();
   };
-
-  window.Appointments = Appointments;
-
-  /* ---- small formatting helpers shared by pages ---- */
-
-  // "YYYY-MM-DD" -> "Mon, 12 Jun 2025"
-  window.formatApptDate = function (iso) {
-    try {
-      const [y, m, d] = iso.split("-").map(Number);
-      const dt = new Date(y, m - 1, d);
-      return dt.toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+  window.Appointments = {
+    async all() {
+      const data = await request("/api/patient/overview");
+      current = data.appointments;
+      notify();
+      return current;
+    },
+    upcoming() { return current.filter((a) => ["pending", "confirmed"].includes(a.status)); },
+    past() { return current.filter((a) => ["completed", "cancelled", "no_show"].includes(a.status)); },
+    countUpcoming() { return this.upcoming().length; },
+    async add({ slotId, reason, idempotencyKey }) {
+      const result = await request("/api/patient/appointments", {
+        method: "POST", body: JSON.stringify({ slotId, reason, idempotencyKey })
       });
-    } catch {
-      return iso;
-    }
+      try { await this.all(); } catch { current = []; notify(); result.refreshFailed = true; }
+      return result;
+    },
+    async cancel(id) {
+      const result = await request(`/api/patient/appointments/${encodeURIComponent(id)}/cancel`, { method: "PATCH" });
+      try { await this.all(); } catch { current = []; notify(); result.refreshFailed = true; }
+      return result;
+    },
   };
-
-  // "HH:MM" (24h) -> "4:00 PM"
-  window.formatApptTime = function (hhmm) {
-    try {
-      const [h, m] = hhmm.split(":").map(Number);
-      const ampm = h >= 12 ? "PM" : "AM";
-      const hour = h % 12 === 0 ? 12 : h % 12;
-      return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
-    } catch {
-      return hhmm;
-    }
+  window.formatApptDate = function (iso) {
+    return new Date(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   };
-
-  // Render the live badge count onto any nav element with [data-appt-badge].
+  window.formatApptTime = function (iso) {
+    return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  };
   window.refreshAppointmentBadge = function () {
     const count = window.Appointments.countUpcoming();
     document.querySelectorAll("[data-appt-badge]").forEach((el) => {

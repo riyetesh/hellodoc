@@ -32,7 +32,6 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="index.html#about" class="nav-link">About</a></li>
           <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
-          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
             <a href="appointments.html" class="nav-link">
               Appointments
@@ -58,10 +57,10 @@
       <div class="home-hero-main">
         <div class="home-copy">
           <h1>A little help.<br>A healthier you.</h1>
-          <p class="home-lead">Find a doctor, plan a visit, or make sense of your symptoms. One simple place to start.</p>
+          <p class="home-lead">Find a doctor and plan a visit. One simple place to start.</p>
           <div class="home-cta-row">
             <a href="dashboard.html" class="btn btn-primary">Find a doctor</a>
-            <a href="/predict" class="btn btn-outline">Check symptoms</a>
+            <a href="doctor-apply.html" class="btn btn-outline">Apply as a doctor</a>
           </div>
           <a href="./story.html#builder" class="contact-btn">Meet the builder</a>
         </div>
@@ -78,8 +77,7 @@
       <h2 id="about-title">About HelloDoc</h2>
       <p class="about-lead">
         HelloDoc is a digital front door to everyday healthcare: search a pool of
-        registered doctors, book an appointment, and run a fast symptom check when
-        something feels wrong.
+        registered doctors and book an appointment.
       </p>
 
       <div class="about-grid">
@@ -92,14 +90,13 @@
           <p>Choose a slot and keep track of upcoming visits so nothing gets missed.</p>
         </article>
         <article class="about-card">
-          <h3>Check symptoms</h3>
-          <p>Describe what you feel and a machine learning model suggests likely conditions, with precautions and general guidance.</p>
+          <h3>For clinicians</h3>
+          <p>Doctors can apply for a verified workspace to manage their appointments.</p>
         </article>
       </div>
 
       <p class="about-note">
-        The symptom check is an experimental prototype: its suggestions are not a
-        diagnosis and never replace advice from a qualified healthcare professional.
+        HelloDoc does not provide emergency care or replace advice from a qualified healthcare professional.
       </p>
     </section>
 
@@ -135,12 +132,13 @@
             hidden
           ></div>
           <button type="submit" class="continue-btn">Continue</button>
-          <!-- TODO: implement password reset flow -->
-          <a href="#" class="forgot-password" disabled aria-disabled="true" title="Coming soon">Forgot Password? (coming soon)</a>
+          <a href="recover.html" class="forgot-password">Forgot Password?</a>
+          <p>Patients and approved doctors sign in here with their email and password.</p>
+          <a href="signup.html">Create a patient account</a> · <a href="doctor-apply.html">Apply as a doctor</a>
 
           <div class="divider">or</div>
-          <button class="google-login">
-            <img src="./Asset/Login/google1.png" alt="Google" class="google">
+          <button class="google-login" type="button" disabled aria-disabled="true" title="Google sign-in is not configured">
+            <img src="./Asset/Login/google1.png" alt="Google" class="google"> Google login coming soon
           </button>
         </form>
       </div>

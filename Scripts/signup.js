@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // Stay disabled so the account is not created twice while the
           // confirmation is announced and the redirect starts.
           done = true;
-          api.setNotice("Account created — taking you to the home page to log in.");
+          api.setNotice(data.message || "Account created — taking you to the home page to log in.");
           window.setTimeout(function () {
             window.location.href = "index.html";
           }, 1200);
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })[0];
 
         if (response.status === 503) {
-          api.setSummary("The service is unavailable right now. Please try again in a few minutes.");
+          api.setSummary(data.message || "Signup is unavailable. Please try again later or contact the site administrator.");
           return;
         }
         if (mapped) api.setFieldError(mapped[1], mapped[2]);

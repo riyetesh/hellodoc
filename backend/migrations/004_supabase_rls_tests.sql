@@ -1,0 +1,25 @@
+-- Run ONLY on an isolated disposable Supabase project with 003 applied.
+-- Substitute UUIDs below with synthetic Auth user IDs provisioned through the
+-- official Auth API; never insert directly into auth.users for this test.
+-- :patient_a, :patient_b, :doctor_a and :doctor_b are psql variables.
+-- Test as each role via authenticated API with the corresponding JWT (the SQL
+-- editor's postgres role bypasses RLS and is NOT a valid policy test).
+-- Expected matrix:
+-- anon: public_doctors/public_slots only; no profiles/patients/appointments/history.
+-- patient A: own profile/appointments/history; no B rows; no DML privileges.
+-- doctor A: own appointments/slots + assigned patient names via RPC; no B/doctor B records.
+-- doctor B: cannot change appointment assigned to A.
+-- patient A: book_appointment requires approved doctor, open future slot;
+-- duplicate request key returns the same row; overlapping requests conflict.
+-- doctor A: add_doctor_slot rejects overlaps; only doctor A can transition own visits.
+-- patient A: change_appointment_status allows only cancellation of own future pending/confirmed visit.
+-- Direct UPDATE public.profiles SET role='admin' should fail (no UPDATE grant).
+-- Direct INSERT/UPDATE public.appointments should fail (no INSERT/UPDATE grants).
+-- SQL probes when connected with each JWT:
+-- select auth.uid(), current_role;
+-- select count(*) from public.appointments;
+-- select * from public.assigned_patient_names();
+-- select * from public.doctor_activity(current_date-30,current_date);
+-- select * from public.book_appointment(:'slot_id'::uuid,gen_random_uuid(),null);
+-- Tests must verify both granted and denied calls via PostgREST authenticated
+-- and anon keys; do not execute as service_role or postgres.

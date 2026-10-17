@@ -1,84 +1,36 @@
-🌐 Disease Prediction & Doctor Finder Platform
-Welcome to our Disease Prediction & Doctor Finder project! 🚑 This web-based platform is designed to make healthcare more accessible and efficient for everyone. Whether you're feeling under the weather 🤒 or looking for the best doctor nearby 🩺, we've got you covered!
+# HelloDoc — patient and doctor workflow prototype
 
-🌟 Features
-🧠 AI-Powered Disease Prediction: Enter your symptoms, and let our smart algorithms predict potential health conditions.
-📍 Find Nearby Doctors: Get recommendations for doctors based on your predicted condition and location.
-📅 Easy Appointment Booking: Schedule appointments with a few clicks, no hassle!
-🔒 Secure & Private: Your health data is safe with us.
+**Supabase cutover in progress:** The new [Supabase setup and migration guide](backend/migrations/SUPABASE.md) describes the PostgreSQL schema, Auth, RLS, booking RPCs, access matrix, analytics and remaining setup. The connected Supabase project has no public tables yet; the [PostgreSQL migration](backend/migrations/003_supabase_foundation.sql) has **not** been applied. With `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` configured, the app uses Supabase Auth and PostgreSQL; production fails closed if they are missing. Existing MySQL behavior below is legacy local mode only, and its tests do **not** establish Supabase security. No live patient data should be entered until isolated migration and end-to-end tests pass.
 
-🚀 Tech Stack
-Here’s what we’re using to build this awesome platform:
+HelloDoc uses static HTML/CSS/JavaScript pages (existing HelloDoc branding), an Express/MySQL API, a separate Flask/scikit-learn symptom service, and a separate optional Vite/React chatbot. It is **not** a clinically validated product or a deployed EHR. The prediction model is experimental decision support, not a diagnosis. For urgent symptoms, seek local emergency care; this site does not monitor patients continuously.
 
-Frontend: React.js 🌟
-Backend: Python (Django/Flask) 🐍
-Database: MongoDB 🍃
-Machine Learning: TensorFlow & Scikit-learn 🤖
- 
-🏗️ Project Roadmap
-✅ Planning & Design: Wireframes and feature planning.
-🚧 Development: Currently working on core features.
-🛠️ Testing: Ensuring everything runs smoothly.
-🎉 Launch: Coming soon!
-🤝 Contributions Welcome!
-We’d love for you to contribute and make this project even better! 🫶
+## What works in the code
 
-Report issues 🐛
-Suggest features 💡
-Submit pull requests 🔧
-📧 Contact Us
-Feel free to reach out if you have any questions or ideas:
+- **Patient (stage 1):** account registration/login, own appointments, doctor directory populated from approved profiles, slot booking/cancellation, own symptom submissions and published assessments, care plans and prescriptions in [My health](patient.html). No clinical records or appointment state are authoritative in browser storage.
+- **Doctor (stage 2):** approved accounts can see only assigned appointments and associated submissions in the [workspace](doctor.html), confirm/reschedule/cancel visits, save draft assessments/plans/prescriptions, publish records with an audit log, create/complete follow-up tasks, inspect model output separately from their assessment, offer discrete slots and view appointment counts. Published records are immutable through the API; a correction requires a new record (not yet linked to the original).
+- **Synchronization (stage 3):** both dashboards query the same MySQL tables on load/refresh. Appointment changes and publication return success only after database commit; in-app notifications are persisted in the same transaction for booking, cancellation, status change, rescheduling, symptom submission tied to a visit, care-plan/assessment/prescription publication and follow-up creation. Notifications have read/unread state; there is no email, SMS, push, WebSocket or background reminder job. Upcoming appointments appear in dashboard lists, but no automatic upcoming reminder is implemented. If a post-commit refresh fails, the client reports that separately; reload retrieves the saved record.
 
+## Local setup
 
-💙 Our Team
+1. Install Node dependencies using `npm ci --prefix backend` and `npm ci --prefix chatbot`; install Python dependencies with `python -m pip install -r requirements.txt` in a project virtual environment. The optional chatbot requires a separately configured API endpoint; **do not put private API keys in `VITE_*` variables**, which are shipped to the browser.
+2. Copy [backend/.env.example](backend/.env.example) to an untracked `backend/.env`; configure `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, optional `DB_SSL`, `APP_ORIGIN`, and a strong `SESSION_SECRET`. To use the model through Express, configure the same strong `PREDICTION_INTERNAL_TOKEN` for both services and set `FLASK_ORIGIN` to a private loopback origin. Flask must not expose its internal route to untrusted networks.
+3. Inspect `SHOW CREATE TABLE users`, take a verified backup, and follow [migration instructions](backend/migrations/README.md) for `001_patient_foundation.sql` then `002_doctor_workspace.sql`. **Neither migration has been applied automatically.** Existing users become patients. An administrator must verify clinicians offline and assign role `doctor` and an approved doctor profile via a controlled process; signup cannot do this. Do not seed fictional doctors or patient data.
+4. Start with `node backend/server.js` (Express defaults to port 5000 and auto-starts local Flask on 5001 if available), or use `./start.sh` / `start.bat`. Open the Express origin for patient and doctor pages. The optional chatbot runs with `npm run dev --prefix chatbot` (default Vite 5173); it is not automatically embedded in the static site.
 
- Ritesh Yadav
- Sanjay Sah
- Bijay Prasad Shah Rauniyar
- Anuj Kumar Prajapati
- Hariom Gupta
- Purushotam Prasad Kurmi
+## API overview
 
----
+- `/api/auth/signup`, `/api/auth/login`, `/api/auth/current-user`, `/api/auth/profile`, `/api/auth/logout`: signed, HTTP-only session cookie. Identity and role are re-read from MySQL for private requests; doctors additionally require an approved profile.
+- `/api/doctors`, `/api/doctors/:id/slots`: database-backed directory and free discrete slots.
+- `/api/patient/overview`, `POST /api/patient/appointments`, `PATCH /api/patient/appointments/:id/cancel`, `POST /api/patient/symptoms`, `PATCH /api/patient/notifications/:id/read`: own-data only. Overview exposes only published clinical records.
+- `/api/doctor/dashboard?date=&status=`, `/api/doctor/appointments/:id`, `PATCH /api/doctor/appointments/:id/status`, `PATCH /api/doctor/appointments/:id/reschedule`, `POST /api/doctor/appointments/:id/predictions`, `POST /api/doctor/appointments/:id/{assessments,care-plans,prescriptions,tasks}`, `PATCH /api/doctor/appointments/:id/{assessments,care-plans,prescriptions}/:recordId/publish`, `PATCH /api/doctor/tasks/:id/complete`, `GET|POST /api/doctor/availability`, `DELETE /api/doctor/availability/:id`, `GET /api/doctor/analytics`, `GET /api/doctor/notifications`, `PATCH /api/doctor/notifications/:id/read`: approved doctor and owned visits/records only.
+- Flask `/internal/predict`: shared-token restricted; accepts exact training symptom identifiers. `/predict` browser POST is disabled. Model output is stored separately with version fingerprint and submission reference, never automatically published or prescribed.
 
-📦 Quick Start
+## Testing and deployment status
 
-## Local Development
+Run `python -m pytest -q`, `node --test tests/patient_api.test.js tests/doctor_api.test.js`, `npm run lint --prefix chatbot`, `npm run build --prefix chatbot`, and `node --check backend/server.js`. Node workflow tests use an in-memory DB stub; they do **not** demonstrate durable persistence, isolation across devices or actual MySQL transaction behavior. The serialized model was produced with scikit-learn 1.5.1 while declared/runtime dependencies use 1.6.1: a version warning remains, and no clinical accuracy has been established.
 
-Run all services with a single command:
+The existing [vercel.json](vercel.json) describes a multi-service deployment, but its runtime routing, static assets, Flask internal endpoint and persistent MySQL/session compatibility have **not** been verified. Do not treat it as a ready-to-deploy production configuration. The current `express-session` MemoryStore, per-process login throttle and no durable reminder queue are unsafe for a multi-instance deployment. Review actual bundle/dependency sizes and entry points before modifying deployment configuration; avoid publicly exposing Flask. No deployment has been performed.
 
-### Linux / macOS
+## Privacy and clinical limitations
 
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-### Windows
-
-Double-click `start.bat` or run:
-
-```cmd
-start.bat
-```
-
-This starts:
-
-- **Flask Prediction Service** - Port 5001 (Python required)
-- **Node.js Backend** - Port 5000 (Node.js required)
-- **React Chatbot** - Port 5173 (npm required)
-
-Then open:
-
-- Main App: http://localhost:5000
-- Chatbot: http://localhost:5173 (if started)
-
-## Deployment (Vercel)
-
-The project is configured for Vercel deployment with multiple services:
-
-- `/api/*` → Backend service (Express)
-- `/` → Flask app service
-- `/predict` → Flask prediction endpoint
-
-See `vercel.json` for service configuration.
+This is a prototype; **do not enter real patient information** until security, clinical, privacy and operational reviews are completed. Obtain and record meaningful consent for health data, define lawful access and retention periods, audit clinical read/write access, limit privileged DB users, test backup/restore and incident response, enforce transport security, add durable shared sessions and distributed rate limits, and verify role/ownership behavior against a real migrated database. Medical information in the current API includes free-text inputs; notifications deliberately avoid symptom details but are in-app only. File upload/document management, full break/leave/duration-aware scheduling, active reminders, clinician verification workflow, linked amendments, reliable timing/feedback analytics, medical model validation and end-to-end integration tests remain incomplete. No legal or regulatory compliance is claimed.

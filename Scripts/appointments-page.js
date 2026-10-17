@@ -1,8 +1,7 @@
 /* ============================================================
    HelloDoc - Appointments page logic
    Renders upcoming / past appointments from the shared store,
-   supports starting a visit (routes to the symptom predictor
-   /predict with context), cancelling, and rebooking.
+   supports cancelling and rebooking visits.
    Depends on: doctors-data.js, appointments.js, app.css.
    ============================================================ */
 
@@ -30,45 +29,20 @@
     }, 3200);
   }
 
-  // ---- start a visit: hand off to the symptom predictor ----
-  function startAppointment(appt) {
-    // Build a query so the predictor can carry context (who + which visit).
-    const params = new URLSearchParams({
-      appointment: appt.id,
-      doctor: appt.doctorName,
-      speciality: appt.speciality || "",
-      from: "appointments",
-    });
-    if (appt.reason) params.set("reason", appt.reason);
-
-    // Mark as in-progress via the store, then route to the predictor.
-    window.Appointments.update(appt.id, { status: "in-progress" });
-    toast(`Starting your visit with ${appt.doctorName}…`, "info");
-    setTimeout(() => {
-      window.location.href = "/predict?" + params.toString();
-    }, 400);
+  async function cancelAppointment(appt, button) {
+    button.disabled = true;
+    try {
+      const result = await window.Appointments.cancel(appt.id);
+      toast(result.refreshFailed ? "Cancellation saved, but the list could not refresh. Reload to check it." : "Appointment cancelled", "success");
+      render();
+    } catch (error) { toast(error.message, "error"); button.disabled = false; }
   }
 
-  function cancelAppointment(appt) {
-    window.Appointments.cancel(appt.id);
-    toast(`Appointment with ${appt.doctorName} cancelled`, "error");
-    render();
+  function bookAgain() {
+    window.location.href = "dashboard.html";
   }
 
-  function bookAgain(appt) {
-    const doc = window.getDoctorById(appt.doctorId);
-    if (doc) {
-      window.location.href = "dashboard.html";
-    } else {
-      window.location.href = "dashboard.html";
-    }
-  }
 
-  function removeAppointment(appt) {
-    window.Appointments.remove(appt.id);
-    toast("Appointment removed", "info");
-    render();
-  }
 
   // ---- rendering ----
   function render() {
@@ -107,36 +81,31 @@
     const card = document.createElement("article");
     card.className = "appt-card";
 
-    const statusClass = appt.status === "in-progress" ? "upcoming" : appt.status;
+    const statusClass = ["pending", "confirmed"].includes(appt.status) ? "upcoming" : appt.status;
     const statusLabel =
-      appt.status === "in-progress"
-        ? "In progress"
-        : appt.status.charAt(0).toUpperCase() + appt.status.slice(1);
+      appt.status.charAt(0).toUpperCase() + appt.status.slice(1);
 
-    const dateStr = window.formatApptDate(appt.date);
-    const timeStr = window.formatApptTime(appt.time);
+    const dateStr = window.formatApptDate(appt.startsAt);
+    const timeStr = window.formatApptTime(appt.startsAt);
 
     let actions = "";
-    if (appt.status === "upcoming" || appt.status === "in-progress") {
+    if (["pending", "confirmed"].includes(appt.status)) {
       actions = `
-        <button class="btn btn-success" data-start="${appt.id}">
-          <i class="fa-solid fa-video"></i> Start visit
-        </button>
         <button class="btn btn-ghost" data-cancel="${appt.id}">Cancel</button>`;
     } else {
       actions = `
         <button class="btn btn-outline" data-again="${appt.id}">
           <i class="fa-solid fa-rotate-right"></i> Book again
         </button>
-        <button class="btn btn-ghost" data-remove="${appt.id}">Remove</button>`;
+        `;
     }
 
     card.innerHTML = `
       <div class="appt-doc">
-        <img src="${appt.image}" alt="${appt.doctorName}" />
+        <img src="./Asset/Illustrations/doctor.svg" alt="" />
         <div class="info">
-          <h3>${appt.doctorName}</h3>
-          <div class="spec">${appt.speciality || "Consultation"}</div>
+          <h3></h3>
+          <div class="spec"></div>
         </div>
       </div>
 
@@ -153,18 +122,14 @@
 
       <div class="appt-actions">${actions}</div>`;
 
+    card.querySelector(".info h3").textContent = appt.doctorName;
+    card.querySelector(".info .spec").textContent = appt.specialty || "Consultation";
     // wire actions
-    const startBtn = card.querySelector("[data-start]");
-    if (startBtn) startBtn.addEventListener("click", () => startAppointment(appt));
-
     const cancelBtn = card.querySelector("[data-cancel]");
-    if (cancelBtn) cancelBtn.addEventListener("click", () => cancelAppointment(appt));
+    if (cancelBtn) cancelBtn.addEventListener("click", () => cancelAppointment(appt, cancelBtn));
 
     const againBtn = card.querySelector("[data-again]");
     if (againBtn) againBtn.addEventListener("click", () => bookAgain(appt));
-
-    const removeBtn = card.querySelector("[data-remove]");
-    if (removeBtn) removeBtn.addEventListener("click", () => removeAppointment(appt));
 
     return card;
   }
@@ -193,8 +158,14 @@
   // The shared navbar (menu, badge, auth chip) is handled by nav.js.
   document.addEventListener("DOMContentLoaded", () => {
     initTabs();
-    render();
-
+    $("#apptEmpty").hidden = false;
+    $("#emptyTitle").textContent = "Loading appointments…";
+    $("#emptyText").textContent = "Fetching your saved visits.";
+    window.Appointments.all().then(render).catch((error) => {
+      $("#apptEmpty").hidden = false;
+      $("#emptyTitle").textContent = "Appointments unavailable";
+      $("#emptyText").textContent = error.message === "Not authenticated" ? "Log in to see your appointments." : "Please try again later.";
+    });
     window.addEventListener("appointments:changed", render);
   });
 })();

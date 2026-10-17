@@ -410,6 +410,20 @@
   margin-bottom: 0.15rem;
 }
 
+.card .doctor-bio {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.card .doctor-bio[hidden] { display: none; }
+
 .card .spec {
   color: var(--brand);
   font-size: 0.86rem;

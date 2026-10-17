@@ -44,9 +44,7 @@ echo ================================================
 echo.
 
 if %PYTHON_FOUND% equ 1 (
-    echo [1/3] Starting Flask prediction service (port 5001)...
-    start /B "Flask" cmd /c "python Algo/main.py"
-    echo      ^> Running in background
+    echo [1/3] Python available; backend will start the private symptom model automatically.
 ) else (
     echo [SKIP] Flask - Python not available
 )

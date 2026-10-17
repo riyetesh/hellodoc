@@ -41,8 +41,7 @@ APP_PAGES = [
 ALL_PAGES = ROOT_PAGES + APP_PAGES
 
 # The canonical navbar: labels in the order every page must use them.
-EXPECTED_NAV_ITEMS = ["About", "Find a doctor", "Check symptoms", "Appointments",
-                      "My Story", "Help"]
+EXPECTED_NAV_ITEMS = ["About", "Find a doctor", "Appointments", "My Story", "Help"]
 
 VOID_ELEMENTS = {"area", "base", "br", "col", "embed", "hr", "img", "input",
                  "link", "meta", "param", "source", "track", "wbr"}
@@ -166,7 +165,7 @@ class TestSharedNavigation:
     def test_navbar_items_and_order(self):
         for page in ALL_PAGES:
             items = _nav_items(_nav(_read(page)))
-            expected = [item for item in EXPECTED_NAV_ITEMS if not (page == "appointments.html" and item == "Check symptoms")]
+            expected = EXPECTED_NAV_ITEMS
             assert items == expected, f"{page} navbar items: {items}"
 
     def test_current_page_highlight_is_not_hardcoded(self):

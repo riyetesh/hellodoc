@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 import os
 import secrets
+import hashlib
+import hmac
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -69,15 +71,18 @@ def helper(dis):
 
     return desc,pre,med,die,wrkout
 
-symptoms_dict = {'itching': 0, 'skin_rash': 1, 'nodal_skin_eruptions': 2, 'continuous_sneezing': 3, 'shivering': 4, 'chills': 5, 'joint_pain': 6, 'stomach_pain': 7, 'acidity': 8, 'ulcers_on_tongue': 9, 'muscle_wasting': 10, 'vomiting': 11, 'burning_micturition': 12, 'spotting_ urination': 13, 'fatigue': 14, 'weight_gain': 15, 'anxiety': 16, 'cold_hands_and_feets': 17, 'mood_swings': 18, 'weight_loss': 19, 'restlessness': 20, 'lethargy': 21, 'patches_in_throat': 22, 'irregular_sugar_level': 23, 'cough': 24, 'fever': 25, 'sunken_eyes': 26, 'breathlessness': 27, 'sweating': 28, 'dehydration': 29, 'indigestion': 30, 'headache': 31, 'yellowish_skin': 32, 'dark_urine': 33, 'nausea': 34, 'loss_of_appetite': 35, 'pain_behind_the_eyes': 36, 'back_pain': 37, 'constipation': 38, 'abdominal_pain': 39, 'diarrhoea': 40, 'mild_fever': 41, 'yellow_urine': 42, 'yellowing_of_eyes': 43, 'acute_liver_failure': 44, 'fluid_overload': 45, 'swelling_of_stomach': 46, 'swelled_lymph_nodes': 47, 'malaise': 48, 'blurred_and_distorted_vision': 49, 'phlegm': 50, 'throat_irritation': 51, 'redness_of_eyes': 52, 'sinus_pressure': 53, 'runny_nose': 54, 'congestion': 55, 'chest_pain': 56, 'weakness_in_limbs': 57, 'fast_heart_rate': 58, 'pain_during_bowel_movements': 59, 'pain_in_anal_region': 60, 'bloody_stool': 61, 'irritation_in_anus': 62, 'neck_pain': 63, 'dizziness': 64, 'cramps': 65, 'bruising': 66, 'obesity': 67, 'swollen_legs': 68, 'swollen_blood_vessels': 69, 'puffy_face_and_eyes': 70, 'enlarged_thyroid': 71, 'brittle_nails': 72, 'swollen_extremeties': 73, 'excessive_hunger': 74, 'extra_marital_contacts': 75, 'drying_and_tingling_lips': 76, 'slurred_speech': 77, 'knee_pain': 78, 'hip_joint_pain': 79, 'weakness': 80, 'stiff_neck': 81, 'swelling_joints': 82, 'movement_stiffness': 83, 'spinning_movements': 84, 'malnutrition': 85, 'unsteadiness': 86, 'weakness_of_one_body_side': 87, 'loss_of_smell': 88, 'bladder_discomfort': 89, 'foul_smell_of urine': 90, 'continuous_feel_of_urine': 91, 'passage_of_gases': 92, 'internal_itching': 93, 'toxic_look_(typhos)': 94, 'depression': 95, 'irritability': 96, 'muscle_pain': 97, 'altered_sensorium': 98, 'red_spots_over_body': 99, 'belly_pain': 100, 'abnormal_menstruation': 101, 'dischromic _patches': 102, 'watering_from_eyes': 103, 'increased_appetite': 104, 'polyuria': 105, 'family_history': 106, 'mucoid_sputum': 107, 'rusty_sputum': 108, 'lack_of_concentration': 109, 'visual_disturbances': 110, 'receiving_blood_transfusion': 111, 'receiving_unsterile_injections': 112, 'sleep': 113, 'stomach_bleeding': 114, 'distention_of_abdomen': 115, 'history_of_alcohol_consumption': 116, 'fluid_overload.1': 117, 'blood_in_sputum': 118, 'prominent_veins_on_calf': 119, 'palpitations': 120, 'painful_walking': 121, 'pus_filled_pimples': 122, 'blackheads': 123, 'scurring': 124, 'skin_peeling': 125, 'silver_like_dusting': 126, 'small_dents_in_nails': 127, 'inflammatory_nails': 128, 'blister': 129, 'red_sore_around_nose': 130, 'yellow_crust_ooze': 131}
+symptoms_dict = {'itching': 0, 'skin_rash': 1, 'nodal_skin_eruptions': 2, 'continuous_sneezing': 3, 'shivering': 4, 'chills': 5, 'joint_pain': 6, 'stomach_pain': 7, 'acidity': 8, 'ulcers_on_tongue': 9, 'muscle_wasting': 10, 'vomiting': 11, 'burning_micturition': 12, 'spotting_ urination': 13, 'fatigue': 14, 'weight_gain': 15, 'anxiety': 16, 'cold_hands_and_feets': 17, 'mood_swings': 18, 'weight_loss': 19, 'restlessness': 20, 'lethargy': 21, 'patches_in_throat': 22, 'irregular_sugar_level': 23, 'cough': 24, 'high_fever': 25, 'sunken_eyes': 26, 'breathlessness': 27, 'sweating': 28, 'dehydration': 29, 'indigestion': 30, 'headache': 31, 'yellowish_skin': 32, 'dark_urine': 33, 'nausea': 34, 'loss_of_appetite': 35, 'pain_behind_the_eyes': 36, 'back_pain': 37, 'constipation': 38, 'abdominal_pain': 39, 'diarrhoea': 40, 'mild_fever': 41, 'yellow_urine': 42, 'yellowing_of_eyes': 43, 'acute_liver_failure': 44, 'fluid_overload': 45, 'swelling_of_stomach': 46, 'swelled_lymph_nodes': 47, 'malaise': 48, 'blurred_and_distorted_vision': 49, 'phlegm': 50, 'throat_irritation': 51, 'redness_of_eyes': 52, 'sinus_pressure': 53, 'runny_nose': 54, 'congestion': 55, 'chest_pain': 56, 'weakness_in_limbs': 57, 'fast_heart_rate': 58, 'pain_during_bowel_movements': 59, 'pain_in_anal_region': 60, 'bloody_stool': 61, 'irritation_in_anus': 62, 'neck_pain': 63, 'dizziness': 64, 'cramps': 65, 'bruising': 66, 'obesity': 67, 'swollen_legs': 68, 'swollen_blood_vessels': 69, 'puffy_face_and_eyes': 70, 'enlarged_thyroid': 71, 'brittle_nails': 72, 'swollen_extremeties': 73, 'excessive_hunger': 74, 'extra_marital_contacts': 75, 'drying_and_tingling_lips': 76, 'slurred_speech': 77, 'knee_pain': 78, 'hip_joint_pain': 79, 'muscle_weakness': 80, 'stiff_neck': 81, 'swelling_joints': 82, 'movement_stiffness': 83, 'spinning_movements': 84, 'loss_of_balance': 85, 'unsteadiness': 86, 'weakness_of_one_body_side': 87, 'loss_of_smell': 88, 'bladder_discomfort': 89, 'foul_smell_of urine': 90, 'continuous_feel_of_urine': 91, 'passage_of_gases': 92, 'internal_itching': 93, 'toxic_look_(typhos)': 94, 'depression': 95, 'irritability': 96, 'muscle_pain': 97, 'altered_sensorium': 98, 'red_spots_over_body': 99, 'belly_pain': 100, 'abnormal_menstruation': 101, 'dischromic _patches': 102, 'watering_from_eyes': 103, 'increased_appetite': 104, 'polyuria': 105, 'family_history': 106, 'mucoid_sputum': 107, 'rusty_sputum': 108, 'lack_of_concentration': 109, 'visual_disturbances': 110, 'receiving_blood_transfusion': 111, 'receiving_unsterile_injections': 112, 'coma': 113, 'stomach_bleeding': 114, 'distention_of_abdomen': 115, 'history_of_alcohol_consumption': 116, 'fluid_overload.1': 117, 'blood_in_sputum': 118, 'prominent_veins_on_calf': 119, 'palpitations': 120, 'painful_walking': 121, 'pus_filled_pimples': 122, 'blackheads': 123, 'scurring': 124, 'skin_peeling': 125, 'silver_like_dusting': 126, 'small_dents_in_nails': 127, 'inflammatory_nails': 128, 'blister': 129, 'red_sore_around_nose': 130, 'yellow_crust_ooze': 131}
 diseases_list = {15: 'Fungal infection', 4: 'Allergy', 16: 'GERD', 9: 'Chronic cholestasis', 14: 'Drug Reaction', 33: 'Peptic ulcer disease', 1: 'AIDS', 12: 'Diabetes ', 17: 'Gastroenteritis', 6: 'Bronchial Asthma', 23: 'Hypertension ', 30: 'Migraine', 7: 'Cervical spondylosis', 32: 'Paralysis (brain hemorrhage)', 28: 'Jaundice', 29: 'Malaria', 8: 'Chicken pox', 11: 'Dengue', 37: 'Typhoid', 40: 'hepatitis A', 19: 'Hepatitis B', 20: 'Hepatitis C', 21: 'Hepatitis D', 22: 'Hepatitis E', 3: 'Alcoholic hepatitis', 36: 'Tuberculosis', 10: 'Common Cold', 34: 'Pneumonia', 13: 'Dimorphic hemmorhoids(piles)', 18: 'Heart attack', 39: 'Varicose veins', 26: 'Hypothyroidism', 24: 'Hyperthyroidism', 25: 'Hypoglycemia', 31: 'Osteoarthristis', 5: 'Arthritis', 0: '(vertigo) Paroymsal  Positional Vertigo', 2: 'Acne', 38: 'Urinary tract infection', 35: 'Psoriasis', 27: 'Impetigo'}
 
 # Model Prediction functionf
 def get_predicted_value(patient_symptoms):
-    input_vector = np.zeros(len(symptoms_dict))
-    for item in patient_symptoms:
-        input_vector[symptoms_dict[item]] = 1
-    return diseases_list[svc.predict([input_vector])[0]]
+    if not patient_symptoms or any(item not in symptoms_dict for item in patient_symptoms):
+        raise ValueError("Unknown or missing model symptom")
+    columns = list(svc.feature_names_in_)
+    if len(columns) != len(symptoms_dict) or any(columns[i] != name for name, i in symptoms_dict.items()):
+        raise RuntimeError("Model feature order differs from symptom dictionary")
+    input_vector = pd.DataFrame([[int(name in patient_symptoms) for name in columns]], columns=columns)
+    return diseases_list[int(svc.predict(input_vector)[0])]
 
 
 
@@ -85,7 +90,7 @@ def get_predicted_value(patient_symptoms):
 # Authenticated identity (trusted server-side only)
 #============================================================================
 # The Express backend owns authentication: it verifies the signed session
-# cookie or a Bearer JWT and is the only component with the user records.
+# cookie and is the only component with the user records.
 # This service therefore never trusts an id/email from the query string, a
 # form field or client-side JavaScript. It forwards the caller's own
 # credentials to the backend and uses the identity the backend validates.
@@ -147,14 +152,11 @@ def fetch_verified_user(forward_headers=None):
 
     headers = {"Accept": "application/json"}
     cookie = forward_headers.get("Cookie")
-    authorization = forward_headers.get("Authorization")
     if cookie:
         headers["Cookie"] = cookie
-    if authorization:
-        headers["Authorization"] = authorization
 
     # Nothing to authenticate with: skip the round trip entirely.
-    if "Cookie" not in headers and "Authorization" not in headers:
+    if "Cookie" not in headers:
         return None, None
 
     req = urllib.request.Request(f"{BACKEND_ORIGIN}/api/auth/profile", headers=headers)
@@ -229,64 +231,48 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 # Home Route (Landing Page)
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return jsonify(message='The public symptom checker is unavailable.'), 403
+
+MODEL_VERSION = hashlib.sha256((MODEL_DIR / "svc.pkl").read_bytes()).hexdigest()[:16]
+
+def _internal_authorized():
+    token = os.environ.get('PREDICTION_INTERNAL_TOKEN')
+    supplied = request.headers.get('X-Internal-Token', '')
+    return bool(token and hmac.compare_digest(token, supplied))
+
+
+@app.get('/internal/symptoms')
+def internal_symptoms():
+    if not _internal_authorized():
+        return jsonify(message='Forbidden'), 403
+    return jsonify(symptoms=list(symptoms_dict))
+
+
+@app.post('/internal/predict')
+def internal_predict():
+    if not _internal_authorized():
+        return jsonify(message='Forbidden'), 403
+    body = request.get_json(silent=True) or {}
+    symptoms = body.get('symptoms')
+    if not isinstance(symptoms, list) or not symptoms or len(symptoms) > len(symptoms_dict) or any(
+        not isinstance(item, str) or item not in symptoms_dict for item in symptoms
+    ):
+        return jsonify(message='Unknown or missing model symptom'), 422
+    try:
+        return jsonify(output=get_predicted_value(symptoms), modelVersion=MODEL_VERSION)
+    except (ValueError, RuntimeError):
+        app.logger.exception('Model feature mismatch')
+        return jsonify(message='Model unavailable'), 503
 
 # Prediction Route (Separate Results Page)
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
-    if request.method == 'POST':
-        symptoms = request.form.get('symptoms', '').strip()
-
-        if not symptoms or symptoms.lower() == "symptoms":
-            message = "Please provide valid symptoms."
-            return render_template('index.html', message=message)
-
-        # Process symptoms
-        user_symptoms = [s.strip() for s in symptoms.split(',') if s.strip()]
-        
-        if not user_symptoms:
-            message = "Invalid symptoms provided."
-            return render_template('index.html', message=message)
-
-        try:
-            # Predict disease
-            predicted_disease = get_predicted_value(user_symptoms)
-            dis_des, precautions, medications, rec_diet, workout = helper(predicted_disease)
-
-            my_precautions = precautions[0] if len(precautions) > 0 else []  # This maintains the old functionality
-
-            # Optional verified patient block. Anonymous visitors (or an
-            # unreachable auth service) simply get no patient section; the
-            # symptom check itself never requires an account.
-            authenticated_user_id, backend_user = fetch_verified_user()
-
-            report = build_report(
-                predicted_disease=predicted_disease,
-                dis_des=dis_des,
-                precautions=my_precautions,
-                medications=medications,
-                diet=rec_diet,
-                workout=workout,
-                authenticated_user_id=authenticated_user_id,
-                backend_user=backend_user,
-            )
-
-            # Both the page and the PDF render from this one report object.
-            return render_template('results.html', report=report)
-
-        except Exception:
-            # Log server-side without symptoms, patient data or tokens, and
-            # show the visitor a generic message (no internals leaked).
-            app.logger.exception("Prediction failed")
-            message = "Sorry, we could not process that request. Please try again."
-            return render_template('index.html', message=message), 500
-
-    return render_template('index.html')
+    return jsonify(message='Symptom checks are available only in the approved doctor workflow.'), 403
 
 
 if __name__ == '__main__':
-    # Port 5001 keeps this dev server from colliding with the Node backend
-    # (which owns 5000); backend/server.js proxies /predict here locally.
+    # Port 5001 keeps this private model server separate from the Node backend
+    # (which owns 5000). The backend calls only token-protected /internal routes.
     # FLASK_PORT (not PORT) is used deliberately: generic PORT env vars are
     # often injected by hosts and would break the proxy target.
     #

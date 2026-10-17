@@ -179,14 +179,9 @@ class TestServerRenderedSymptomForm:
         response = client.post("/predict", data={"symptoms": ""})
         html = response.get_data(as_text=True)
 
-        assert response.status_code == 200
-        summary = re.search(r'<div[^>]*data-form-summary[^>]*>(.*?)</div>', html, re.S)
-        assert summary, "the symptom form has no validation summary"
-        assert "Please provide valid symptoms." in summary.group(1), (
-            "the server message is not rendered inside the live region"
-        )
-        # ...and the region is visible in that case, so it is announced.
-        assert "hidden" not in summary.group(0)
+        assert response.status_code == 403
+        assert 'data-form-summary' not in html
+        assert 'Select Symptoms' not in html
 
     def test_clean_form_leaves_the_live_region_hidden(self, algo):
         algo.app.config.update(TESTING=True)
@@ -194,5 +189,5 @@ class TestServerRenderedSymptomForm:
 
         html = client.get("/predict").get_data(as_text=True)
 
-        summary = re.search(r'<div[^>]*data-form-summary[^>]*>', html, re.S)
-        assert summary and "hidden" in summary.group(0)
+        assert 'data-form-summary' not in html
+        assert client.get('/').status_code == 403

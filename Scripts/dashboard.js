@@ -50,18 +50,11 @@
 
     if (state.query) {
       const q = state.query.toLowerCase();
-      list = list.filter(
-        (d) => d.name.toLowerCase().includes(q) || d.speciality.toLowerCase().includes(q)
-      );
+      list = list.filter((d) => d.name.toLowerCase().includes(q) || d.speciality.toLowerCase().includes(q) || (d.language || "").toLowerCase().includes(q));
     }
 
     switch (state.sort) {
-      case "experience":
-        list.sort((a, b) => b.experience - a.experience);
-        break;
-      case "rating":
-        list.sort((a, b) => b.rating - a.rating);
-        break;
+
       case "feeLowHigh":
         list.sort((a, b) => a.hourlyFee - b.hourlyFee);
         break;
@@ -69,8 +62,8 @@
         list.sort((a, b) => b.hourlyFee - a.hourlyFee);
         break;
       default:
-        // relevance: available first, then rating
-        list.sort((a, b) => b.available - a.available || b.rating - a.rating);
+        // Show bookable doctors first; preserve server order within each group.
+        list.sort((a, b) => Number(b.acceptingAppointments) - Number(a.acceptingAppointments));
     }
     return list;
   }
@@ -84,8 +77,8 @@
     $("#resultsCount").textContent = `${list.length} doctor${list.length === 1 ? "" : "s"}`;
     $("#resultsTitle").textContent =
       state.specialities.size > 0 ? "Filtered specialists" : "All specialists";
-
     $("#noResults").hidden = list.length !== 0;
+    if (list.length === 0) $("#noResults p").textContent = window.DOCTORS.length ? "No doctors match these filters. Try another search or speciality." : "No approved doctors are listed yet. Try again later.";
 
     const frag = document.createDocumentFragment();
     list.forEach((doc) => {
@@ -93,30 +86,34 @@
       card.className = "card";
       card.innerHTML = `
         <div class="profile">
-          <img src="${doc.image}" alt="${doc.name}" loading="lazy" />
-          <span class="rating-pill"><i class="fa-solid fa-star"></i>${doc.rating.toFixed(1)}</span>
-          <span class="status-dot ${doc.available ? "online" : "offline"}">
-            ${doc.available ? "Available" : "Offline"}
+          <img src="./Asset/Illustrations/doctor.svg" alt="" loading="lazy" />
+          <span class="rating-pill" hidden></span>
+          <span class="status-dot ${doc.acceptingAppointments ? "online" : "offline"}">
+            ${doc.acceptingAppointments ? "Accepting visits" : "Not booking"}
           </span>
         </div>
         <div class="description">
-          <h2>${doc.name}</h2>
-          <div class="spec">${doc.speciality}</div>
+          <h2></h2>
+          <div class="spec"></div>
+          <p class="doctor-bio"></p>
           <div class="meta">
-            <div><strong>${doc.experience} yrs</strong><span>Experience</span></div>
-            <div><strong>Rs.${doc.hourlyFee}</strong><span>Per hour</span></div>
-            <div><strong>${doc.reviews}</strong><span>Reviews</span></div>
+            <div><strong></strong><span>Consultation fee</span></div>
           </div>
-          <div class="next-slot"><i class="fa-regular fa-clock"></i>Next: ${doc.nextSlot}</div>
+          <div class="next-slot"><i class="fa-regular fa-clock"></i><span></span></div>
           <div class="card-actions">
-            <button class="btn btn-primary" data-book="${doc.id}">
-              <i class="fa-regular fa-calendar-plus"></i>Book
+            <button class="btn btn-primary" type="button" data-book ${doc.acceptingAppointments ? "" : "disabled"}>
+              <i class="fa-regular fa-calendar-plus"></i>${doc.acceptingAppointments ? "View times" : "Not booking"}
             </button>
-            <a class="btn btn-outline" href="/predict?doctor=${encodeURIComponent(doc.name)}">
-              <i class="fa-solid fa-stethoscope"></i>Symptoms
-            </a>
           </div>
         </div>`;
+      card.querySelector("[data-book]").dataset.book = String(doc.id);
+      card.querySelector(".description h2").textContent = doc.name;
+      card.querySelector(".description .spec").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
+      const bio = card.querySelector(".doctor-bio");
+      bio.textContent = doc.bio || "";
+      bio.hidden = !doc.bio;
+      card.querySelector(".meta strong").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
+      card.querySelector(".next-slot span").textContent = doc.nextSlot ? `Next: ${doc.nextSlot}` : doc.acceptingAppointments ? "View times for availability" : "Appointments currently unavailable";
       frag.appendChild(card);
     });
     grid.appendChild(frag);
@@ -153,7 +150,7 @@
   // so both the close path and any focus-restore path can return focus there.
   let bookingTrigger = null;
 
-  function openBooking(doc, fromBtn) {
+  async function openBooking(doc, fromBtn) {
     // `fromBtn` is the button the visitor used to open the modal. If it is
     // not provided we fall back to the current active element so focus can be
     // restored later.
@@ -161,12 +158,17 @@
       ? document.activeElement
       : null);
 
-    state.booking = { doctor: doc, date: null, time: null };
+    state.booking = { doctor: doc, date: null, time: null, slots: [], idempotencyKey: crypto.randomUUID() };
+    try {
+      const response = await fetch(`/api/doctors/${doc.id}/slots`);
+      if (!response.ok) throw new Error("Could not load available slots");
+      state.booking.slots = await response.json();
+    } catch (error) { state.booking = null; toast(error.message, "error"); return; }
     $("#bookingImg").src = doc.image;
     $("#bookingImg").alt = doc.name;
     $("#bookingTitle").textContent = doc.name;
-    $("#bookingSpeciality").textContent = doc.speciality + " · " + doc.experience + " yrs";
-    $("#bookingFee").textContent = "Rs." + doc.hourlyFee;
+    $("#bookingSpeciality").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
+    $("#bookingFee").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
     $("#bookingReason").value = "";
     buildDateRow();
     buildSlotGrid();
@@ -201,62 +203,56 @@
   function buildDateRow() {
     const row = $("#dateRow");
     row.innerHTML = "";
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-        d.getDate()
-      ).padStart(2, "0")}`;
+    const localDate = (value) => {
+      const day = new Date(value);
+      return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    };
+    const dates = [...new Set(state.booking.slots.map((slot) => localDate(slot.startsAt)))];
+    if (!dates.length) { row.textContent = "No available slots yet."; return; }
+    dates.forEach((iso) => {
+      const d = new Date(iso + "T12:00:00");
       const chip = document.createElement("button");
       chip.type = "button";
       chip.className = "date-chip";
       chip.dataset.date = iso;
       chip.innerHTML = `
-        <span class="dow">${i === 0 ? "Today" : d.toLocaleDateString(undefined, { weekday: "short" })}</span>
+        <span class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</span>
         <span class="dnum">${d.getDate()}</span>
         <span class="mon">${d.toLocaleDateString(undefined, { month: "short" })}</span>`;
       chip.addEventListener("click", () => {
         row.querySelectorAll(".date-chip").forEach((c) => c.classList.remove("active"));
         chip.classList.add("active");
         state.booking.date = iso;
+        state.booking.time = null;
+        buildSlotGrid();
         syncConfirm();
       });
       row.appendChild(chip);
-    }
+    });
   }
 
   function buildSlotGrid() {
     const grid = $("#slotGrid");
     grid.innerHTML = "";
-    const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
-    slots.forEach((time, idx) => {
+    const slots = state.booking.slots.filter((slot) => {
+      const date = new Date(slot.startsAt);
+      const localDay = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return localDay === state.booking.date;
+    });
+    slots.forEach((slot) => {
+      const btnTime = new Date(slot.startsAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "slot";
-      btn.textContent = formatTime12(time);
-      // pseudo-randomly disable a couple of slots so the UI feels real
-      const taken = (time.charCodeAt(1) + idx) % 7 === 0;
-      if (taken) {
-        btn.disabled = true;
-        btn.title = "Unavailable";
-      } else {
-        btn.addEventListener("click", () => {
-          grid.querySelectorAll(".slot").forEach((s) => s.classList.remove("active"));
-          btn.classList.add("active");
-          state.booking.time = time;
-          syncConfirm();
-        });
-      }
+      btn.textContent = btnTime;
+      btn.addEventListener("click", () => {
+        grid.querySelectorAll(".slot").forEach((s) => s.classList.remove("active"));
+        btn.classList.add("active");
+        state.booking.time = slot.id;
+        syncConfirm();
+      });
       grid.appendChild(btn);
     });
-  }
-
-  function formatTime12(hhmm) {
-    const [h, m] = hhmm.split(":").map(Number);
-    const ampm = h >= 12 ? "PM" : "AM";
-    const hr = h % 12 === 0 ? 12 : h % 12;
-    return `${hr}:${String(m).padStart(2, "0")} ${ampm}`;
   }
 
   function syncConfirm() {
@@ -264,27 +260,20 @@
     $("#bookingConfirm").disabled = !ok;
   }
 
-  function confirmBooking() {
+  async function confirmBooking() {
     const b = state.booking;
     if (!b || !b.date || !b.time) return;
-    const record = window.Appointments.add({
-      doctorId: b.doctor.id,
-      doctorName: b.doctor.name,
-      speciality: b.doctor.speciality,
-      image: b.doctor.image,
-      fee: b.doctor.hourlyFee,
-      date: b.date,
-      time: b.time,
-      reason: $("#bookingReason").value.trim(),
-      status: "upcoming",
-    });
-    const date = record.date ? window.formatApptDate(record.date) : "the selected date";
-    const time = record.time ? window.formatApptTime(record.time) : "the selected time";
-    const message = `Appointment booked with ${record.doctorName} on ${date} at ${time}.`;
-    announce(message);
-    closeBooking();
-    window.refreshAppointmentBadge();
-    toast(message, "success");
+    const confirm = $("#bookingConfirm");
+    confirm.disabled = true;
+    try {
+      const result = await window.Appointments.add({ slotId: b.time, idempotencyKey: b.idempotencyKey, reason: $("#bookingReason").value.trim() });
+      const message = result.refreshFailed ? "Appointment saved, but the list could not refresh. Reload My Appointments to check it." : `Appointment requested with ${b.doctor.name}. View its status in My Appointments.`;
+      announce(message);
+      closeBooking();
+      toast(message, "success");
+    } catch (error) {
+      toast(error.message === "Not authenticated" ? "Log in to request an appointment." : error.message, "error");
+    } finally { if (state.booking) syncConfirm(); }
   }
 
   // --- user greeting (auth state itself is handled by nav.js) ---
@@ -294,13 +283,6 @@
   }
 
   function initGreeting() {
-    // Restore immediately if a previous visit already resolved the session.
-    try {
-      const stored = sessionStorage.getItem("hellodoc.userName");
-      if (stored) setHeroGreeting(stored);
-    } catch {
-      // sessionStorage unavailable, wait for the event below.
-    }
     // Update when nav.js resolves the session during this page load.
     window.addEventListener("hellodoc:user", (e) => {
       if (e.detail && e.detail.name) setHeroGreeting(e.detail.name);
@@ -351,7 +333,7 @@
     els.teamContainer.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-book]");
       if (!btn) return;
-      const doc = window.getDoctorById(btn.dataset.book);
+      const doc = window.DOCTORS.find((d) => String(d.id) === btn.dataset.book);
       if (doc) openBooking(doc, btn);
     });
   }
@@ -480,7 +462,21 @@
     els.chips = $("#chips");
     els.overlay = $("#bookingOverlay");
 
-    $("#statDoctors").textContent = window.DOCTORS.length;
+    window.DOCTORS = [];
+    window.SPECIALITIES = [];
+    $("#statDoctors").textContent = "0";
+    $("#noResults").hidden = true;
+    $("#resultsCount").textContent = "Loading doctors…";
+    fetch("/api/doctors").then((response) => {
+      if (!response.ok) throw new Error("Directory unavailable");
+      return response.json();
+    }).then((doctors) => {
+      if (!Array.isArray(doctors)) throw new Error("Directory unavailable");
+      window.DOCTORS = doctors.map((d) => ({ ...d, speciality: d.specialty, hourlyFee: d.fee == null ? null : Number(d.fee), acceptingAppointments: d.accepting_appointments !== false, nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null, image: "./Asset/Illustrations/doctor.svg" }));
+      window.SPECIALITIES = [...new Set(window.DOCTORS.map((d) => d.speciality))];
+      $("#statDoctors").textContent = window.DOCTORS.length;
+      renderChips(); renderCards();
+    }).catch(() => { $("#resultsCount").textContent = "Unavailable"; $("#noResults").hidden = false; $("#noResults p").textContent = "Doctor directory is unavailable. Please try again later."; });
 
     initToolbar();
     initCards();
@@ -488,6 +484,5 @@
     initGreeting();
 
     renderChips();
-    renderCards();
   });
 })();

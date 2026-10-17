@@ -29,18 +29,10 @@ trap cleanup SIGINT SIGTERM
 # Check if Python is available
 if command -v python3 &> /dev/null || command -v python &> /dev/null; then
     PYTHON_CMD=$(command -v python3 || command -v python)
-    echo -e "${GREEN}[1/3]${NC} Starting Flask prediction service on port 5001..."
-    echo "       Command: $PYTHON_CMD Algo/main.py"
-    echo ""
-    # Start Flask in background
-    $PYTHON_CMD Algo/main.py > /dev/null 2>&1 &
-    FLASK_PID=$!
-    PIDS+=($FLASK_PID)
-    echo -e "       ${GREEN}✓${NC} Flask service started (PID: $FLASK_PID)"
+    echo -e "${GREEN}[1/3]${NC} Python available; backend will start the private symptom model automatically."
 else
     echo -e "${YELLOW}[WARNING]${NC} Python not found. Symptom prediction will not work."
     echo "          Install Python 3.8+ to enable disease prediction."
-    FLASK_PID=""
 fi
 
 echo ""

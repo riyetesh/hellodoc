@@ -36,16 +36,16 @@ const App = () => {
     try {
 
       // Make the API call to get the bot's response
-      const response = await fetch(import.meta.env.VITE_API_URL, requestOptions);
+      if (!import.meta.env.VITE_API_URL) throw new Error("Chat service is not configured.");
+      const response = await fetch(import.meta.env.VITE_API_URL, { ...requestOptions, signal: AbortSignal.timeout(15000) });
       const data = await response.json();
-      if(!response.ok) throw new Error(data.error.message || "Something went wrong!");
+      if (!response.ok) throw new Error(data?.error?.message || "Chat service unavailable.");
 
-      // Clean and update chat history with bot's response
-      const apiResponseText = data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, "$1").
-      trim();
-      updateHistory(apiResponseText);
+      const apiResponseText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (typeof apiResponseText !== "string" || !apiResponseText.trim()) throw new Error("Chat service returned no answer.");
+      updateHistory(apiResponseText.replace(/\*\*(.*?)\*\*/g, "$1").trim());
     } catch (error) {
-      console.error(error.message, true);
+      updateHistory(error.name === "TimeoutError" ? "The chat service timed out. Please try again." : "Chat is unavailable right now. Please try again or contact a clinician for health concerns.", true);
     }
   };
 
@@ -58,7 +58,7 @@ const App = () => {
   return(
     <div className={`container ${showChatbot ? "show-chatbot" : ""}` }>
 
-      <button onClick={() => setShowChatbot(prev => !prev)} id="chatbot-toggler">
+      <button onClick={() => setShowChatbot(prev => !prev)} id="chatbot-toggler" aria-label={showChatbot ? "Close chat" : "Open chat"} aria-expanded={showChatbot}>
         <span className="material-symbols-rounded">mode_comment</span>
         <span className="material-symbols-rounded">close</span>
       </button>
@@ -71,7 +71,7 @@ const App = () => {
             <h2 className="logo-text">HelloDoc</h2>
           </div>
           <button onClick={() => setShowChatbot(prev => !prev)}
-          className="material-symbols-rounded">
+          className="material-symbols-rounded" aria-label="Close chat">
             keyboard_arrow_down
           </button>
         </div>

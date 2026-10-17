@@ -29,6 +29,8 @@ export default [
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'react/prop-types': 'off',
+      // Vite uses React's automatic JSX transform; no React binding is needed.
+      'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-vars': 'warn',
       'react/jsx-uses-react': 'warn',
     },

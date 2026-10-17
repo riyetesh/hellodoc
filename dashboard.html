@@ -34,7 +34,6 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="index.html#about" class="nav-link">About</a></li>
           <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
-          <li><a href="/predict" class="nav-link">Check symptoms</a></li>
           <li>
             <a href="appointments.html" class="nav-link">
               Appointments
@@ -61,26 +60,24 @@
     <header class="hero">
       <div class="container hero-inner">
         <div class="hero-copy">
-          <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Trusted by 50k+ patients</span>
+          <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Verified doctors</span>
           <h1 id="heroGreeting">Find your doctor</h1>
           <p>
-            Browse verified specialists, see live availability and book a video
-            consultation, then run a symptom check to prepare for your visit.
+Browse approved doctors, review their specialties and consultation details, and request a visit when booking is open.
           </p>
           <div class="hero-stats">
-            <div class="stat"><strong id="statDoctors">0</strong><span>Specialists</span></div>
-            <div class="stat"><strong>24/7</strong><span>Support</span></div>
-            <div class="stat"><strong>4.8★</strong><span>Avg. rating</span></div>
+            <div class="stat"><strong id="statDoctors">0</strong><span>Approved doctors</span></div>
+
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
           <div class="hero-card">
             <i class="fa-solid fa-stethoscope"></i>
-            <div><strong>AI symptom check</strong><span>Instant, evidence based</span></div>
+            <div><strong>Verified profiles</strong><span>Only approved doctors appear here</span></div>
           </div>
           <div class="hero-card">
             <i class="fa-solid fa-video"></i>
-            <div><strong>Video consults</strong><span>Join from anywhere</span></div>
+            <div><strong>Request a visit</strong><span>Track status in appointments</span></div>
           </div>
         </div>
       </div>
@@ -91,7 +88,7 @@
       <div class="container toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="search" placeholder="Search by doctor name…" autocomplete="off" />
+          <input type="text" id="search" placeholder="Search by doctor, speciality or language…" autocomplete="off" />
         </div>
 
         <div class="dropdown" id="sortDropdown">
@@ -102,8 +99,6 @@
           </button>
           <div class="dropdown-content" id="sortMenu">
             <a href="#" class="sort-option active" data-value="relevance">Relevance</a>
-            <a href="#" class="sort-option" data-value="experience">Experience</a>
-            <a href="#" class="sort-option" data-value="rating">Rating</a>
             <a href="#" class="sort-option" data-value="feeLowHigh">Fee: Low to High</a>
             <a href="#" class="sort-option" data-value="feeHighLow">Fee: High to Low</a>
           </div>
@@ -126,11 +121,11 @@
         <h2 id="resultsTitle">All specialists</h2>
         <span class="results-count" id="resultsCount"></span>
       </div>
-      <div class="team-container" id="teamContainer"></div>
-      <div class="no-results" id="noResults" hidden>
+      <div class="team-container" id="teamContainer" aria-live="polite"></div>
+      <div class="no-results" id="noResults" role="status" hidden>
         <i class="fa-solid fa-user-doctor"></i>
         <h3>No doctors found</h3>
-        <p>Try a different name or clear some speciality filters.</p>
+        <p>No approved doctors are listed yet. Try again later.</p>
         <button class="btn btn-outline" id="clearFilters">Clear filters</button>
       </div>
     </main>
@@ -186,7 +181,6 @@
       </div>
     </footer>
 
-    <script src="./Scripts/doctors-data.js"></script>
     <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js"></script>
     <script src="./Scripts/dashboard.js"></script>

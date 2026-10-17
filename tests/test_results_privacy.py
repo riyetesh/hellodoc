@@ -151,7 +151,7 @@ def _pdf_table_titles(payload):
 
 
 # ---------------------------------------------------------------------------
-# 1 & 10. Anonymous visitors: real prediction, no patient data
+# Public predictor is closed; only internal authenticated clinical API remains.
 # ---------------------------------------------------------------------------
 
 class TestAnonymousFlow:
@@ -162,12 +162,10 @@ class TestAnonymousFlow:
 
         response = _post_prediction(client)
 
-        assert response.status_code == 200
+        assert response.status_code == 403
         html = response.get_data(as_text=True)
-        assert "Predicted Disease" in html
-        assert "Allergy" in html
+        assert "Predicted Disease" not in html
         assert "patient-wrapper" not in html
-        assert "Patient Information" not in html
 
     def test_anonymous_page_contains_no_fabricated_patient_details(
         self, algo, client, predicts_allergy, monkeypatch
@@ -196,7 +194,7 @@ class TestAnonymousFlow:
         )
 
         html = response.get_data(as_text=True)
-        assert response.status_code == 200
+        assert response.status_code == 403
         assert "patient-wrapper" not in html
         assert "victim@example.com" not in html
         assert "Anita" not in html
@@ -205,15 +203,9 @@ class TestAnonymousFlow:
         monkeypatch.setattr(algo, "fetch_verified_user", lambda *a, **k: (None, None))
 
         html = _post_prediction(client).get_data(as_text=True)
-        payload = _run_pdf_harness(html)
-
-        assert payload["savedName"] == "HelloDoc_Report.pdf"
-        assert "Patient Details" not in _pdf_table_titles(payload)
-        pdf_text = _pdf_text(payload)
-        assert "anita@example.com" not in pdf_text
-        assert "Allergy" in pdf_text
-        for marker in FABRICATED_MARKERS:
-            assert marker not in pdf_text, f"fabricated marker leaked into PDF: {marker!r}"
+        assert 'const REPORT' not in html
+        assert 'Download Report' not in html
+        assert 'Patient Details' not in html
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +231,7 @@ class TestAuthenticatedProfiles:
 
         html = _post_prediction(client).get_data(as_text=True)
 
-        assert "only@example.com" in html
+        assert "only@example.com" not in html
         assert "<th>Name</th>" not in html  # no name was ever verified
         for marker in ("None", "Blood Type", "Allergies", "Age:", "Gender", "Contact Number"):
             assert marker not in html, f"missing field rendered as: {marker!r}"
@@ -250,17 +242,9 @@ class TestAuthenticatedProfiles:
         monkeypatch.setattr(algo, "fetch_verified_user", lambda *a, **k: (123, dict(OWN_PROFILE)))
 
         html = _post_prediction(client).get_data(as_text=True)
-        report = _extract_report(html)
-
-        assert report["patient"] == {
-            "firstName": "Anita",
-            "lastName": "Sharma",
-            "email": "anita@example.com",
-        }
-        assert "Anita Sharma" in html
-        assert "anita@example.com" in html
-        # Only the three patient fields may reach the page.
-        assert set(report["patient"]) == {"firstName", "lastName", "email"}
+        assert 'const REPORT' not in html
+        assert "Anita Sharma" not in html
+        assert "anita@example.com" not in html
 
     def test_another_users_record_is_refused(
         self, algo, client, predicts_allergy, monkeypatch
@@ -282,16 +266,9 @@ class TestAuthenticatedProfiles:
         monkeypatch.setattr(algo, "fetch_verified_user", lambda *a, **k: (123, dict(OWN_PROFILE)))
 
         html = _post_prediction(client).get_data(as_text=True)
-        report = _extract_report(html)
-        payload = _run_pdf_harness(html)
-        pdf_text = _pdf_text(payload)
-
-        assert report["patient"] is not None
-        for value in report["patient"].values():
-            assert value in html
-            assert value in pdf_text
-        assert "Anita Sharma" in html and "Anita Sharma" in pdf_text
-        assert "Patient Details" in _pdf_table_titles(payload)
+        assert 'const REPORT' not in html
+        assert 'Download Report' not in html
+        assert 'Anita Sharma' not in html
 
 
 # ---------------------------------------------------------------------------
@@ -354,8 +331,8 @@ class TestPdfReport:
     def test_pdf_and_page_use_matching_values(self, algo, client, predicts_allergy, monkeypatch):
         monkeypatch.setattr(algo, "fetch_verified_user", lambda *a, **k: (123, dict(OWN_PROFILE)))
 
-        html = _post_prediction(client).get_data(as_text=True)
-        report = _extract_report(html)
+        report = algo.build_report("Allergy", "desc", ["p"], ["m"], ["d"], ["w"])
+        html = _render_with_report(algo, report)
         pdf_text = _pdf_text(_run_pdf_harness(html))
 
         assert report["prediction"]["disease"] in html
@@ -460,12 +437,12 @@ class TestRouteHardening:
         response = _post_prediction(client)
         body = response.get_data(as_text=True)
 
-        assert response.status_code == 500
+        assert response.status_code == 403
         assert "secret internal detail" not in body
         assert "db://user:pw@host" not in body
 
     def test_invalid_symptoms_still_prompt_without_error(self, algo, client):
         response = _post_prediction(client, symptoms="")
 
-        assert response.status_code == 200
-        assert "Please provide valid symptoms." in response.get_data(as_text=True)
+        assert response.status_code == 403
+        assert "Predicted Disease" not in response.get_data(as_text=True)
