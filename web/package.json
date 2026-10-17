@@ -1,0 +1,7 @@
+{
+  "name": "hellodoc-static",
+  "private": true,
+  "scripts": {
+    "build": "node ../backend/build-static.js web/dist"
+  }
+}

@@ -2,9 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "web": {
-      "root": ".",
-      "installCommand": "npm ci --prefix backend --ignore-scripts",
-      "buildCommand": "node backend/build-static.js",
+      "root": "web",
+      "installCommand": "node --version",
+      "buildCommand": "npm run build",
       "outputDirectory": "dist"
     },
     "backend": {
