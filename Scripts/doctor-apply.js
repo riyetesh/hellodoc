@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.message || 'Doctor registration could not be completed.');
-      message.textContent = result.message + ' Redirecting to sign in…';
+      message.textContent = result.message + (result.authenticated ? ' Opening your doctor portal…' : ' Redirecting to sign in…');
       form.reset();
-      window.setTimeout(() => { window.location.assign('/index.html?login=doctor'); }, 1800);
+      window.setTimeout(() => { window.location.assign(result.authenticated ? '/doctor-portal.html' : '/index.html?login=doctor'); }, 1800);
     } catch (error) {
       message.textContent = error.message || 'Could not reach HelloDoc. Please try again.';
       button.disabled = false;
