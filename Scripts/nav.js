@@ -140,6 +140,8 @@
     const pretty = name.replace(/\b\w/g, (c) => c.toUpperCase());
     const loginBtn = $("#loginBtn");
     const signupBtn = $("#signupBtn");
+    const doctorLoginBtn = $('#doctorLoginBtn');
+    if (doctorLoginBtn) doctorLoginBtn.hidden = true;
     const chip = $("#userChip");
     if (loginBtn) loginBtn.hidden = true;
     if (signupBtn) signupBtn.hidden = true;

@@ -43,7 +43,8 @@
         </ul>
 
         <div class="navbar-actions" id="navActions">
-          <a href="index.html" class="btn btn-ghost" id="loginBtn">Log in</a>
+          <a href="index.html?login=patient" class="btn btn-ghost" id="loginBtn">Log in as a patient</a>
+          <a href="index.html?login=doctor" class="btn btn-outline" id="doctorLoginBtn">Log in as a doctor</a>
           <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
@@ -111,7 +112,9 @@
     <div id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
       <div class="modal-content">
         <span class="close-btn" role="button" tabindex="0" aria-label="Close login">&times;</span>
-        <h2 id="login-modal-title">Welcome back</h2>
+        <h2 id="login-modal-title">Log in as a patient</h2>
+        <p id="login-role-description">Sign in to book visits and view your patient dashboard.</p>
+        <p><a href="?login=patient" data-login-role="patient">Patient login</a> · <a href="?login=doctor" data-login-role="doctor">Doctor login</a></p>
         <!-- novalidate hands validation to Scripts/form-validation.js, which
              explains each problem in place instead of showing browser bubbles.
              method="post" keeps entered values out of the URL if the script

@@ -13,12 +13,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = modal.querySelector("form");
   const emailInput = modal.querySelector("#email");
   let api = null;
+  let opener = loginBtn;
 
   function isOpen() {
     return modal.style.display === "flex";
   }
 
-  function openModal() {
+  function openModal(role = 'patient') {
+    document.getElementById('login-modal-title').textContent = role === 'doctor' ? 'Log in as a doctor' : 'Log in as a patient';
+    document.getElementById('login-role-description').textContent = role === 'doctor' ? 'Approved doctors open their workspace; applicants can check their application status.' : 'Sign in to book visits and view your patient dashboard.';
     modal.style.display = "flex";
     if (api) {
       api.clearSummary();
@@ -31,17 +34,26 @@ document.addEventListener("DOMContentLoaded", function () {
   function closeModal() {
     modal.style.display = "none";
     // Put focus back where the modal was opened from.
-    if (loginBtn) loginBtn.focus();
+    if (opener) opener.focus();
   }
 
-  if (window.location.search && /(?:^\?|&)login=(?:doctor|patient)(?:&|$)/.test(window.location.search)) openModal();
+  if (window.location.search && /(?:^\?|&)login=(?:doctor|patient)(?:&|$)/.test(window.location.search)) openModal(new URLSearchParams(window.location.search).get('login'));
 
   if (loginBtn) {
     loginBtn.addEventListener("click", function (event) {
       event.preventDefault();
-      openModal();
+      opener = loginBtn;
+      openModal('patient');
     });
   }
+
+  const doctorLoginBtn = document.getElementById('doctorLoginBtn');
+  if (doctorLoginBtn) doctorLoginBtn.addEventListener('click', (event) => {
+    event.preventDefault(); opener = doctorLoginBtn; openModal('doctor');
+  });
+  modal.querySelectorAll('[data-login-role]').forEach((link) => link.addEventListener('click', (event) => {
+    event.preventDefault(); openModal(link.dataset.loginRole);
+  }));
 
   if (closeBtn) {
     closeBtn.addEventListener("click", closeModal);
