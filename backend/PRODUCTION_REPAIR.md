@@ -1,4 +1,12 @@
-# Production repair handoff — 2026-10-17
+# Production repair handoff — 2026-10-17 (historical)
+
+> **Historical snapshot.** Everything below describes the repository and
+> deployments as they were on 2026-10-17. Several statements are now outdated
+> (migrations 005–012 exist, the migration ledger is known to be incomplete, and
+> the clinical assessment workflow has been added). For current schema, install
+> and verification instructions use [migrations/README.md](migrations/README.md);
+> for setup and features use the root [README.md](../README.md). Do not apply
+> migrations or deploy based on this file alone.
 
 ## Confirmed diagnosis
 

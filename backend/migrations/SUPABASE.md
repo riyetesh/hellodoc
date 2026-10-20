@@ -1,19 +1,58 @@
-# HelloDoc Supabase backend — setup and verification
+# HelloDoc Supabase backend — verification record
+
+> **Status:** this file is a dated record of what was checked and when. The
+> canonical instructions are in [README.md](README.md) in this directory; the
+> root [README.md](../../README.md) describes setup and the feature set. Claims
+> below that predate 2026-10-20 are historical and are not re-verified unless the
+> dated check says so.
 
 ## Applied database
 
-Connected project: **Hellodoc**, `fsqtjdavnfjnwsbswqel` (eu-west-1). Inspected before changes: no public tables, migrations or Auth accounts. No legacy import or fictional clinician directory was created.
+Connected project: **Hellodoc**, `fsqtjdavnfjnwsbswqel` (eu-west-1).
 
-Applied via connected migration API on 2026-10-17:
-- `003_supabase_foundation.sql`: profiles, patient_profiles, doctor_profiles, doctor_applications, doctor_availability, appointments, appointment_status_history; Auth trigger, RLS, scoped RPCs and GiST conflict constraints.
-- `005_admin_management.sql`: admin_audit_logs, private.admin_bootstrap, profile phone/suspension, qualification/review fields, restricted admin RPCs, repair for missing profiles and idempotent first-admin operation.
-- `006_directory_suspension.sql`: suspended clinicians excluded from directory/slots/booking, clinician locking during booking and qualification/evidence application RPC.
+**Verified read-only on 2026-10-20** against the live catalog (not against the
+migration ledger, which is incomplete):
 
-`001` and `002` were **MySQL-only** migrations and were deleted together with the MySQL backend; never execute them in PostgreSQL. `004` is an older test specification, not a migration. `007_security_regression.sql` is a rollback-only executable **test**, not a migration. Remote migration versions are API-generated timestamps; names map to the files above. An initial 005 attempt failed on an alias and rolled back; the corrected transaction succeeded.
+- 9 public tables, all with RLS enabled: `profiles`, `patient_profiles`,
+  `doctor_profiles`, `doctor_applications`, `doctor_availability`,
+  `appointments`, `appointment_status_history`, `admin_audit_logs`,
+  `assessments`.
+- 35 public functions — the complete set defined by migrations 003–012 (including
+  the internal `internal_*` wrappers, `is_active`/`is_admin`/`require_active`/
+  `require_admin`, `is_approved_doctor`, `is_own_assessment`, `assessment_view`
+  and `doctor_consultation`).
+- 17 public policies, including six restrictive `active_account` policies from
+  005 and the three assessment policies from 010/011.
+- 2 non-internal triggers: `create_patient_profile_after_signup` on `auth.users`
+  and `assessments_freeze_model` on `public.assessments`.
+- 23 columns on `assessments`, including `supersedes_id`, and the
+  `assessments_single_revision` partial unique index.
+- Role constraint is the 009 version (`patient`/`doctor`/`admin`); the 008
+  four-role constraint no longer exists.
 
-## Clinical assessments (010, 011)
+**Ledger discrepancy:** `supabase_migrations.schema_migrations` records only
+`003`, `005`, `006`, an 008 entry named `doctor_applicant_role`, and two `010`
+entries. There is **no ledger row for 009, 011 or 012**, although their objects
+are present and were confirmed by inspecting function bodies, policies,
+constraints and indexes. The ledger therefore cannot be used to decide whether a
+migration is applied. Use [VERIFY.sql](VERIFY.sql).
 
-Applied 2026-10-20 via the connected migration API: `010_clinical_assessments.sql` and `011_assessment_revisions.sql`.
+`001` and `002` were **MySQL-only** migrations and were deleted with the MySQL
+backend; never execute them in PostgreSQL. `004` is an older test specification,
+not a migration. `007_security_regression.sql` is a rollback-only executable
+**test**, not a migration. Apply order, clean-install steps, per-object mapping and
+recovery instructions live in [README.md](README.md).
+
+## Clinical assessments (010–012)
+
+Applied 2026-10-20: `010_clinical_assessments.sql` (through the connected
+migration API, which recorded two `010` ledger entries), then
+`011_assessment_revisions.sql` and `012_doctor_consultation.sql` as individual SQL
+statements. No ledger row exists for 011 or 012; objects were verified afterwards
+with [VERIFY.sql](VERIFY.sql) (§6 of [README.md](README.md)).
+
+`011` supersedes three objects created by `010` — the insert policy, the freeze
+trigger function and `assessment_view` — so only the 011 definitions are current.
 
 - `assessments` stores one row per model run: doctor, patient, optional appointment, patient-reported and doctor-added model symptoms, free-text observations, duration/note, frozen model output (condition, model version, guidance, optional confidence) and the doctor's own editable assessment and plan.
 - The model verdict and the assessment identity are immutable (trigger); only `doctor_assessment`, `plan` and report metadata can change. A symptom correction is a new row with `supersedes_id`, so the earlier prediction is never overwritten. A partial unique index allows one revision per record, which also blocks duplicate submissions.
@@ -26,25 +65,35 @@ Applied 2026-10-20 via the connected migration API: `010_clinical_assessments.sq
 
 Existing static pages → same-origin Express → Supabase Auth/PostgREST. Routine API requests use only `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, with verified user JWTs. Tokens are HTTP-only SameSite=Lax cookies, Secure in production. Session restoration uses getUser/refreshSession. Roles come from PostgreSQL, never editable metadata. Auth trigger always creates patient identity/profile rows. Public signup rejects role assignments. Suspension denies private API access and database operations. Profile fields cannot be directly updated by clients, including role.
 
-Signup returns confirmation instructions unless an authenticated session exists. Email confirmation remains enabled. Sign in after confirming; this server-cookie app does not consume the confirmation redirect's implicit browser session. Recovery supports both the standard Supabase recovery fragment and a token_hash fragment; fragments are removed from the URL immediately, are not stored in browser storage, and are sent only to same-origin password completion. Logout attempts Supabase session revocation and clears cookies; failures are reported rather than claimed successful. Existing access JWTs may remain valid until expiry after refresh-session revocation, as with standard Supabase Auth.
+Signup returns confirmation instructions unless an authenticated session exists. Whether email confirmation is enforced is a **project setting** and is not verified here: earlier notes in this repository claimed both "confirmation on" and "confirmation off (`mailer_autoconfirm: true`)". Check Auth → Providers → Email in the Supabase dashboard before relying on either. The application handles both paths. Sign in after confirming; this server-cookie app does not consume the confirmation redirect's implicit browser session. Recovery supports both the standard Supabase recovery fragment and a token_hash fragment; fragments are removed from the URL immediately, are not stored in browser storage, and are sent only to same-origin password completion. Logout attempts Supabase session revocation and clears cookies; failures are reported rather than claimed successful. Existing access JWTs may remain valid until expiry after refresh-session revocation, as with standard Supabase Auth.
 
 Supabase Site URL now uses `https://hellodoc-r1-e09f.vercel.app`; exact root/recover URLs for production and this VM preview were allowlisted. Password minimum is eight. Auth health was ACTIVE_HEALTHY. No custom SMTP is configured; built-in email limits/restrictions remain. Email delivery, confirmation and recovery must be tested with a real controlled mailbox. Never disable confirmation to get a passing test.
 
 Local start:
 ```
 npm ci --prefix backend
-# Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and APP_ORIGIN privately.
-FLASK_AUTOSTART=false PORT=3000 npm start --prefix backend
+cd backend        # dotenv loads backend/.env relative to the working directory
+npm start         # Express on PORT or 5000; Flask autostarts on 5001
 ```
-Environment is loaded by dotenv relative to the working directory. Use exported variables, or deliberately launch from the directory containing your ignored .env. Never expose service keys in public variables. Production fails closed if Supabase or APP_ORIGIN are missing. The legacy MySQL implementation has been removed: Supabase is the only account backend and the API fails closed while it is unconfigured.
+Set `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `APP_ORIGIN` (matching the
+origin you open) privately. `FLASK_AUTOSTART=false` disables the local model.
+dotenv loads `.env` from the working directory, so launch the server from `backend/` (or use `npm start --prefix backend`, which does that) to pick up `backend/.env`. Exported process variables take precedence. Never expose service keys in public variables. Production fails closed if Supabase or APP_ORIGIN are missing. The legacy MySQL implementation has been removed: Supabase is the only account backend and the API fails closed while it is unconfigured.
 
-## First administrator — not yet provisioned
+## First administrator
 
-No administrator email or password was chosen, and no real administrator account was created. Bootstrap has no HTTP endpoint or public signup page.
+**Current dev project:** one administrator profile exists and
+`private.admin_bootstrap` is consumed, so `bootstrap_first_admin` will refuse a
+second bootstrap. The account's email and password are deliberately not recorded
+here. This is a development convenience, not a production default: rotate or
+replace the account before any real deployment. (The earlier statement that no
+administrator had been provisioned was true when written and is now outdated.)
+
+Bootstrap has no HTTP endpoint and public admin signup does not exist. For a
+**fresh** project, use this one-time procedure:
 
 1. Register the intended administrator email through HelloDoc and confirm the mailbox. This initially creates a patient account. Choose your own strong password; do not send credentials in chat.
 2. On a trusted machine or private CI job, configure these **private process environment** values:
-   - `SUPABASE_URL=https://fsqtjdavnfjnwsbswqel.supabase.co`
+   - `SUPABASE_URL=https://<project-ref>.supabase.co` (the confirmed project URL)
    - `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard (server-only; never commit or paste in chat).
    - `ADMIN_EMAIL` equal to the confirmed email.
    - `ADMIN_BOOTSTRAP_CONFIRM=provision-first-admin`
@@ -94,16 +143,43 @@ Appointments persist in PostgreSQL, not localStorage. Eligible approved clinicia
 
 ## Checks actually performed
 
-- 22 Node tests passed: legacy regression stubs, Supabase route stubs, admin role/validation/suspension tests, live HTTP and anonymous Data API permission checks.
-- Live PostgreSQL rollback regression passed under SET LOCAL ROLE authenticated and explicit synthetic subjects: trigger metadata role ignored, own profiles only, role mutation denied, patient/doctor admin denied, public bootstrap denied, audit denied, doctor application/approval, approved count, booking persistence within transaction, idempotency, patient-confirmation denied, cross-patient reads denied, overlapping booking rejected, suspended reads/RPCs denied. SQL fixtures are not Auth API signup tests. All fixtures rolled back; zero Auth users remained.
-- Static allowlisted build succeeded. JS syntax checks passed. No project TypeScript/typecheck script exists.
-- Live directory returned `[]` from actual Supabase (no approved clinician seeded). Admin/private endpoints return 401 signed out; foreign-origin writes and role escalation rejected.
-- Python test attempt blocked: pytest is not installed in restored environment. No Python tests claimed passed.
-- Dependency install reported **11 vulnerabilities (2 moderate, 7 high, 2 critical)** in backend dependencies. Lockfile preserved; no blind dependency upgrade. Audit remediation remains required.
+### 2026-10-20 (current)
 
-NOT VERIFIED: complete Auth signup/confirmation/login/refresh/recovery/logout using controlled mailbox, real bootstrap/sign-in, authenticated PostgREST JWT matrix, simultaneous competing transactions, second-device persistence, interactive browser behavior, new deployed Vercel runtime. Database sequential exclusion testing is not a concurrent-request measurement. Browser automation is unavailable; owner must perform interactive checks. Do not enter real patient information.
+- Read-only catalog inspection of the connected project: table/function/policy/
+  trigger/constraint/index inventory above; all migration markers and privilege
+  spot checks in [VERIFY.sql](VERIFY.sql) returned `true`.
+- Node: 52 tests passed, 0 failed against a running local server
+  (`TEST_ORIGIN`/`TEST_PUBLIC_ORIGIN` set). The suite stubs Supabase, so this does
+  not prove live RLS or Auth delivery.
+- Python: 64 passed, 14 failed (Node available) / 59 passed, 7 skipped, 12 failed
+  (Node absent). Every failure is a pre-existing legacy form-validation or
+  shared-navbar test in files unchanged on `main`.
+- Browser: appointment consultation → symptom search → prediction → revision →
+  PDF and one-click return were exercised against the local stack with synthetic
+  data only. Reports are generated on demand and not stored.
+- DB connection strings, service-role keys and Vercel environment values were not
+  decrypted or tested.
 
-## Vercel status and remaining deployment
+### Historical checks (superseded where they conflict)
+
+- 22 Node tests passed at the time, and a live PostgreSQL rollback regression under
+  `SET LOCAL ROLE authenticated` covered role escalation, cross-patient reads,
+  booking idempotency and suspension. SQL fixtures were rolled back.
+- The migration ledger was treated as authoritative at the time; that assumption
+  is now known to be wrong (see above).
+- An earlier attempt to run pytest was blocked because it was not installed; the
+  suite now runs and reports the failures listed above.
+
+NOT VERIFIED: mailbox delivery/confirmation/recovery, live Auth signup/login
+against deployed code, cross-device session behavior, concurrent booking under
+real load, deployed Vercel runtime, and two-doctor/two-patient RLS isolation with
+real Auth JWTs. Do not enter real patient information.
+
+## Vercel status and remaining deployment (historical, unverified)
+
+> The deployment facts below were recorded during earlier repairs. They are not
+> re-verified for this revision; treat build IDs, URLs and environment claims as
+> unconfirmed.
 
 Existing project `hellodoc`, `prj_jFbKTPOO82ObVUAvEHvFu96ZfO7s`; no duplicate created. Latest inspected production `dpl_F2H8Z8nurmAFvwDN78rvBZvtbABp` is ERROR: root Python bundle **625.04 MB**, above 500 MB. Existing Supabase-linked URL/publishable env names target preview/production; secret values were not decrypted.
 

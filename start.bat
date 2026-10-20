@@ -53,7 +53,9 @@ echo.
 
 if %NODE_FOUND% equ 1 (
     echo [2/3] Starting Node.js backend (port 5000)...
-    start /B "Backend" cmd /c "node backend/server.js"
+    pushd "%~dp0backend"
+    start /B "Backend" cmd /c "node server.js"
+    popd
     echo      ^> Running in background
 ) else (
     echo [SKIP] Backend - Node.js not available

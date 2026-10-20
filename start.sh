@@ -40,10 +40,10 @@ echo ""
 # Check if Node is available
 if command -v node &> /dev/null; then
     echo -e "${GREEN}[2/3]${NC} Starting Node.js backend on port 5000..."
-    echo "       Command: node backend/server.js"
+    echo "       Command: cd backend && node server.js"
     echo ""
-    # Start Node backend
-    node backend/server.js > /dev/null 2>&1 &
+    # Start Node backend from backend/ so dotenv loads backend/.env
+    (cd backend && exec node server.js) > /dev/null 2>&1 &
     NODE_PID=$!
     PIDS+=($NODE_PID)
     echo -e "       ${GREEN}✓${NC} Node backend started (PID: $NODE_PID)"
