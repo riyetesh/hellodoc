@@ -28,6 +28,20 @@ jobs:
       # TEST_SUPABASE_* pair is set; this job intentionally sets neither.
       - run: npm test --prefix backend
 
+  static-build:
+    name: Static build and deployment configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix backend
+      # Build into the same directory Vercel publishes (web/dist) and verify the
+      # output contents, private-path exclusions and service/rewrite config.
+      - run: node backend/build-static.js web/dist
+      - run: node --test tests/build_static.test.js tests/deployment_config.test.js
+
   python:
     name: Python predictor, privacy and design contracts
     runs-on: ubuntu-latest

@@ -16,10 +16,20 @@ async function instance(env,run) {
 }
 const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:'https://hellodoc.example'};
 test('missing configuration stays inspectable and never falls back to MySQL',async()=>instance({},async url=>{
- const response=await fetch(url+'/api/health'); assert.equal(response.status,503); assert.deepEqual(await response.json(),{status:'unavailable',application:'running',configuration:'invalid',supabase:'not_checked'});
+ const response=await fetch(url+'/api/health'); assert.equal(response.status,503); assert.deepEqual(await response.json(),{status:'unavailable',application:'running',configuration:'invalid',problems:['SUPABASE_URL is missing','SUPABASE_PUBLISHABLE_KEY is missing','APP_ORIGIN is missing'],supabase:'not_checked'});
  assert.equal((await fetch(url+'/api/auth/login',{method:'POST'})).status,503);
 }));
-test('privileged keys rejected by production configuration',async()=>instance({...env,SUPABASE_PUBLISHABLE_KEY:'sb_secret_never_use'},async url=>assert.equal((await fetch(url+'/api/health')).status,503)));
+test('privileged keys rejected by production configuration',async()=>instance({...env,SUPABASE_PUBLISHABLE_KEY:'sb_secret_never_use'},async url=>{
+ const response=await fetch(url+'/api/health'); assert.equal(response.status,503);
+ const body=await response.json();
+ assert.equal(body.configuration,'invalid');
+ assert.deepEqual(body.problems,['SUPABASE_PUBLISHABLE_KEY must be the publishable/anon key; secret keys are rejected']);
+ assert.ok(!JSON.stringify(body).includes('sb_secret_never_use'),'the rejected key must never be echoed');
+}));
+test('an origin with a path is rejected instead of silently trusted',async()=>instance({...env,APP_ORIGIN:'https://hellodoc.example/app'},async url=>{
+ const body=await (await fetch(url+'/api/health')).json();
+ assert.deepEqual(body.problems,['APP_ORIGIN must be a bare origin with no path, e.g. https://example.com']);
+}));
 test('readiness distinguishes successful schema query and connectivity failure safely',async()=>instance(env,async url=>{
  const real=global.fetch;
  try {

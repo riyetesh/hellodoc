@@ -40,6 +40,7 @@ test('unconfigured API fails closed with 503 instead of any fallback authenticat
       status: 'unavailable',
       application: 'running',
       configuration: 'invalid',
+      problems: ['SUPABASE_URL is missing', 'SUPABASE_PUBLISHABLE_KEY is missing', 'APP_ORIGIN is missing'],
       supabase: 'not_checked',
     });
     for (const route of ['/api/auth/login', '/api/auth/signup', '/api/auth/current-user', '/api/admin/patients']) {

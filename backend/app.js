@@ -42,21 +42,50 @@ function isPublicKey(key) {
   }
 }
 
-function validateConfig(config) {
-  if (!config || !config.url || !config.key || !config.origin) return false;
-  if (!isPublicKey(config.key)) return false;
-  try {
-    // The project URL must be HTTPS and the trusted origin must be a bare origin,
-    // never derived from request headers.
-    return new URL(config.url).protocol === 'https:' && new URL(config.origin).origin === config.origin;
-  } catch {
-    return false;
+// Operator-facing diagnostics. Values are never echoed, only the name of the
+// setting and what is wrong with it, so this is safe for a health response.
+function configProblems(config) {
+  const problems = [];
+  if (!config || !config.url) problems.push('SUPABASE_URL is missing');
+  else {
+    try {
+      if (new URL(config.url).protocol !== 'https:') problems.push('SUPABASE_URL must be an https project URL');
+    } catch {
+      problems.push('SUPABASE_URL is not a valid URL');
+    }
   }
+  if (!config || !config.key) problems.push('SUPABASE_PUBLISHABLE_KEY is missing');
+  else if (!isPublicKey(config.key)) {
+    problems.push('SUPABASE_PUBLISHABLE_KEY must be the publishable/anon key; secret keys are rejected');
+  }
+  if (!config || !config.origin) problems.push('APP_ORIGIN is missing');
+  else {
+    try {
+      if (new URL(config.origin).origin !== config.origin) {
+        problems.push('APP_ORIGIN must be a bare origin with no path, e.g. https://example.com');
+      }
+    } catch {
+      problems.push('APP_ORIGIN is not a valid origin');
+    }
+  }
+  return problems;
+}
+
+function validateConfig(config) {
+  // The project URL must be HTTPS and the trusted origin must be a bare origin,
+  // never derived from request headers.
+  return configProblems(config).length === 0;
 }
 
 function createApp({ config = readConfig(), allowSameHostOrigin = false } = {}) {
   const app = express();
-  const configured = validateConfig(config);
+  const problems = configProblems(config);
+  const configured = problems.length === 0;
+  if (!configured) {
+    // One structured line is what an operator sees in the deployment log; the
+    // API stays up so /api/health can report the same diagnosis.
+    console.error(JSON.stringify({ event: 'configuration_invalid', problems }));
+  }
   app.disable('x-powered-by');
 
   app.use((req, res, next) => {
@@ -73,6 +102,7 @@ function createApp({ config = readConfig(), allowSameHostOrigin = false } = {}) 
         status: 'unavailable',
         application: 'running',
         configuration: 'invalid',
+        problems,
         supabase: 'not_checked',
       });
     }
@@ -146,4 +176,4 @@ function createApp({ config = readConfig(), allowSameHostOrigin = false } = {}) 
   return app;
 }
 
-module.exports = { createApp, readConfig, validateConfig, isPublicKey };
+module.exports = { createApp, readConfig, validateConfig, configProblems, isPublicKey };

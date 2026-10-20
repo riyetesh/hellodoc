@@ -3,7 +3,6 @@
   "services": {
     "web": {
       "root": "web",
-      "installCommand": "node --version",
       "buildCommand": "npm run build",
       "outputDirectory": "dist"
     },
@@ -14,9 +13,11 @@
       "installCommand": "npm ci --ignore-scripts"
     }
   },
+  "redirects": [
+    { "source": "/admin", "destination": "/admin.html", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": { "service": "backend" } },
-    { "source": "/admin", "destination": { "service": "web", "path": "/admin.html" } },
     { "source": "/(.*)", "destination": { "service": "web" } }
   ]
 }

@@ -563,3 +563,43 @@ test('an assessment can only be read or edited by its own doctor', async () => {
   assessmentView=null;
   profile={...profile,role:'patient'};
 });
+
+test('unauthorized callers never reach the private prediction service', async () => {
+  modelCalls=[];
+  // An omitted cookie must stay omitted, so predict() cannot silently look
+  // authenticated by relying on post()'s default.
+  const predict=(cookie) => post('/api/doctor/predict',{symptoms:['itching']},cookie);
+
+  // Anonymous, wrong role and unapproved doctor are all rejected before any
+  // model request is made; the internal token stays server-side.
+  assert.equal((await predict('')).status,401);
+  profile={...profile,role:'patient',suspended:false};
+  assert.equal((await predict()).status,403);
+  profile={...profile,role:'doctor'};
+  verification={...verification,verification_status:'pending'};
+  assert.equal((await predict()).status,403);
+  assert.equal((await fetch(`${origin}/api/doctor/symptoms`)).status,401);
+  assert.equal((await fetch(`${origin}/api/doctor/symptoms`,{headers:{Cookie:'hd_access=valid'}})).status,403);
+  assert.deepEqual(modelCalls,[]);
+
+  // An authorized doctor still gets a fail-closed response when the deployment
+  // has no model service configured (the Vercel case): 503, no stored result.
+  verification={...verification,verification_status:'approved'};
+  profile={...profile,role:'doctor'};
+  modelFailure='MODEL_NOT_CONFIGURED';
+  const unconfigured=await predict();
+  assert.equal(unconfigured.status,503);
+  assert.equal(unconfigured.body.code,'MODEL_NOT_CONFIGURED');
+  modelFailure=null;
+
+  // The same is true for every route that can trigger a model run.
+  verification={...verification,verification_status:'approved'};
+  insertedAssessment=null;
+  modelCalls=[];
+  profile={...profile,role:'patient'};
+  const created=await post('/api/doctor/assessments',{appointmentId:consultationView.appointmentId,patientReported:['itching'],clinicianAdded:[],observations:[]});
+  assert.equal(created.status,403);
+  assert.equal(insertedAssessment,null);
+  assert.deepEqual(modelCalls,[]);
+  profile={...profile,role:'patient'};
+});

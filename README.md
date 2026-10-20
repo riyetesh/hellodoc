@@ -197,10 +197,11 @@ adds pytest to the runtime requirements.
 
 ```bash
 npm test                    # maintained regression suite: Node + current Python suites
-npm run test:node           # all 52 Node tests (live integration tests skip)
+npm run test:node           # all 62 Node tests (live integration tests skip)
 npm run test:routes         # routes, auth pages, production guards and model transport
 npm run test:assessment     # Supabase assessment, revision and consultation authorization
-npm run test:pdf            # PDF report rendering	npm run test:python         # full pytest run, including the retired UI tests (see below)
+npm run test:pdf            # PDF report rendering
+npm run test:python         # full pytest run, including the retired UI tests (see below)
 npm run test:python:current # clinical model, results privacy, design contract, pages
 npm run test:live           # live HTTP/Data API checks; skips unless configured
 ```
@@ -209,7 +210,7 @@ npm run test:live           # live HTTP/Data API checks; skips unless configured
 
 ```bash
 cd backend
-npm test                    # same 52 Node tests, resolved through ../tests
+npm test                    # same 62 Node tests, resolved through ../tests
 npm run test:routes
 npm run test:assessment
 npm run test:pdf
@@ -240,7 +241,8 @@ production credentials, and never put a service-role key in these variables.
 
 ### Current results (2026-10-20)
 
-- **Node:** 48 passed, 4 skipped, 0 failed.
+- **Node:** 58 passed, 4 skipped, 0 failed. This includes build-output, deployment-configuration
+  and private-prediction authorization tests.
 - **Maintained Python suite:** 52 passed (`test:python:current`).
 - **Full Python suite:** 65 passed, 13 failed (`test:python`). All 13 failures are
   in `tests/test_form_validation.py`, which guards the retired signup/login
@@ -266,20 +268,119 @@ node --check backend/server.js     # syntax; there is no typecheck script
 
 ## Deployment
 
-[vercel.json](vercel.json) describes two Vercel services: `web` (static build via
-`backend/build-static.js`) and `backend` (`backend/production.js`, an Express
-entrypoint), with `/api/*` rewritten to the backend and `/admin` served from the
-static build. The Flask model is **not** deployed there; a deployment that needs
-predictions must point `FLASK_ORIGIN` at a separate private model service and
-supply the matching token. Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` per
-environment, and `APP_ORIGIN` for production. Preview derives its trusted origin
-from `VERCEL_URL`.
+### How pages and API requests are served
+
+- **Locally** (`npm start --prefix backend`): [backend/server.js](backend/server.js)
+  serves `/api/*` from the same Express app used in production, serves the static
+  pages from the repository root, maps `/admin` to `admin.html`, and auto-starts
+  Flask on port 5001 unless `FLASK_ORIGIN` is set or `FLASK_AUTOSTART=false`.
+- **On Vercel** ([vercel.json](vercel.json)): two services behind one domain.
+  `web` runs `node ../backend/build-static.js web/dist` through `web/package.json`
+  and publishes `web/dist`; `backend` runs `backend/production.js` with
+  `npm ci --ignore-scripts`. Top-level routing is `/api/(.*)` → `backend`,
+  `/admin` → `307 /admin.html`, and `/(.*)` → `web`. Services are internal until a
+  rewrite targets them, and the original path is forwarded unchanged, so the
+  browser's relative `/api/...` calls reach the same mounts in both environments.
+- The Vercel project's **framework must be set to Services** in its build
+  settings. Without it Vercel ignores `services` in `vercel.json`; this is a
+  dashboard setting that cannot be verified from the repository.
+
+### Static output
+
+[backend/build-static.js](backend/build-static.js) copies an explicit allowlist of
+14 public pages plus `Styles/`, `Scripts/`, `Asset/` and `images/`. It deletes and
+recreates the output directory first (so a removed page cannot linger), skips
+dotfiles, `node_modules` and `.md`/`.map`/`.log`/`.env`/`.pem`/`.key`/`.p12`
+files, and fails the build when a required page or asset is missing, when the
+output path would delete the repository, or when `backend`, `tests`, `Algo`,
+`node_modules`, `web` or an `.env` file appears in the output.
+[tests/build_static.test.js](tests/build_static.test.js) builds into a temporary
+directory and checks required files, forbidden paths, secret markers and that
+every HTML/CSS reference resolves inside the build.
+
+### Environment variables
+
+| Setting | Required | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | yes | HTTPS project URL. Server-side only. |
+| `SUPABASE_PUBLISHABLE_KEY` | yes | Publishable or legacy anon key. A `sb_secret_`/service-role key is rejected with 503. |
+| `APP_ORIGIN` | yes in production | Exact browser origin, e.g. `https://hellodoc.example`. Drives the CSRF origin check and the `Secure` cookie flag, and must be a bare origin. Preview deployments fall back to `https://$VERCEL_URL`. |
+| `FLASK_ORIGIN` | only for predictions | Private URL of the model service reachable from the backend. Setting it disables the local Flask autostart. |
+| `PREDICTION_INTERNAL_TOKEN` | with `FLASK_ORIGIN` | Shared with Flask's token-protected `/internal/*` routes. Server-side only; never in static assets. |
+| `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `ADMIN_BOOTSTRAP_CONFIRM` | never at runtime | Only for the one-off `backend/bootstrap-admin.js` in a private shell. |
+| `FLASK_PORT`, `FLASK_AUTOSTART` | local only | Model child process for development. |
+
+Session cookies (`hd_access`, `hd_refresh`) are `HttpOnly`, `SameSite=Lax`, and
+`Secure` whenever `APP_ORIGIN` is HTTPS, independent of `NODE_ENV`.
+
+### Configuration failures
+
+Missing or invalid configuration fails closed: every `/api` request returns
+`503 CONFIGURATION_UNAVAILABLE`, while `/api/health` (and `/health`) answers with
+`configuration: "invalid"` plus a `problems` list naming the setting (never its
+value), and one `configuration_invalid` line is logged at startup. No setting
+value is ever echoed in that list or in the logs. Static pages still load, so an
+operator can inspect the deployment.
+
+### The Flask model on Vercel
+
+The Flask predictor is **not part of the Vercel deployment**: `Algo/` is excluded
+from uploads, Vercel does not run `backend/server.js`, and its Express service
+cannot spawn Python. `tests/deployment_config.test.js` enforces the two-service
+configuration so a model service cannot be assumed silently. Until `FLASK_ORIGIN`
+and `PREDICTION_INTERNAL_TOKEN` point at a separately deployed private model
+(allowed origin only; never a public rewrite), `GET /api/doctor/symptoms`,
+assessment creation/revision and `/api/doctor/predict` return
+`503 MODEL_NOT_CONFIGURED`/`MODEL_UNAVAILABLE` and save nothing. Local
+development is unaffected.
+
+### Verification status
+
+| Area | Status |
+| --- | --- |
+| Static build from the working tree | **Locally verified** (2026-10-20): build completes, required pages/assets present, no private paths or secret markers. |
+| Node suite (routes, guards, PDF, build, deployment config) | **Locally verified** (2026-10-20): 62 tests, 58 passed, 4 skipped (live), 0 failed. |
+| Python suites | **Locally verified** (2026-10-20): maintained subset 52 passed; full suite 65 passed / 13 pre-existing failures in the retired `test_form_validation.py`. |
+| CI workflow | **Configured, not verified from this checkout.** [.github/workflows/tests.yml](.github/workflows/tests.yml) runs the Node suite and a static-build job, plus the maintained Python subset. Treat it as verified only after a green run is visible in Actions. |
+| Vercel production deployment | **Not verified.** No deployment or environment change was made from this workspace; routing, the Services framework setting, environment variables and the live model gap were not exercised on Vercel. |
 
 No deployment is performed by this repository, and migrations are never run by a
-deploy. Earlier Vercel deployment notes in [SUPABASE.md](backend/migrations/SUPABASE.md)
-and [PRODUCTION_REPAIR.md](backend/PRODUCTION_REPAIR.md) are **historical records**
-and are not re-verified here; treat their URLs, build results and environment
-claims as unconfirmed until re-tested.
+deploy. Earlier Vercel notes in [SUPABASE.md](backend/migrations/SUPABASE.md) and
+[PRODUCTION_REPAIR.md](backend/PRODUCTION_REPAIR.md) are **historical records** and
+are not re-verified here; treat their URLs, build results and environment claims
+as unconfirmed until re-tested.
+
+### Manual deployment smoke checklist
+
+Run against a preview deployment with disposable accounts, never production data.
+
+1. **Build** — the `web` service build log shows `backend/build-static.js`
+   completing; `web/dist` contains the 14 pages and the four asset directories.
+2. **Routing** — `/api/health` returns 200 with `configuration: "valid"`; `/admin`
+   redirects to `/admin.html`; an unknown `/api/...` path returns JSON 404, not an
+   HTML page.
+3. **Static assets** — open one page per section and confirm no 404s in the
+   network panel for CSS, JS, images or fonts; `/Asset/favicon.svg` loads.
+4. **Signup and login** — create a patient, confirm the session survives a reload,
+   sign out, sign in again, and verify a wrong-portal login is refused.
+5. **Doctor approval** — register a doctor, confirm clinical pages refuse while
+   pending (`403 DOCTOR_NOT_VERIFIED`), then approve through an admin account and
+   reload the doctor dashboard.
+6. **Appointment creation** — as a patient, book a slot; the request returns 201
+   and the appointment appears for the doctor.
+7. **Symptom retrieval** — as the approved doctor, open the assessment form: it
+   either lists model symptoms or shows the explicit model-unavailable message.
+   A 503 here is the documented model gap, not a signup failure.
+8. **Assessment saving** — save a record, then open the same appointment again and
+   confirm it opens the existing record instead of creating a duplicate.
+9. **Report loading and PDF** — reload the report page and download the PDF; check
+   the filename, `application/pdf` content type and that the text matches the
+   stored assessment.
+10. **Authorization** — signed out, `/api/doctor/predict`, `/api/doctor/symptoms`
+    and `/api/doctor/assessments` return 401/403 and never a model result.
+11. **Secrets and cookies** — no `sb_secret_`/`SUPABASE_SERVICE_ROLE_KEY` value in
+    page source or JS bundles; `hd_access` is `Secure`, `HttpOnly`, `SameSite=Lax`.
+    Setting an invalid key must turn the API into 503, not a partial service.
 
 ## Privacy, clinical safety and limitations
 

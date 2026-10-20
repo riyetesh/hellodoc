@@ -1,3 +1,33 @@
-# Vercel deployment ignore rules
-# Ignore the retired new-login service folder entirely
-Login-and-dashboard/New-login/**
+# Vercel deployment ignore rules.
+# Only `web/` (static build) and `backend/` (Express API) are deployed as
+# services. Everything else is private source, model data or local tooling and
+# is not uploaded to a deployment.
+
+# Retired / unrelated applications
+Login-and-dashboard/**
+Waiting page/**
+chatbot/**
+child_process/**
+disease prediction/**
+ap.py.py
+
+# Private model service and its datasets (deployed separately, if at all)
+Algo/**
+
+# Tests, local tooling and build output
+tests/**
+screenshots/**
+.runtime/**
+.freebuff/**
+.pytest_cache/**
+dist/**
+web/dist/**
+*.log
+
+# Secrets: local env files are never uploaded, examples stay for documentation
+.env
+.env.*
+*.pem
+*.key
+!.env.example
+!.env.example.*

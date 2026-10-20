@@ -5,9 +5,13 @@ const { renderAssessmentReport } = require('./report-pdf');
 
 const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-const cookieOptions = () => ({ httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
 module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY, origin = process.env.APP_ORIGIN }) {
   if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY required');
+  // Derive the Secure flag from the trusted public origin rather than NODE_ENV
+  // alone. A deployment served over HTTPS must never issue a session cookie a
+  // browser would also send over plain HTTP, even if NODE_ENV is unset.
+  const secureCookies = /^https:\/\//i.test(String(origin || ''));
+  const cookieOptions = () => ({ httpOnly: true, secure: secureCookies, sameSite: 'lax', path: '/' });
   const client = () => createClient(url, key, options);
   const report = (operation, error) => console.error(JSON.stringify({ event: 'supabase_operation_failed', operation, code: typeof error?.code === 'string' ? error.code : undefined, status: error?.status, errorType: error?.name }));
   const router = express.Router();
@@ -639,7 +643,12 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const result = await modelRequest('/internal/predict', req.body.symptoms);
       if (typeof result.output !== 'string' || typeof result.modelVersion !== 'string') throw new Error('Invalid model response');
       res.json({output:result.output,modelVersion:result.modelVersion,label:'Experimental decision support, not a diagnosis'});
-    } catch (error) { res.status(error.code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code:error.code === 'INVALID_SYMPTOMS' ? error.code : 'MODEL_UNAVAILABLE', message:['INVALID_SYMPTOMS','MODEL_NOT_CONFIGURED'].includes(error.code) ? error.message : 'Model service unavailable. Please retry later.' }); }
+    } catch (error) {
+      // Keep a missing model configuration distinguishable from an outage so a
+      // deployment gap is diagnosable instead of looking like a transient error.
+      const code = ['INVALID_SYMPTOMS', 'MODEL_NOT_CONFIGURED'].includes(error.code) ? error.code : 'MODEL_UNAVAILABLE';
+      res.status(code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code, message: code === 'MODEL_UNAVAILABLE' ? 'Model service unavailable. Please retry later.' : error.message });
+    }
   }));
   router.post('/doctor/availability', ...guard('doctor', async (req, res, { db }) => {
     const start = req.body?.startsAt;

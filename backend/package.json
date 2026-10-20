@@ -13,6 +13,9 @@
     "test:all": "npm test && npm run test:python:current",
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
