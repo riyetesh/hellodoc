@@ -455,6 +455,10 @@
       return;
     }
     if (!state.patientId) { showError('assessmentError', 'Select the patient this assessment belongs to.'); return; }
+    if (!state.revisingId && !state.appointmentId) {
+      showError('assessmentError', 'Open this assessment from an appointment assigned to you.');
+      return;
+    }
     if (!state.reported.length && !state.clinician.length) {
       showError('assessmentError', 'Add at least one model symptom before reviewing.');
       return;
@@ -478,6 +482,7 @@
     // create a duplicate assessment or revision.
     if (state.saving) return;
     if (!state.patientId) { showError('reviewError', 'Select a patient first.'); return; }
+    if (!state.revisingId && !state.appointmentId) { showError('reviewError', 'Open this assessment from an appointment assigned to you.'); return; }
     if (!state.reported.length && !state.clinician.length) { showError('reviewError', 'Add at least one model symptom.'); return; }
     state.doctorAssessment = $('doctorAssessment').value;
     state.plan = $('plan').value;
@@ -501,9 +506,10 @@
     const url = state.revisingId
       ? `/api/doctor/assessments/${encodeURIComponent(state.revisingId)}/revision`
       : '/api/doctor/assessments';
-    // The revision endpoint takes the patient and appointment from the stored
-    // record, so they are deliberately not resent from the browser.
-    const payload = state.revisingId ? shared : { patientId: state.patientId, appointmentId: state.appointmentId || null, ...shared };
+    // The server derives the patient from the appointment. Only the appointment
+    // id is sent for a new record; a revision takes its identity from the stored
+    // record. A browser-supplied patient id is never trusted.
+    const payload = state.revisingId ? shared : { appointmentId: state.appointmentId, ...shared };
 
     try {
       const response = await fetch(url, {
@@ -514,6 +520,16 @@
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (response.status === 409 && body.code === 'ASSESSMENT_EXISTS' && body.assessmentId) {
+          // Another tab (or a retry) saved this appointment first. The stored
+          // record wins; open it instead of creating a duplicate.
+          clearDraft();
+          window.location.assign(`/prediction.html?id=${encodeURIComponent(body.assessmentId)}`);
+          return;
+        }
+        if (response.status === 401) {
+          throw new Error('Your session expired. Your text is still here; sign in again in another tab and retry.');
+        }
         if (body.code === 'UNSUPPORTED_SYMPTOMS' && Array.isArray(body.unsupported)) {
           // Keep every entry: move unsupported ones to observations, never drop.
           for (const id of body.unsupported) {
@@ -556,6 +572,18 @@
     state.revisingSource = data;
     state.patientId = data.patientId;
     state.appointmentId = data.appointmentId || '';
+    // The patient list picks the "most relevant" appointment, which may be a
+    // different visit for the same patient. Show the visit this record belongs
+    // to so the review and PDF agree with the saved assessment.
+    const match = state.patients.find((patient) => patient.patientId === data.patientId);
+    if (match) {
+      Object.assign(match, {
+        appointmentId: data.appointmentId || match.appointmentId,
+        appointmentStart: data.appointmentStart || match.appointmentStart,
+        appointmentStatus: data.appointmentStatus || match.appointmentStatus,
+        email: data.patientEmail || match.email,
+      });
+    }
     state.reported = Array.isArray(data.patientReported) ? [...data.patientReported] : [];
     state.clinician = Array.isArray(data.clinicianAdded) ? [...data.clinicianAdded] : [];
     state.observations = Array.isArray(data.observations) ? [...data.observations] : [];
@@ -680,6 +708,22 @@
         // consultation already assessed reopens that record instead of creating a
         // second assessment for the same visit.
         const consultation = await loadConsultation(appointmentId);
+        const existingPatient = state.patients.find((patient) => patient.patientId === consultation.patientId);
+        if (existingPatient) {
+          Object.assign(existingPatient, {
+            appointmentId: consultation.appointmentId,
+            appointmentStart: consultation.startsAt,
+            appointmentStatus: consultation.status,
+            email: consultation.patientEmail || existingPatient.email,
+          });
+        } else {
+          state.patients.push({
+            patientId: consultation.patientId, fullName: consultation.patientName || 'Patient',
+            email: consultation.patientEmail || '', appointmentId: consultation.appointmentId,
+            appointmentStart: consultation.startsAt, appointmentStatus: consultation.status,
+            assessmentCount: consultation.previousAssessmentId ? 1 : 0,
+          });
+        }
         if (consultation.previousAssessmentId) {
           const source = await fetch(`/api/doctor/assessments/${encodeURIComponent(consultation.previousAssessmentId)}`, { credentials: 'same-origin' });
           if (!source.ok) throw new Error('The assessment already recorded for this appointment is unavailable.');

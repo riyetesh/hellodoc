@@ -35,7 +35,13 @@ and clinical review.
   - run the private model, then review the prediction, dataset guidance and the
     doctor's own assessment and plan on a dedicated results page;
   - edit a symptom list as an append-only revision (the original prediction is
-    never overwritten), and download a PDF generated from the same stored record.
+    never overwritten), and download a PDF generated from the same stored record;
+  - create assessments only from an appointment: the browser sends the
+    appointment id, the server resolves the patient through
+    `doctor_consultation`, rejects a mismatched patient id, and returns the
+    existing record instead of duplicating an already-assessed appointment;
+  - save notes with the version that was loaded, so a second tab's newer save
+    produces a visible conflict instead of silently overwriting it.
 - **Administrator:** real metrics, paginated patient/doctor/appointment/audit
   lists, clinician approval/rejection/resubmission requests, suspension and
   audited appointment cancellation.

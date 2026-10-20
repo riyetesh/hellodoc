@@ -18,6 +18,8 @@
   function fail(message) {
     const messageNode = $('message');
     show(messageNode, message);
+    $('pageTitle').textContent = 'Assessment unavailable';
+    $('pageSubtitle').textContent = 'Open an assessment from the doctor workspace and try again.';
     $('report').hidden = true;
   }
 
@@ -172,6 +174,10 @@
         fail('This assessment is not available to your account.');
         return;
       }
+      if (response.status === 400) {
+        fail('That assessment link is not valid. Open one from the doctor workspace.');
+        return;
+      }
       if (!response.ok) { fail('The assessment could not be loaded. Please retry.'); return; }
       render(await response.json());
     } catch {
@@ -202,12 +208,19 @@
         body: JSON.stringify({
           doctorAssessment: $('doctorAssessment').value,
           plan: $('plan').value,
+          // Sends the version this page loaded. A second tab that saved first
+          // causes a conflict instead of a silent overwrite.
+          expectedUpdatedAt: assessment.updatedAt,
         }),
       });
       const body = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error('Your session expired. Your text is still here; sign in again in another tab and retry.');
+      }
       if (!response.ok) throw new Error(body.message || 'Your assessment could not be saved.');
       assessment.doctorAssessment = $('doctorAssessment').value;
       assessment.plan = $('plan').value;
+      if (body.updatedAt) assessment.updatedAt = body.updatedAt;
       dirty = false;
       setClinicalState('All changes saved', 'saved');
       return true;
@@ -250,7 +263,14 @@
     button.textContent = 'Generating report…';
     try {
       const response = await fetch(`/api/doctor/assessments/${encodeURIComponent(id)}/report.pdf`, { credentials: 'same-origin' });
-      if (!response.ok) throw new Error(response.status === 403 ? 'You are not authorized to download this report.' : 'The report could not be generated.');
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('Your session expired. Sign in again, then download the report.');
+        throw new Error(response.status === 403 ? 'You are not authorized to download this report.' : 'The report could not be generated.');
+      }
+      // Generating the report records report_generated_at, which advances the
+      // row's updated_at; keep the page's optimistic-concurrency token in sync.
+      const reportUpdatedAt = response.headers.get('X-Assessment-Updated-At');
+      if (reportUpdatedAt) assessment.updatedAt = reportUpdatedAt;
       const blob = await response.blob();
       if (!blob.size) throw new Error('The generated report was empty. Please retry.');
       const url = URL.createObjectURL(blob);

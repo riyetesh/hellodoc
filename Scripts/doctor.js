@@ -1,7 +1,13 @@
 (() => {
   'use strict';
   const $ = (selector) => document.querySelector(selector);
-  const message = (value) => { $('#message').textContent = value; };
+  const message = (value) => {
+    const node = $('#message');
+    node.textContent = value || '';
+    // The static placeholder is not hidden, so an empty status would otherwise
+    // leave a large blank block above the dashboard.
+    node.hidden = !value;
+  };
   async function call(path, options = {}) {
     const response = await fetch('/api' + path, { credentials:'same-origin', ...options, headers:{ 'Content-Type':'application/json', ...options.headers } });
     const body = await response.json().catch(() => ({}));
@@ -18,6 +24,8 @@
   const request = (path, options) => call('/doctor' + path, options);
   async function load() {
     const filters = new FormData($('#filters'));
+    const appointments = $('#appointments');
+    if (!appointments.children.length) appointments.textContent = 'Loading appointments…';
     const data = await request('/dashboard');
     const list = $('#appointments');
     list.replaceChildren();
@@ -58,8 +66,14 @@
     const now = new Date();
     const since = new Date(now.getTime()-30*86400000).toISOString().slice(0,10);
     const until = now.toISOString().slice(0,10);
-    const metrics = await request(`/analytics?since=${since}&until=${until}`);
-    $('#analytics').textContent = `Last 30 days (UTC): ${metrics.total} appointments; ${metrics.counts.completed} completed, ${metrics.counts.cancelled} cancelled, ${metrics.counts.no_show} no-show. Cancellation rate: ${(metrics.cancellationRate*100).toFixed(1)}%.`;
+    // Analytics is secondary: a metrics outage must not replace the appointment
+    // list that has already loaded.
+    try {
+      const metrics = await request(`/analytics?since=${since}&until=${until}`);
+      $('#analytics').textContent = `Last 30 days (UTC): ${metrics.total} appointments; ${metrics.counts.completed} completed, ${metrics.counts.cancelled} cancelled, ${metrics.counts.no_show} no-show. Cancellation rate: ${(metrics.cancellationRate*100).toFixed(1)}%.`;
+    } catch {
+      $('#analytics').textContent = 'Analytics are unavailable right now. Appointments above are still current.';
+    }
     focusRequestedAppointment();
   }
 
@@ -78,8 +92,10 @@
     target.focus({ preventScroll: true });
   }
   async function availability() {
+    const list = $('#slots');
+    if (!list.children.length) list.textContent = 'Loading availability…';
     const rows = await request('/availability');
-    const list = $('#slots'); list.replaceChildren();
+    list.replaceChildren();
     if (!rows.length) list.textContent = 'No future slots.';
     for (const row of rows) {
       const item = document.createElement('p');

@@ -19,6 +19,8 @@ let assessmentView = null;
 let assessmentViewError = null;
 let modelCalls = [];
 let modelFailure = null;
+let modelResponse = null;
+let updateAssessmentError = null;
 let consultationView = {
   appointmentId:'4011b5d5-db16-41f6-9c7f-1b94f766bbda', startsAt:'2026-11-12T09:00:00Z', status:'pending',
   reason:'Persistent rash', patientId:'44444444-4444-4444-8444-444444444444',
@@ -40,7 +42,10 @@ const makeQuery = (table) => {
     async single() {
       if (table === 'assessments') {
         if (mode === 'insert') return { data:insertAssessmentError ? null : {id:'33333333-3333-4333-8333-333333333333'}, error:insertAssessmentError };
-        if (mode === 'update') return { data:{id:'33333333-3333-4333-8333-333333333333'}, error:null };
+        if (mode === 'update') return {
+          data: updateAssessmentError ? null : { id:'33333333-3333-4333-8333-333333333333', updated_at:'2026-10-20T10:00:00.123456+00:00' },
+          error: updateAssessmentError,
+        };
         // Reading one assessment (revision source): the route filters by doctor_id.
         return { data:assessmentSource, error:assessmentSourceError };
       }
@@ -59,6 +64,7 @@ require.cache[modelPath] = {
       modelCalls.push({path, symptoms});
       if (modelFailure) { const error = new Error('model unavailable'); error.code = modelFailure; throw error; }
       if (path === '/internal/symptoms') return { symptoms:['itching','skin_rash','nodal_skin_eruptions'], labels:{ itching:'Itching' } };
+      if (modelResponse) return modelResponse;
       return { output:'Fungal infection', modelVersion:'mv-test', description:'Synthetic description', precautions:['p'], medications:['m'], diet:['d'], workout:['w'], disclaimer:'Experimental.' };
     },
   },
@@ -326,7 +332,6 @@ test('pending doctors can sign in and are routed to the dashboard with their sta
 
 test('clinical assessments require an approved doctor and validated model symptoms', async () => {
   const body = {
-    patientId:'44444444-4444-4444-8444-444444444444',
     appointmentId:'55555555-5555-4555-8555-555555555555',
     patientReported:['itching'], clinicianAdded:['skin_rash'], observations:['Visible scaling'],
     symptomDuration:'3 days', clinicalNote:'No fever.', doctorAssessment:'Impression', plan:'Review',
@@ -350,9 +355,46 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.equal((await send({...body, patientReported:[], clinicianAdded:[], observations:['x']})).status, 400);
   assert.equal((await send({...body, patientReported:[1]})).status, 400);
   assert.equal((await send({...body, appointmentId:'not-a-uuid'})).status, 400);
+  assert.equal((await send({...body, appointmentId:undefined})).status, 400);
 
-  modelCalls = []; insertedAssessment = null;
-  const created = await send();
+  // A browser-supplied patient cannot override the appointment's patient.
+  assert.equal((await send({...body, patientId:'99999999-9999-4999-8999-999999999999'})).status, 400);
+
+  // An appointment owned by another doctor is reported as missing, never saved.
+  consultationError={code:'P0002'};
+  assert.equal((await send()).status, 404);
+  consultationError=null;
+  assert.ok(calls.some((call) => call.name==='doctor_consultation' && call.args.p_appt===body.appointmentId));
+
+  // An appointment that already has a record is never duplicated.
+  consultationView = { ...consultationView, previousAssessmentId:'77777777-7777-4777-8777-777777777777' };
+  insertedAssessment = null; modelCalls = [];
+  const duplicate = await send(body);
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicate.body.code, 'ASSESSMENT_EXISTS');
+  assert.equal(duplicate.body.assessmentId, '77777777-7777-4777-8777-777777777777');
+  assert.equal(insertedAssessment, null);
+  assert.equal(modelCalls.some((call) => call.path === '/internal/assess'), false);
+  consultationView = { ...consultationView, previousAssessmentId:null };
+
+  // A malformed model reply is refused before any row is inserted.
+  insertedAssessment = null; modelCalls = [];
+  modelResponse = { output:null, modelVersion:'mv-broken' };
+  const invalid = await send(body);
+  assert.equal(invalid.status, 503);
+  assert.equal(invalid.body.code, 'MODEL_INVALID_RESPONSE');
+  assert.equal(insertedAssessment, null);
+  modelResponse = null;
+
+  // If a database uniqueness rule is added for one root record per appointment,
+  // the race loser is reported as a conflict rather than a server error.
+  insertedAssessment = null;
+  insertAssessmentError = { code:'23505' };
+  assert.equal((await send(body)).status, 409);
+  insertAssessmentError = null;
+
+  insertedAssessment = null; modelCalls = [];
+  const created = await send(body);
   assert.equal(created.status, 201);
   assert.equal(created.body.id, '33333333-3333-4333-8333-333333333333');
   // Only symptom identifiers reach the model - no patient identifiers or notes.
@@ -360,8 +402,10 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.deepEqual(assessCall.symptoms, ['itching','skin_rash']);
   assert.equal(insertedAssessment.table, 'assessments');
   assert.equal(insertedAssessment.payload.predicted_disease, 'Fungal infection');
-  assert.equal(insertedAssessment.payload.patient_id, body.patientId);
-  assert.equal(insertedAssessment.payload.appointment_id, body.appointmentId);
+  // The stored patient and appointment come from the RPC context, not the body.
+  assert.equal(insertedAssessment.payload.patient_id, consultationView.patientId);
+  assert.equal(insertedAssessment.payload.appointment_id, consultationView.appointmentId);
+  assert.equal(insertedAssessment.payload.doctor_id, profile.id);
   assert.deepEqual(insertedAssessment.payload.patient_reported, ['itching']);
   assert.deepEqual(insertedAssessment.payload.clinician_added, ['skin_rash']);
   assert.equal(JSON.stringify(insertedAssessment.payload).includes('Synthetic Patient'), false);
@@ -490,6 +534,7 @@ test('an assessment can only be read or edited by its own doctor', async () => {
   assert.equal(report.status,200);
   assert.equal(report.headers.get('content-type'),'application/pdf');
   assert.match(report.headers.get('content-disposition') || '', /attachment/);
+  assert.equal(report.headers.get('x-assessment-updated-at'),'2026-10-20T10:00:00.123456+00:00');
   const pdf = Buffer.from(await report.arrayBuffer()).toString('latin1');
   assert.ok(pdf.startsWith('%PDF-'));
   const text = [...pdf.matchAll(/\(((?:\\.|[^\\()])*)\) Tj/g)].map((match) => match[1]).join(' ');
@@ -503,7 +548,18 @@ test('an assessment can only be read or edited by its own doctor', async () => {
   updatedAssessment=null;
   const patched = await fetch(`${origin}/api/doctor/assessments/${id}`,{ method:'PATCH',headers:{'Content-Type':'application/json',Cookie:'hd_access=valid'},body:JSON.stringify({doctorAssessment:'Clinical impression',plan:'Follow up'}) });
   assert.equal(patched.status,200);
+  assert.equal((await patched.json()).updatedAt,'2026-10-20T10:00:00.123456+00:00');
   assert.deepEqual(Object.keys(updatedAssessment.patch).sort(),['doctor_assessment','plan']);
+
+  // A stale page version cannot overwrite notes saved by another tab.
+  updateAssessmentError={code:'PGRST116'};
+  const conflict = await fetch(`${origin}/api/doctor/assessments/${id}`,{ method:'PATCH',headers:{'Content-Type':'application/json',Cookie:'hd_access=valid'},body:JSON.stringify({doctorAssessment:'Stale text',expectedUpdatedAt:'2026-10-20T09:00:00+00:00'}) });
+  assert.equal(conflict.status,409);
+  assert.match((await conflict.json()).message,/changed in another tab/);
+  updateAssessmentError=null;
+
+  const badVersion = await fetch(`${origin}/api/doctor/assessments/${id}`,{ method:'PATCH',headers:{'Content-Type':'application/json',Cookie:'hd_access=valid'},body:JSON.stringify({plan:'Plan',expectedUpdatedAt:'not-a-date'}) });
+  assert.equal(badVersion.status,400);
   assessmentView=null;
   profile={...profile,role:'patient'};
 });

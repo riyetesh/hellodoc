@@ -418,12 +418,30 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       res.status(422).json({ code: 'UNSUPPORTED_SYMPTOMS', message: 'Some symptoms are not model features. Keep them as clinical observations instead.', unsupported });
       return null;
     }
+    let assessment;
     try {
-      return await modelRequest('/internal/assess', symptoms);
+      assessment = await modelRequest('/internal/assess', symptoms);
     } catch (error) {
       res.status(error.code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code: error.code === 'INVALID_SYMPTOMS' ? 'INVALID_SYMPTOMS' : 'MODEL_UNAVAILABLE', message: 'The model could not produce a prediction. Your assessment has not been saved; retry when the service is available.' });
       return null;
     }
+    // A malformed reply must never reach the database as a half-valid record.
+    if (!assessment || typeof assessment.output !== 'string' || !assessment.output.trim()
+      || typeof assessment.modelVersion !== 'string' || !assessment.modelVersion.trim()) {
+      res.status(503).json({ code: 'MODEL_INVALID_RESPONSE', message: 'The model returned an unusable result. Nothing was saved; retry or ask the administrator to check the model service.' });
+      return null;
+    }
+    const textList = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item.trim()) : []);
+    return {
+      output: assessment.output.trim(),
+      modelVersion: assessment.modelVersion.trim(),
+      confidence: typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
+      description: typeof assessment.description === 'string' ? assessment.description : '',
+      precautions: textList(assessment.precautions),
+      medications: textList(assessment.medications),
+      diet: textList(assessment.diet),
+      workout: textList(assessment.workout),
+    };
   };
   router.get('/doctor/patients', ...guard('doctor', async (req, res, { db }) => {
     const result = await db.rpc('assigned_patients');
@@ -459,26 +477,49 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.post('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
     const body = req.body || {};
-    const { patientId, appointmentId = null } = body;
-    if (!isUuid(patientId) || (appointmentId !== null && !isUuid(appointmentId))) return res.status(400).json({ message: 'Select a patient and appointment' });
+    const { appointmentId } = body;
+    // The browser may only name an appointment. Patient identity, ownership and
+    // approval are resolved by the database RPC, so a forged patient id cannot
+    // attach this assessment to another patient.
+    if (!isUuid(appointmentId)) return res.status(400).json({ message: 'Open the assessment from an appointment assigned to you.' });
+    const context = await db.rpc('doctor_consultation', { p_appt: appointmentId });
+    if (context.error) {
+      const status = context.error.code === '42501' ? 403 : context.error.code === 'P0002' ? 404 : 503;
+      return res.status(status).json({ message: status === 404 ? 'That appointment is not assigned to you.' : status === 403 ? 'Only an approved doctor can record an assessment.' : 'The appointment could not be verified. Nothing was saved.' });
+    }
+    const consultation = context.data || {};
+    if (!isUuid(consultation.patientId) || !isUuid(consultation.appointmentId)) {
+      return res.status(503).json({ message: 'The appointment context is incomplete. Nothing was saved.' });
+    }
+    if (body.patientId !== undefined && body.patientId !== consultation.patientId) {
+      return res.status(400).json({ message: 'The patient does not match this appointment.' });
+    }
+    if (consultation.previousAssessmentId) {
+      return res.status(409).json({
+        code: 'ASSESSMENT_EXISTS',
+        assessmentId: consultation.previousAssessmentId,
+        message: 'An assessment already exists for this appointment. Open that record to make a revision.',
+      });
+    }
     const cleaned = assessmentInput(body);
     if (cleaned.error) return res.status(400).json({ message: cleaned.error });
     const assessment = await runModelAssessment(cleaned.symptoms, res);
     if (!assessment) return;
     const insert = await db.from('assessments').insert({
-      doctor_id: user.id, patient_id: patientId, appointment_id: appointmentId || null,
+      doctor_id: user.id, patient_id: consultation.patientId, appointment_id: consultation.appointmentId,
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations: cleaned.observations,
       symptom_duration: cleaned.duration || null, clinical_note: cleaned.note || null,
       predicted_disease: assessment.output, model_version: assessment.modelVersion,
       // Only a real numeric score is stored; the bundled SVC exposes no
       // calibrated probabilities, so this stays null for it.
-      model_confidence: typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
-      description: assessment.description || '', precautions: assessment.precautions || [],
-      medications: assessment.medications || [], diet: assessment.diet || [], workout: assessment.workout || [],
+      model_confidence: assessment.confidence,
+      description: assessment.description, precautions: assessment.precautions,
+      medications: assessment.medications, diet: assessment.diet, workout: assessment.workout,
       doctor_assessment: cleaned.doctorAssessment || null, plan: cleaned.plan || null,
     }).select('id').single();
     if (insert.error) {
       report('assessment_create', insert.error);
+      if (insert.error.code === '23505') return res.status(409).json({ message: 'This appointment already has an assessment. Open it to make a revision.' });
       const code = insert.error.code === '42501' ? 403 : insert.error.code === '23514' ? 400 : 503;
       return res.status(code).json({ message: code === 403 ? 'Only an approved doctor for this appointment can record an assessment' : 'The assessment could not be saved. Your form is preserved; please retry.' });
     }
@@ -537,8 +578,14 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
     const body = req.body || {};
     const keys = Object.keys(body);
-    if (!keys.length || keys.some((key) => !['doctorAssessment', 'plan'].includes(key))) {
+    if (!keys.length || keys.some((key) => !['doctorAssessment', 'plan', 'expectedUpdatedAt'].includes(key))
+      || !keys.some((key) => key === 'doctorAssessment' || key === 'plan')) {
       return res.status(400).json({ message: 'Only the doctor assessment and plan can be edited' });
+    }
+    const expectedUpdatedAt = body.expectedUpdatedAt;
+    if (expectedUpdatedAt !== undefined
+      && (typeof expectedUpdatedAt !== 'string' || Number.isNaN(Date.parse(expectedUpdatedAt)))) {
+      return res.status(400).json({ message: 'Invalid assessment version' });
     }
     const patch = {};
     if ('doctorAssessment' in body) {
@@ -549,20 +596,39 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       if (typeof body.plan !== 'string' || body.plan.length > 4000) return res.status(400).json({ message: 'Plan is too long' });
       patch.plan = body.plan.trim() || null;
     }
-    const result = await db.from('assessments').update(patch)
-      .eq('id', req.params.id).eq('doctor_id', user.id).select('id').single();
-    if (result.error) return res.status(result.error.code === 'PGRST116' ? 404 : 503).json({ message: 'Assessment could not be updated' });
-    res.json({ id: result.data.id });
+    let update = db.from('assessments').update(patch)
+      .eq('id', req.params.id).eq('doctor_id', user.id);
+    // Optimistic concurrency: the update only applies if the record has not
+    // changed since the page loaded. Without this, a second tab would silently
+    // overwrite notes saved by the first.
+    if (expectedUpdatedAt !== undefined) update = update.eq('updated_at', expectedUpdatedAt);
+    const result = await update.select('id,updated_at').single();
+    if (result.error) {
+      if (result.error.code === 'PGRST116') {
+        return res.status(expectedUpdatedAt === undefined ? 404 : 409).json({
+          message: expectedUpdatedAt === undefined
+            ? 'Assessment could not be updated'
+            : 'This assessment changed in another tab or is no longer available. Your text is still here; reload to see the current saved version.',
+        });
+      }
+      return res.status(503).json({ message: 'Assessment could not be updated' });
+    }
+    res.json({ id: result.data.id, updatedAt: result.data.updated_at });
   }));
-  router.get('/doctor/assessments/:id/report.pdf', ...guard('doctor', async (req, res, { db }) => {
+  router.get('/doctor/assessments/:id/report.pdf', ...guard('doctor', async (req, res, { db, user }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
     const result = await db.rpc('assessment_view', { p_id: req.params.id });
     if (result.error) return res.status(result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503).json({ message: 'Report unavailable' });
     let pdf;
     try { pdf = renderAssessmentReport(result.data, { generatedAt: new Date() }); }
     catch (error) { report('assessment_report', error); return res.status(503).json({ message: 'Report generation failed. Please retry.' }); }
-    // Report metadata only; the model verdict itself stays frozen.
-    await db.from('assessments').update({ report_generated_at: new Date().toISOString() }).eq('id', req.params.id);
+    // Report metadata only; the model verdict itself stays frozen. The new
+    // updated_at is returned so the page's concurrency token stays current after
+    // a download (this write also bumps the row's updated_at trigger).
+    const marked = await db.from('assessments')
+      .update({ report_generated_at: new Date().toISOString() })
+      .eq('id', req.params.id).eq('doctor_id', user.id).select('updated_at').single();
+    if (marked.data?.updated_at) res.set('X-Assessment-Updated-At', marked.data.updated_at);
     res.set('Content-Type', 'application/pdf');
     res.set('Content-Disposition', `attachment; filename="HelloDoc-assessment-${String(req.params.id).slice(0, 8)}.pdf"`);
     res.send(pdf);
