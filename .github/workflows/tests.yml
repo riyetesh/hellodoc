@@ -1,0 +1,48 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node routes, auth, assessments and PDF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci --prefix backend
+      # Live HTTP/Data API tests are skipped unless TEST_ORIGIN or the
+      # TEST_SUPABASE_* pair is set; this job intentionally sets neither.
+      - run: npm test --prefix backend
+
+  python:
+    name: Python predictor, privacy and design contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      # Maintained subset: tests/test_form_validation.py targets retired forms
+      # (Scripts/login.js, DOB/sex signup fields) and is excluded here. Run the
+      # full suite locally with `npm run test:python` to see those results.
+      - run: npm run test:python:current

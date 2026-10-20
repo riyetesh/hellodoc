@@ -18,16 +18,22 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="index.html#about" class="nav-link">About</a></li>
           <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
-          <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+          <li>
+            <a href="appointments.html" class="nav-link">
+              Appointments
+              <span class="nav-badge" data-appt-badge>0</span>
+            </a>
+          </li>
           <li><a href="story.html" class="nav-link">My Story</a></li>
           <li><a href="help.html" class="nav-link">Help</a></li>
         </ul>
         <div class="navbar-actions" id="navActions">
           <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
-          <a href="signup.html" class="btn btn-primary" id="signupBtn" aria-current="page">Sign Up</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
             <span class="user-name" id="userName">Guest</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
           </button>
         </div>
       </div>

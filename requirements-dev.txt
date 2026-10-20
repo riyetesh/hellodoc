@@ -1,0 +1,4 @@
+# Test and development dependencies. Install into the same virtualenv used for
+# the Flask model: pip install -r requirements-dev.txt
+-r requirements.txt
+pytest>=8,<10

@@ -1,0 +1,21 @@
+{
+  "name": "hellodoc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HelloDoc — test entry points for the static site, Express backend and Flask model",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "npm run test:regression",
+    "test:node": "node --test \"tests/*.test.js\"",
+    "test:backend": "node --test tests/app.test.js tests/production.test.js tests/supabase_routes.test.js tests/model_transport.test.js",
+    "test:routes": "node --test tests/app.test.js tests/production.test.js tests/auth_pages.test.js tests/model_transport.test.js",
+    "test:assessment": "node --test tests/supabase_routes.test.js",
+    "test:pdf": "node --test tests/report_pdf.test.js",
+    "test:live": "node --test tests/live_http.test.js",
+    "test:python": "node backend/scripts/python.js tests -q",
+    "test:python:current": "node backend/scripts/python.js tests/test_clinical_model.py tests/test_design_contract.py tests/test_illustrations.py tests/test_pages_navigation.py tests/test_results_privacy.py -q",
+    "test:regression": "npm run test:node && npm run test:python:current"
+  }
+}

@@ -170,27 +170,93 @@ public `/predict` route stays closed.
 
 ## Testing
 
+All suites run offline by default. No Supabase project, Auth account or model
+service is required: the Node API tests stub Supabase, and the Python predictor
+tests load the bundled model locally.
+
+### Setup
+
 ```bash
-node --test tests/*.test.js        # Node 20+, from the repo root
-.venv/Scripts/python -m pytest -q  # POSIX: .venv/bin/python
-node backend/build-static.js       # static build sanity check
-node --check backend/server.js     # syntax check; there is no typecheck script
+npm ci --prefix backend                          # Node 20+ dependencies (Express, Supabase JS)
+python -m venv Algo/.venv                         # Python 3.12 for the model and pytest
+Algo/.venv/Scripts/pip install -r requirements-dev.txt   # Windows
+# POSIX: Algo/.venv/bin/pip install -r requirements-dev.txt
 ```
 
-Current results (2026-10-20):
+`scripts/python.js` finds `.venv`, `Algo/.venv`, then `python3`/`python`, so the
+npm Python scripts work without activating the virtualenv. `requirements-dev.txt`
+adds pytest to the runtime requirements.
 
-- **Node:** 52 passed, 0 failed when `TEST_ORIGIN`/`TEST_PUBLIC_ORIGIN` point at a
-  running local server. The live-HTTP cases otherwise target `127.0.0.1:3000` and
-  fail for lack of a server, not because of the schema.
-- **Python:** 59 passed, 7 skipped, 12 failed without Node on `PATH`; 64 passed,
-  14 failed with Node available. All failures are **pre-existing** in legacy
-  signup/index/login form-validation and shared-navbar tests; those HTML/JS files
-  are unchanged on `main`. The feature suites (clinical model, results privacy,
-  design contract) pass.
-- The Node API suites stub Supabase: they verify routing, guards, validation and
-  configuration, not real Auth delivery, live RLS or durable persistence. RLS
-  claims in this repository come from catalog inspection and the checked-in SQL
-  tests, not from an automated CI run against the live project.
+### Commands from the repository root
+
+```bash
+npm test                    # maintained regression suite: Node + current Python suites
+npm run test:node           # all 52 Node tests (live integration tests skip)
+npm run test:routes         # routes, auth pages, production guards and model transport
+npm run test:assessment     # Supabase assessment, revision and consultation authorization
+npm run test:pdf            # PDF report rendering	npm run test:python         # full pytest run, including the retired UI tests (see below)
+npm run test:python:current # clinical model, results privacy, design contract, pages
+npm run test:live           # live HTTP/Data API checks; skips unless configured
+```
+
+### Commands from `backend/`
+
+```bash
+cd backend
+npm test                    # same 52 Node tests, resolved through ../tests
+npm run test:routes
+npm run test:assessment
+npm run test:pdf
+npm run test:python:current
+```
+
+From the repository root the equivalent form is `npm test --prefix backend`.
+These scripts run the tests from `backend/` without loading `backend/.env` into
+unit tests: the production-configuration test stubs dotenv, so a local secrets
+file cannot turn the missing-configuration case into a false pass.
+
+### Optional live integration tests
+
+`tests/live_http.test.js` is opt-in and skipped otherwise. Point it only at a
+disposable server/project:
+
+```bash
+TEST_ORIGIN=http://127.0.0.1:5000 \
+TEST_SUPABASE_URL=https://<disposable-ref>.supabase.co \
+TEST_SUPABASE_PUBLISHABLE_KEY=<public key> \
+npm run test:live
+```
+
+`TEST_ORIGIN` enables the page/API checks; `TEST_PUBLIC_ORIGIN` overrides the
+origin used for the signup-role probe. The Data API check runs only when the
+Supabase pair is set. Missing settings produce `SKIP`, never a pass. Do not use
+production credentials, and never put a service-role key in these variables.
+
+### Current results (2026-10-20)
+
+- **Node:** 48 passed, 4 skipped, 0 failed.
+- **Maintained Python suite:** 52 passed (`test:python:current`).
+- **Full Python suite:** 65 passed, 13 failed (`test:python`). All 13 failures are
+  in `tests/test_form_validation.py`, which guards the retired signup/login
+  wiring: it imports the deleted `Scripts/login.js`, expects the removed
+  date-of-birth/sex fields, and expects a validation form on the marketing
+  `index.html`. The current auth pages are covered by `tests/auth_pages.test.js`.
+  The module is retained and runnable, but CI does not run it. Do not treat the
+  full command as passing until it is rewritten for the current pages.
+- **CI:** [.github/workflows/tests.yml](.github/workflows/tests.yml) runs the Node
+  suite and `test:python:current` on pushes and pull requests. It sets no
+  Supabase or model secrets, so live tests skip.
+- The Node API suites verify routing, guards, validation and configuration, not
+  real Auth delivery, live RLS or durable persistence. RLS claims come from
+  catalog inspection and the checked-in SQL tests, not from CI against the live
+  project.
+
+Extra sanity checks:
+
+```bash
+node backend/build-static.js       # static build
+node --check backend/server.js     # syntax; there is no typecheck script
+```
 
 ## Deployment
 

@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"../tests/*.test.js\"",
+    "test:routes": "node --test ../tests/app.test.js ../tests/production.test.js ../tests/auth_pages.test.js ../tests/model_transport.test.js",
+    "test:assessment": "node --test ../tests/supabase_routes.test.js",
+    "test:pdf": "node --test ../tests/report_pdf.test.js",
+    "test:live": "node --test ../tests/live_http.test.js",
+    "test:python": "node scripts/python.js tests -q",
+    "test:python:current": "node scripts/python.js tests/test_clinical_model.py tests/test_design_contract.py tests/test_illustrations.py tests/test_pages_navigation.py tests/test_results_privacy.py -q",
+    "test:all": "npm test && npm run test:python:current",
     "start": "node server.js"
   },
   "keywords": [],

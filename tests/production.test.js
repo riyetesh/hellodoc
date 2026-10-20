@@ -1,11 +1,18 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const path=require.resolve('../backend/production');
+// production.js calls dotenv with no path, so it would load backend/.env when
+// the suite runs from backend/. The dotenv stub keeps the missing-configuration
+// case isolated from a developer's local file.
+const dotenvPath=require.resolve('../backend/node_modules/dotenv');
+const dotenv=require(dotenvPath);
+const realDotenvConfig=dotenv.config;
 async function instance(env,run) {
  const saved={...process.env};
  for(const key of ['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','APP_ORIGIN','VERCEL_ENV','VERCEL_URL']) delete process.env[key];
+ dotenv.config=()=>{ return { parsed: {} }; };
  Object.assign(process.env,env); delete require.cache[path]; const app=require(path); const server=app.listen(0,'127.0.0.1'); await new Promise(r=>server.once('listening',r));
- try { await run(`http://127.0.0.1:${server.address().port}`); } finally {await new Promise(r=>server.close(r)); process.env=saved;}
+ try { await run(`http://127.0.0.1:${server.address().port}`); } finally {await new Promise(r=>server.close(r)); dotenv.config=realDotenvConfig; process.env=saved;}
 }
 const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:'https://hellodoc.example'};
 test('missing configuration stays inspectable and never falls back to MySQL',async()=>instance({},async url=>{
