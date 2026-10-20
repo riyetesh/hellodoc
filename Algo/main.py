@@ -241,11 +241,66 @@ def _internal_authorized():
     return bool(token and hmac.compare_digest(token, supplied))
 
 
+def symptom_label(identifier):
+    """Readable label for an exact model identifier.
+
+    Several legacy identifiers contain stray spaces, dots or underscores
+    (``spotting_ urination``, ``fluid_overload.1``, ``dischromic _patches``),
+    so the label is only ever a presentation string: the identifier itself is
+    what gets submitted and compared against the model vocabulary.
+    """
+    text = ' '.join(identifier.replace('_', ' ').replace('.', ' ').split())
+    return (text[:1].upper() + text[1:]) if text else identifier
+
+
 @app.get('/internal/symptoms')
 def internal_symptoms():
     if not _internal_authorized():
         return jsonify(message='Forbidden'), 403
-    return jsonify(symptoms=list(symptoms_dict))
+    return jsonify(
+        symptoms=list(symptoms_dict),
+        labels={name: symptom_label(name) for name in symptoms_dict},
+    )
+
+
+@app.post('/internal/assess')
+def internal_assess():
+    """Full model assessment for the doctor workflow.
+
+    Receives symptom identifiers only. No patient identifiers, notes or
+    appointment details are ever sent to this service; clinical context stays in
+    the authenticated Express/Supabase layer.
+    """
+    if not _internal_authorized():
+        return jsonify(message='Forbidden'), 403
+    body = request.get_json(silent=True) or {}
+    symptoms = body.get('symptoms')
+    if not isinstance(symptoms, list) or not symptoms or len(symptoms) > len(symptoms_dict) or any(
+        not isinstance(item, str) or item not in symptoms_dict for item in symptoms
+    ):
+        return jsonify(message='Unknown or missing model symptom'), 422
+    try:
+        disease = get_predicted_value(symptoms)
+        dis_des, pre, med, die, wrkout = helper(disease)
+    except (ValueError, RuntimeError):
+        app.logger.exception('Model feature mismatch')
+        return jsonify(message='Model unavailable'), 503
+    # The bundled linear SVC is trained with probability=False, so it exposes no
+    # calibrated score. Reporting one - or deriving a percentage from the number
+    # of selected symptoms - would be fabricated confidence. The contract is
+    # explicit so the application never has to guess.
+    return jsonify(
+        output=disease,
+        modelVersion=MODEL_VERSION,
+        confidence=None,
+        confidenceSupported=False,
+        description=dis_des or '',
+        precautions=_clean_items(pre),
+        medications=_clean_items(med),
+        diet=_clean_items(die),
+        workout=_clean_items(wrkout),
+        disclaimer=REPORT_DISCLAIMER,
+    )
 
 
 @app.post('/internal/predict')

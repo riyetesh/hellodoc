@@ -28,6 +28,30 @@ def test_invalid_symptom_is_rejected(model):
         model.get_predicted_value([])
 
 
+def test_internal_assess_returns_guidance_and_only_model_features(model, monkeypatch):
+    monkeypatch.setenv('PREDICTION_INTERNAL_TOKEN', 'test-token')
+    client = model.app.test_client()
+    assert client.post('/internal/assess', json={'symptoms': ['itching']}).status_code == 403
+    headers = {'X-Internal-Token': 'test-token'}
+    assert client.post('/internal/assess', json={'symptoms': ['unknown']}, headers=headers).status_code == 422
+    assert client.post('/internal/assess', json={'symptoms': []}, headers=headers).status_code == 422
+
+    response = client.post('/internal/assess', json={'symptoms': ['itching', 'skin_rash']}, headers=headers)
+    assert response.status_code == 200
+    body = response.json
+    assert body['output'] in model.diseases_list.values()
+    assert body['modelVersion'] == model.MODEL_VERSION
+    # The SVC is not probability-calibrated, so no score may be reported.
+    assert body['confidenceSupported'] is False
+    assert body['confidence'] is None
+    assert isinstance(body['description'], str)
+    for key in ('precautions', 'medications', 'diet', 'workout'):
+        assert isinstance(body[key], list)
+        assert all(isinstance(item, str) and item.strip() for item in body[key])
+    # No patient identifiers or notes are accepted, echoed or returned.
+    assert not {'patientId', 'patientName', 'clinicalNote', 'appointmentId'} & set(body)
+
+
 def test_internal_endpoint_rejects_unauthorized_and_invalid(model, monkeypatch):
     monkeypatch.setenv('PREDICTION_INTERNAL_TOKEN', 'test-token')
     client = model.app.test_client()

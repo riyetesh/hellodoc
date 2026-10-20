@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css" />
+    <link rel="stylesheet" href="/Styles/assessment.css" />
   </head>
   <body>
     <nav class="navbar" id="navbar">
@@ -19,7 +20,7 @@
           <li><a href="#doctorAppointments" class="nav-link">Appointments</a></li>
           <li><a href="#doctorAvailability" class="nav-link">Availability</a></li>
           <li><a href="#doctorAnalytics" class="nav-link">Analytics</a></li>
-          <li><a href="#doctorPredictor" class="nav-link">Predictor</a></li>
+          <li><a href="#assessmentSection" class="nav-link">Assessment</a></li>
         </ul>
         <div class="navbar-actions" id="navActions">
           <button class="btn btn-outline" id="logout" type="button">Log out</button>
@@ -78,16 +79,112 @@
           <form id="slotForm"><label>Start <input type="datetime-local" name="startsAt" required></label><button class="btn btn-primary">Add slot</button></form>
           <div id="slots"></div>
         </section>
-        <section class="patient-panel" id="doctorPredictor">
-          <h2>Predictor — symptom decision support</h2>
-          <p>For approved doctors only. Experimental output is not a diagnosis. Do not enter patient identifiers here.</p>
-          <form id="predictionForm">
-            <label for="modelSymptoms">Model symptoms</label>
-            <select id="modelSymptoms" name="symptoms" multiple required size="8" aria-describedby="symptomHint"></select>
-            <p id="symptomHint">Select one or more symptoms (Ctrl or Command to select multiple).</p>
-            <button class="btn btn-primary" type="submit">Run model</button>
+        <section class="patient-panel assessment-panel" id="assessmentSection" aria-labelledby="assessmentTitle">
+          <div class="assessment-head">
+            <div>
+              <h2 id="assessmentTitle">Clinical assessment</h2>
+              <p class="muted">Experimental decision support for an appointment you are attending. It is not a diagnosis and never replaces your own assessment.</p>
+            </div>
+            <p class="draft-state" id="draftState" role="status" aria-live="polite">No unsaved changes.</p>
+          </div>
+
+          <p class="assessment-unsaved" id="draftBanner" hidden>An unsaved draft was restored. Saving the assessment replaces it.</p>
+          <p class="sr-only" id="assessmentAnnounce" role="status" aria-live="polite"></p>
+          <div class="assessment-unsaved consultation-banner" id="consultationBanner" hidden>
+            <p><strong id="consultationPatient"></strong> <span id="consultationMeta"></span></p>
+            <p id="consultationReason" class="muted"></p>
+            <a href="#" id="consultationLink">Back to this appointment</a>
+          </div>
+          <div class="assessment-unsaved revise-banner" id="reviseBanner" hidden>
+            <p><strong>Editing a saved assessment.</strong> Saving re-runs the model and stores a new revision. The original prediction and your earlier assessment stay unchanged.</p>
+            <a href="#" id="reviseSourceLink">Open the original record</a>
+          </div>
+
+          <form id="assessmentForm" novalidate>
+            <p class="shortcut-strip" aria-label="Keyboard shortcuts">
+              <span><kbd>/</kbd> search symptoms</span>
+              <span><kbd>↑</kbd><kbd>↓</kbd> move through matches</span>
+              <span><kbd>Enter</kbd> add highlighted</span>
+              <span><kbd>Backspace</kbd> remove last tag</span>
+              <span><kbd>Esc</kbd> close list</span>
+              <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> review</span>
+            </p>
+            <div class="assessment-context-row">
+              <div class="form-grp">
+                <label for="assessmentPatient">Patient</label>
+                <select id="assessmentPatient" name="patient" required>
+                  <option value="">Loading patients…</option>
+                </select>
+              </div>
+              <p class="assessment-context" id="assessmentContext" aria-live="polite"></p>
+            </div>
+
+            <div class="assessment-symptom-grid">
+              <fieldset class="symptom-group">
+                <legend>Reported by the patient</legend>
+                <p class="symptom-hint" id="reportedHint">Search the model vocabulary. Press <kbd>/</kbd> to jump here, <kbd>Enter</kbd> to add, <kbd>Backspace</kbd> to remove the last tag.</p>
+                <div class="symptom-picker" id="reportedPicker"></div>
+              </fieldset>
+              <fieldset class="symptom-group">
+                <legend>Recorded by you</legend>
+                <p class="symptom-hint">Findings you observed during the consultation, in the same vocabulary.</p>
+                <div class="symptom-picker" id="clinicianPicker"></div>
+              </fieldset>
+            </div>
+
+            <fieldset class="observation-group">
+              <legend>Clinical observations the model cannot interpret</legend>
+              <p class="symptom-hint" id="observationHint">Free text stays out of the model. It is stored on the assessment and never dropped silently.</p>
+              <div class="observation-row">
+                <label class="sr-only" for="observationInput">Clinical observation</label>
+                <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
+                <button class="btn btn-outline" type="button" id="addObservation">Add observation</button>
+              </div>
+              <ul class="symptom-tags" id="observationTags" aria-live="polite"></ul>
+            </fieldset>
+
+            <div class="assessment-details">
+              <div class="form-grp">
+                <label for="symptomDuration">Symptom duration</label>
+                <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
+              </div>
+              <div class="form-grp assessment-note">
+                <label for="clinicalNote">Clinical note</label>
+                <textarea id="clinicalNote" rows="3" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
+              </div>
+            </div>
+
+            <div class="assessment-actions">
+              <button class="btn btn-primary" type="button" id="reviewButton">Review assessment <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
+              <button class="btn btn-outline" type="reset" id="resetDraft">Clear form</button>
+              <p class="assessment-error" id="assessmentError" role="alert" hidden></p>
+            </div>
           </form>
-          <p id="predictionStatus" role="status"></p>
+
+          <section class="assessment-review" id="reviewPanel" hidden aria-labelledby="reviewTitle" tabindex="-1">
+            <h3 id="reviewTitle">Review before saving</h3>
+            <dl class="review-summary" id="reviewSummary"></dl>
+            <div class="assessment-details">
+              <div class="form-grp">
+                <label for="doctorAssessment">Your assessment (optional now, editable later)</label>
+                <textarea id="doctorAssessment" rows="3" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+              </div>
+              <div class="form-grp">
+                <label for="plan">Plan (optional)</label>
+                <textarea id="plan" rows="3" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
+              </div>
+            </div>
+            <p class="assessment-error" id="reviewError" role="alert" hidden></p>
+            <div class="assessment-actions">
+              <button class="btn btn-primary" type="button" id="saveAssessment">Save assessment</button>
+              <button class="btn btn-outline" type="button" id="backToEdit">Back to edit</button>
+            </div>
+          </section>
+
+          <section class="assessment-recent" aria-labelledby="recentTitle" hidden id="recentSection">
+            <h3 id="recentTitle">Recent assessments</h3>
+            <ul id="recentAssessments" class="assessment-recent-list"></ul>
+          </section>
         </section>
         <section class="patient-panel" id="doctorAnalytics">
           <h2>Analytics — appointment activity</h2>
@@ -98,6 +195,7 @@
 
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js"></script>
+    <script src="/Scripts/assessment.js"></script>
     <script src="/Scripts/nav.js"></script>
   </body>
 </html>

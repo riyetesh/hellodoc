@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HelloDoc | Clinical assessment</title>
+    <link rel="icon" href="/Asset/favicon.svg" />
+    <link rel="stylesheet" href="/Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="/Styles/patient.css" />
+    <link rel="stylesheet" href="/Styles/doctor.css" />
+    <link rel="stylesheet" href="/Styles/assessment.css" />
+  </head>
+  <body>
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" /></a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="doctor.html" class="nav-link">Doctor workspace</a></li>
+        </ul>
+        <div class="navbar-actions" id="navActions">
+          <button class="btn btn-outline" id="logout" type="button">Log out</button>
+        </div>
+      </div>
+    </nav>
+
+    <header class="page-head">
+      <div class="container page-head-inner">
+        <div>
+          <span class="eyebrow">Clinical assessment</span>
+          <h1 id="pageTitle">Loading assessment…</h1>
+          <p id="pageSubtitle">Model output and your clinical record for this consultation.</p>
+        </div>
+        <a class="btn btn-outline" href="/doctor.html#doctorAppointments" id="backToWorkspace">Back to appointments</a>
+      </div>
+    </header>
+
+    <div class="container patient-message" id="message" role="alert" hidden></div>
+    <div class="container patient-message assessment-banner" role="note">
+      Experimental decision support. The prediction is not a confirmed diagnosis and never replaces your clinical assessment.
+    </div>
+    <div class="container patient-message assessment-banner" id="revisionNotice" role="status" hidden></div>
+
+    <main class="container assessment-page" id="report" hidden>
+      <section class="patient-panel">
+        <h2>Patient and consultation</h2>
+        <dl class="review-summary" id="patientSummary"></dl>
+      </section>
+
+      <section class="patient-panel">
+        <div class="assessment-head">
+          <h2>Symptoms</h2>
+          <a class="btn btn-outline" id="editSymptoms" href="/doctor.html#assessmentSection">Edit symptoms</a>
+        </div>
+        <p class="muted">Editing the symptom list re-runs the model as a new revision of this record. The prediction below, and any decision already recorded, are kept unchanged.</p>
+        <div class="assessment-symptom-grid">
+          <div class="symptom-group">
+            <h3>Reported by the patient</h3>
+            <ul class="symptom-tags static-tags" id="patientSymptoms"></ul>
+          </div>
+          <div class="symptom-group">
+            <h3>Recorded by you</h3>
+            <ul class="symptom-tags static-tags" id="clinicianSymptoms"></ul>
+          </div>
+        </div>
+        <div class="symptom-group">
+          <h3>Clinical observations the model cannot interpret</h3>
+          <ul class="symptom-tags static-tags" id="observations"></ul>
+        </div>
+        <dl class="review-summary" id="symptomContext"></dl>
+      </section>
+
+      <section class="patient-panel model-result">
+        <h2>Model output</h2>
+        <p class="model-disease" id="predictedDisease"></p>
+        <dl class="review-summary" id="modelMeta"></dl>
+        <p class="model-note" id="confidenceNote" hidden></p>
+        <p id="description" class="model-description"></p>
+      </section>
+
+      <section class="patient-panel">
+        <h2>Guidance from the model</h2>
+        <p class="muted" id="guidanceNote">General dataset-associated guidance requiring clinician review. It is not a prescription, dose or individually validated treatment plan.</p>
+        <div class="guidance-grid">
+          <article><h3>Precautions</h3><ul id="precautions"></ul></article>
+          <article><h3>Medication information</h3><ul id="medications"></ul></article>
+          <article><h3>Diet</h3><ul id="diet"></ul></article>
+          <article><h3>Workout</h3><ul id="workout"></ul></article>
+        </div>
+      </section>
+
+      <section class="patient-panel" id="doctorPanel">
+        <div class="assessment-head">
+          <h2>Your assessment and plan</h2>
+          <p class="draft-state" id="clinicalState" role="status" aria-live="polite">All changes saved</p>
+        </div>
+        <p class="muted">This section is yours. It is stored separately from the model output, which cannot be edited.</p>
+        <p class="shortcut-strip" aria-label="Keyboard shortcuts">
+          <span><kbd>Ctrl</kbd>+<kbd>S</kbd> save assessment and plan</span>
+          <span><kbd>Tab</kbd> move between fields and buttons</span>
+        </p>
+        <div class="assessment-details">
+          <div class="form-grp">
+            <label for="doctorAssessment">Assessment</label>
+            <textarea id="doctorAssessment" rows="4" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+          </div>
+          <div class="form-grp">
+            <label for="plan">Plan</label>
+            <textarea id="plan" rows="4" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
+          </div>
+        </div>
+        <p class="assessment-error" id="clinicalError" role="alert" hidden></p>
+        <div class="assessment-actions">
+          <button class="btn btn-primary" type="button" id="saveClinical">Save assessment and plan</button>
+          <button class="btn btn-outline" type="button" id="revertClinical">Discard changes</button>
+        </div>
+      </section>
+
+      <section class="patient-panel">
+        <h2>Report</h2>
+        <p class="muted">The PDF is generated from this exact record, including your assessment and plan as currently saved.</p>
+        <p class="assessment-error" id="reportError" role="alert" hidden></p>
+        <div class="assessment-actions">
+          <button class="btn btn-primary" type="button" id="downloadReport">Download PDF report</button>
+          <button class="btn btn-outline" type="button" id="retryReport" hidden>Retry report</button>
+          <button class="btn btn-outline" type="button" id="printPage">Print this page</button>
+        </div>
+      </section>
+    </main>
+
+    <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
+    <script src="/Scripts/prediction.js"></script>
+    <script src="/Scripts/nav.js"></script>
+  </body>
+</html>

@@ -11,6 +11,17 @@ Applied via connected migration API on 2026-10-17:
 
 `001` and `002` were **MySQL-only** migrations and were deleted together with the MySQL backend; never execute them in PostgreSQL. `004` is an older test specification, not a migration. `007_security_regression.sql` is a rollback-only executable **test**, not a migration. Remote migration versions are API-generated timestamps; names map to the files above. An initial 005 attempt failed on an alias and rolled back; the corrected transaction succeeded.
 
+## Clinical assessments (010, 011)
+
+Applied 2026-10-20 via the connected migration API: `010_clinical_assessments.sql` and `011_assessment_revisions.sql`.
+
+- `assessments` stores one row per model run: doctor, patient, optional appointment, patient-reported and doctor-added model symptoms, free-text observations, duration/note, frozen model output (condition, model version, guidance, optional confidence) and the doctor's own editable assessment and plan.
+- The model verdict and the assessment identity are immutable (trigger); only `doctor_assessment`, `plan` and report metadata can change. A symptom correction is a new row with `supersedes_id`, so the earlier prediction is never overwritten. A partial unique index allows one revision per record, which also blocks duplicate submissions.
+- RLS: read for the recording doctor, the patient and an active admin; insert only for an approved, unsuspended doctor with an existing appointment with that patient; update only for the recording doctor. There is no delete policy. The superseded-row check runs through `is_own_assessment` because a policy cannot query its own table directly (SQLSTATE 42P17).
+- `assigned_patients()` returns only the caller's own patients with their most relevant appointment; `assessment_view()` re-checks authorization before returning a record and its lineage.
+- `012_doctor_consultation.sql` adds `doctor_consultation(appointment)`: the appointment must belong to the calling approved doctor (otherwise `P0002`, reported as 404), and the response supplies the stored patient name/email, appointment time/status, the patient's stated reason and the latest assessment already recorded for that visit. The browser sends only an appointment id.
+- The Flask model receives symptom identifiers only. Patient identifiers, notes, duration and observations stay in Express/Supabase; the internal token still protects `/internal/*` and public `/predict` remains closed. `/internal/assess` reports `confidenceSupported: false` because the bundled linear SVC is trained with `probability=False`; no percentage is shown or derived from symptom counts.
+
 ## Runtime and authentication
 
 Existing static pages → same-origin Express → Supabase Auth/PostgREST. Routine API requests use only `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, with verified user JWTs. Tokens are HTTP-only SameSite=Lax cookies, Secure in production. Session restoration uses getUser/refreshSession. Roles come from PostgreSQL, never editable metadata. Auth trigger always creates patient identity/profile rows. Public signup rejects role assignments. Suspension denies private API access and database operations. Profile fields cannot be directly updated by clients, including role.

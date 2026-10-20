@@ -1,6 +1,7 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-const { modelRequest, validSymptoms } = require('./model-client');
+const { modelRequest, validSymptoms, symptomVocabulary } = require('./model-client');
+const { renderAssessmentReport } = require('./report-pdf');
 
 const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -375,8 +376,196 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.json({ status:result.data.status });
   }));
   router.get('/doctor/symptoms', ...guard('doctor', async (req, res) => {
-    try { res.json(await modelRequest('/internal/symptoms')); }
+    try { res.json(await symptomVocabulary()); }
     catch (error) { res.status(503).json({ code:error.code === 'MODEL_NOT_CONFIGURED' ? error.code : 'MODEL_UNAVAILABLE', message:error.code === 'MODEL_NOT_CONFIGURED' ? error.message : 'Model service is unreachable. Ask the administrator to start the private prediction service.' }); }
+  }));
+  // ---------------------------------------------------------------------------
+  // Clinical assessments: model output plus the doctor's own decision.
+  // ---------------------------------------------------------------------------
+  const stringList = (value) => Array.isArray(value) && value.every((item) => typeof item === 'string');
+  const cleanList = (value) => value.map((item) => item.trim()).filter(Boolean);
+  // Shared validation for creating and revising an assessment, so both routes
+  // enforce exactly the same limits and neither one can drift.
+  const assessmentInput = (raw) => {
+    const body = raw || {};
+    if (!stringList(body.patientReported) || !stringList(body.clinicianAdded) || !stringList(body.observations)) {
+      return { error: 'Symptoms must be a list of text values' };
+    }
+    const { symptomDuration = '', clinicalNote = '', doctorAssessment = '', plan = '' } = body;
+    if (typeof symptomDuration !== 'string' || symptomDuration.length > 120
+      || typeof clinicalNote !== 'string' || clinicalNote.length > 2000
+      || typeof doctorAssessment !== 'string' || doctorAssessment.length > 4000
+      || typeof plan !== 'string' || plan.length > 4000) return { error: 'Assessment details are too long' };
+    const reported = cleanList(body.patientReported), added = cleanList(body.clinicianAdded), observations = cleanList(body.observations);
+    if (observations.length > 20 || observations.some((item) => item.length > 200)) return { error: 'Limit clinical observations to 20 entries of 200 characters' };
+    const symptoms = [...reported, ...added];
+    if (!symptoms.length) return { error: 'Add at least one model symptom' };
+    if (new Set(symptoms).size !== symptoms.length) return { error: 'Each symptom can only be recorded once' };
+    return {
+      reported, added, observations, symptoms,
+      duration: symptomDuration.trim(), note: clinicalNote.trim(),
+      doctorAssessment: doctorAssessment.trim(), plan: plan.trim(),
+    };
+  };
+  const runModelAssessment = async (symptoms, res) => {
+    let vocabulary;
+    try { vocabulary = await symptomVocabulary(); }
+    catch { res.status(503).json({ code: 'MODEL_UNAVAILABLE', message: 'The model service is unavailable. Your assessment has not been saved.' }); return null; }
+    const unsupported = symptoms.filter((item) => !vocabulary.symptoms.includes(item));
+    if (unsupported.length) {
+      // Never silently drop a symptom: tell the caller exactly which entries are
+      // not model features so the doctor can keep them as clinical observations.
+      res.status(422).json({ code: 'UNSUPPORTED_SYMPTOMS', message: 'Some symptoms are not model features. Keep them as clinical observations instead.', unsupported });
+      return null;
+    }
+    try {
+      return await modelRequest('/internal/assess', symptoms);
+    } catch (error) {
+      res.status(error.code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code: error.code === 'INVALID_SYMPTOMS' ? 'INVALID_SYMPTOMS' : 'MODEL_UNAVAILABLE', message: 'The model could not produce a prediction. Your assessment has not been saved; retry when the service is available.' });
+      return null;
+    }
+  };
+  router.get('/doctor/patients', ...guard('doctor', async (req, res, { db }) => {
+    const result = await db.rpc('assigned_patients');
+    if (result.error) return res.status(503).json({ message: 'Patient list unavailable' });
+    res.json(result.data.map((row) => ({
+      patientId: row.patient_id, fullName: row.full_name, email: row.email,
+      appointmentId: row.appointment_id, appointmentStart: row.appointment_start,
+      appointmentStatus: row.appointment_status, assessmentCount: Number(row.assessment_count || 0),
+    })));
+  }));
+  // The consultation context for one appointment the caller attends. The patient
+  // identity and appointment come from the database, never from the browser.
+  router.get('/doctor/appointments/:id/consultation', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid appointment' });
+    const result = await db.rpc('doctor_consultation', { p_appt: req.params.id });
+    if (result.error) {
+      const status = result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503;
+      return res.status(status).json({ message: status === 404 ? 'That appointment is not assigned to you.' : status === 403 ? 'Only an approved doctor can open a consultation.' : 'Consultation unavailable' });
+    }
+    res.json(result.data);
+  }));
+  router.get('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
+    const result = await db.from('assessments')
+      .select('id,patient_id,predicted_disease,appointment_id,created_at')
+      .eq('doctor_id', user.id).order('created_at', { ascending: false }).limit(20);
+    if (result.error) return res.status(503).json({ message: 'Assessments unavailable' });
+    const people = await db.rpc('assigned_patient_names');
+    const names = new Map((people.data || []).map((p) => [p.id, p.full_name]));
+    res.json(result.data.map((row) => ({
+      id: row.id, patientId: row.patient_id, patientName: names.get(row.patient_id) || 'Patient',
+      predictedDisease: row.predicted_disease, appointmentId: row.appointment_id, createdAt: row.created_at,
+    })));
+  }));
+  router.post('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
+    const body = req.body || {};
+    const { patientId, appointmentId = null } = body;
+    if (!isUuid(patientId) || (appointmentId !== null && !isUuid(appointmentId))) return res.status(400).json({ message: 'Select a patient and appointment' });
+    const cleaned = assessmentInput(body);
+    if (cleaned.error) return res.status(400).json({ message: cleaned.error });
+    const assessment = await runModelAssessment(cleaned.symptoms, res);
+    if (!assessment) return;
+    const insert = await db.from('assessments').insert({
+      doctor_id: user.id, patient_id: patientId, appointment_id: appointmentId || null,
+      patient_reported: cleaned.reported, clinician_added: cleaned.added, observations: cleaned.observations,
+      symptom_duration: cleaned.duration || null, clinical_note: cleaned.note || null,
+      predicted_disease: assessment.output, model_version: assessment.modelVersion,
+      // Only a real numeric score is stored; the bundled SVC exposes no
+      // calibrated probabilities, so this stays null for it.
+      model_confidence: typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
+      description: assessment.description || '', precautions: assessment.precautions || [],
+      medications: assessment.medications || [], diet: assessment.diet || [], workout: assessment.workout || [],
+      doctor_assessment: cleaned.doctorAssessment || null, plan: cleaned.plan || null,
+    }).select('id').single();
+    if (insert.error) {
+      report('assessment_create', insert.error);
+      const code = insert.error.code === '42501' ? 403 : insert.error.code === '23514' ? 400 : 503;
+      return res.status(code).json({ message: code === 403 ? 'Only an approved doctor for this appointment can record an assessment' : 'The assessment could not be saved. Your form is preserved; please retry.' });
+    }
+    res.status(201).json({ id: insert.data.id });
+  }));
+  // Revising symptoms must not rewrite the stored prediction: the new model run
+  // is saved as a new record that points at the one it replaces. Patient and
+  // appointment come from the stored row, never from the request body.
+  router.post('/doctor/assessments/:id/revision', ...guard('doctor', async (req, res, { db, user }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
+    const source = await db.from('assessments')
+      .select('id,patient_id,appointment_id,observations,symptom_duration,clinical_note,doctor_assessment,plan')
+      .eq('id', req.params.id).eq('doctor_id', user.id).single();
+    if (source.error || !source.data) {
+      return res.status(source.error?.code === 'PGRST116' ? 404 : 503).json({ message: 'Assessment unavailable' });
+    }
+    const body = req.body || {};
+    const cleaned = assessmentInput(body);
+    if (cleaned.error) return res.status(400).json({ message: cleaned.error });
+    // Anything the caller did not send keeps the value already recorded for this
+    // consultation, so correcting a symptom never erases the doctor's plan.
+    const duration = 'symptomDuration' in body ? cleaned.duration : (source.data.symptom_duration || '');
+    const note = 'clinicalNote' in body ? cleaned.note : (source.data.clinical_note || '');
+    const observations = 'observations' in body ? cleaned.observations : (source.data.observations || []);
+    const doctorAssessment = 'doctorAssessment' in body ? cleaned.doctorAssessment : (source.data.doctor_assessment || '');
+    const plan = 'plan' in body ? cleaned.plan : (source.data.plan || '');
+    const assessment = await runModelAssessment(cleaned.symptoms, res);
+    if (!assessment) return;
+    const insert = await db.from('assessments').insert({
+      doctor_id: user.id, patient_id: source.data.patient_id, appointment_id: source.data.appointment_id,
+      supersedes_id: source.data.id,
+      patient_reported: cleaned.reported, clinician_added: cleaned.added, observations,
+      symptom_duration: duration || null, clinical_note: note || null,
+      predicted_disease: assessment.output, model_version: assessment.modelVersion,
+      model_confidence: typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
+      description: assessment.description || '', precautions: assessment.precautions || [],
+      medications: assessment.medications || [], diet: assessment.diet || [], workout: assessment.workout || [],
+      doctor_assessment: doctorAssessment || null, plan: plan || null,
+    }).select('id').single();
+    if (insert.error) {
+      // Only the PostgREST code is logged, never symptoms or patient data.
+      report('assessment_revision', insert.error);
+      if (insert.error.code === '23505') return res.status(409).json({ message: 'This assessment has already been revised. Open the newer revision instead.' });
+      const code = insert.error.code === '42501' ? 403 : insert.error.code === '23514' ? 400 : 503;
+      return res.status(code).json({ message: 'The revision could not be saved. Your form is preserved; please retry.' });
+    }
+    res.status(201).json({ id: insert.data.id, supersedesId: source.data.id });
+  }));
+  router.get('/doctor/assessments/:id', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
+    const result = await db.rpc('assessment_view', { p_id: req.params.id });
+    if (result.error) return res.status(result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503).json({ message: 'Assessment unavailable' });
+    res.json(result.data);
+  }));
+  router.patch('/doctor/assessments/:id', ...guard('doctor', async (req, res, { db, user }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
+    const body = req.body || {};
+    const keys = Object.keys(body);
+    if (!keys.length || keys.some((key) => !['doctorAssessment', 'plan'].includes(key))) {
+      return res.status(400).json({ message: 'Only the doctor assessment and plan can be edited' });
+    }
+    const patch = {};
+    if ('doctorAssessment' in body) {
+      if (typeof body.doctorAssessment !== 'string' || body.doctorAssessment.length > 4000) return res.status(400).json({ message: 'Assessment is too long' });
+      patch.doctor_assessment = body.doctorAssessment.trim() || null;
+    }
+    if ('plan' in body) {
+      if (typeof body.plan !== 'string' || body.plan.length > 4000) return res.status(400).json({ message: 'Plan is too long' });
+      patch.plan = body.plan.trim() || null;
+    }
+    const result = await db.from('assessments').update(patch)
+      .eq('id', req.params.id).eq('doctor_id', user.id).select('id').single();
+    if (result.error) return res.status(result.error.code === 'PGRST116' ? 404 : 503).json({ message: 'Assessment could not be updated' });
+    res.json({ id: result.data.id });
+  }));
+  router.get('/doctor/assessments/:id/report.pdf', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
+    const result = await db.rpc('assessment_view', { p_id: req.params.id });
+    if (result.error) return res.status(result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503).json({ message: 'Report unavailable' });
+    let pdf;
+    try { pdf = renderAssessmentReport(result.data, { generatedAt: new Date() }); }
+    catch (error) { report('assessment_report', error); return res.status(503).json({ message: 'Report generation failed. Please retry.' }); }
+    // Report metadata only; the model verdict itself stays frozen.
+    await db.from('assessments').update({ report_generated_at: new Date().toISOString() }).eq('id', req.params.id);
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', `attachment; filename="HelloDoc-assessment-${String(req.params.id).slice(0, 8)}.pdf"`);
+    res.send(pdf);
   }));
   router.post('/doctor/predict', ...guard('doctor', async (req, res) => {
     if (!validSymptoms(req.body?.symptoms)) return res.status(400).json({ message:'Select valid symptoms' });

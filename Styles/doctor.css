@@ -10,3 +10,6 @@
 #documentForm { max-width: 42rem; }
 #documentForm textarea { width: 100%; }
 #message:empty { display: none; }
+/* Arriving from an assessment highlights the appointment it belongs to. */
+#appointments article.appointment-focus { border-left: 3px solid var(--brand, #2f6feb); padding-left: .75rem; background: #f5f9ff; }
+#appointments article.appointment-focus:focus-visible { outline: 2px solid var(--brand, #2f6feb); outline-offset: 2px; }

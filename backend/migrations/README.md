@@ -17,6 +17,18 @@ Apply the PostgreSQL files in this order against the Supabase project:
 4. `008_doctor_applicant.sql` — the four-role constraint (`patient`,
    `doctor_applicant`, `doctor`, `admin`) and the signup trigger that creates either
    a pending application or a patient profile.
+5. `009_doctor_self_service.sql` — doctor accounts from signup with pending
+   verification, professional detail columns and the stricter signup trigger.
+6. `010_clinical_assessments.sql` — `assessments` (frozen model output, separate
+   doctor decision), its RLS policies, the immutability trigger and the
+   `assigned_patients` / `assessment_view` RPCs.
+7. `011_assessment_revisions.sql` — `supersedes_id` lineage so a symptom
+   correction is appended as a new revision instead of rewriting the stored
+   prediction, plus the insert policy and lineage fields in `assessment_view`.
+8. `012_doctor_consultation.sql` — `doctor_consultation(appointment)` returning
+   the stored patient identity and any already-recorded symptoms for one
+   appointment the caller attends; another doctor's appointment is reported as
+   not found.
 
 `004_supabase_rls_tests.sql` and `007_security_regression.sql` are rollback-only
 tests, not migrations. Do not run them against production data.

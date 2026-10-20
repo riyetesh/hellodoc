@@ -25,12 +25,22 @@
     if (!rows.length) list.textContent = 'No appointments match these filters.';
     for (const appointment of rows) {
       const card = document.createElement('article');
+      // Stable anchor so a results page can link straight back to the visit.
+      card.id = `appointment-${appointment.id}`;
+      card.className = 'appointment-row';
       const title = document.createElement('strong');
       title.textContent = appointment.firstName;
       const detail = document.createElement('p');
       detail.textContent = `${new Date(appointment.startsAt).toLocaleString()} · ${appointment.status}`;
       card.append(title,detail);
       const transitions = { pending:['confirmed','cancelled'], confirmed:['completed','no_show','cancelled'] };
+      // The consultation entry point: the appointment id is the only thing the
+      // next page receives; the patient identity is loaded server-side.
+      const assess = document.createElement('a');
+      assess.className = 'btn btn-primary';
+      assess.href = `/doctor.html?appointment=${encodeURIComponent(appointment.id)}#assessmentSection`;
+      assess.textContent = 'Open assessment';
+      card.append(assess);
       for (const status of transitions[appointment.status] || []) {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'btn btn-outline'; button.textContent = `Mark ${status}`;
@@ -50,6 +60,22 @@
     const until = now.toISOString().slice(0,10);
     const metrics = await request(`/analytics?since=${since}&until=${until}`);
     $('#analytics').textContent = `Last 30 days (UTC): ${metrics.total} appointments; ${metrics.counts.completed} completed, ${metrics.counts.cancelled} cancelled, ${metrics.counts.no_show} no-show. Cancellation rate: ${(metrics.cancellationRate*100).toFixed(1)}%.`;
+    focusRequestedAppointment();
+  }
+
+  // Arriving from an assessment with ?appointment=<id> should land on that visit.
+  function focusRequestedAppointment() {
+    const wanted = new URLSearchParams(window.location.search).get('appointment');
+    if (!wanted) return;
+    const target = document.getElementById(`appointment-${wanted}`);
+    if (!target) {
+      message('That appointment is not in the current list. Clear the filters to find it.');
+      return;
+    }
+    target.classList.add('appointment-focus');
+    target.tabIndex = -1;
+    target.scrollIntoView({ block: 'center' });
+    target.focus({ preventScroll: true });
   }
   async function availability() {
     const rows = await request('/availability');
@@ -61,32 +87,6 @@
       list.append(item);
     }
   }
-  async function loadSymptoms() {
-    const select = $('#modelSymptoms');
-    const button = $('#predictionForm').querySelector('button');
-    button.disabled = true;
-    try {
-      const data = await request('/symptoms');
-      if (!Array.isArray(data.symptoms)) throw new Error('Symptom model unavailable');
-      select.replaceChildren(...data.symptoms.map((value) => new Option(value.replaceAll('_',' '),value)));
-      $('#predictionStatus').textContent = 'Model ready. Select symptoms to run it.';
-      button.disabled = false;
-    } catch (error) {
-      $('#predictionStatus').textContent = error.message;
-    }
-  }
-  $('#predictionForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const symptoms = [...$('#modelSymptoms').selectedOptions].map((item) => item.value);
-    const button = event.target.querySelector('button');
-    button.disabled = true;
-    $('#predictionStatus').textContent = 'Running model…';
-    try {
-      const result = await request('/predict', {method:'POST',body:JSON.stringify({symptoms})});
-      $('#predictionStatus').textContent = `${result.output}. ${result.label}`;
-    } catch (error) { $('#predictionStatus').textContent = error.message; }
-    finally { button.disabled = false; }
-  });
   $('#slotForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const button = event.target.querySelector('button'); button.disabled = true;
@@ -181,8 +181,7 @@
       }
       await Promise.all([
         load().catch(() => { $('#appointments').textContent = 'Appointments or analytics unavailable. Retry using Apply filters.'; }),
-        availability().catch(() => { $('#slots').textContent = 'Availability unavailable. Please reload to retry.'; }),
-        loadSymptoms()
+        availability().catch(() => { $('#slots').textContent = 'Availability unavailable. Please reload to retry.'; })
       ]);
     } catch (error) {
       // "Access denied" here means the account is not a doctor at all.

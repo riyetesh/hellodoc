@@ -35,4 +35,16 @@ function validSymptoms(symptoms) {
     new Set(symptoms).size === symptoms.length;
 }
 
-module.exports = { modelRequest, validSymptoms };
+// The vocabulary changes only when the model service restarts, so a short cache
+// keeps the assessment form fast without risking a stale feature list.
+let vocabularyCache = { data: null, at: 0 };
+async function symptomVocabulary({ maxAge = 60 * 1000 } = {}) {
+  if (vocabularyCache.data && Date.now() - vocabularyCache.at < maxAge) return vocabularyCache.data;
+  const payload = await modelRequest('/internal/symptoms');
+  const symptoms = Array.isArray(payload.symptoms) ? payload.symptoms.filter((item) => typeof item === 'string') : [];
+  const labels = payload.labels && typeof payload.labels === 'object' ? payload.labels : {};
+  vocabularyCache = { data: { symptoms, labels }, at: Date.now() };
+  return vocabularyCache.data;
+}
+
+module.exports = { modelRequest, validSymptoms, symptomVocabulary };
