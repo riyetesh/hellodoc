@@ -1,1 +1,59 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HelloDoc | Recover password</title><link rel="stylesheet" href="/Styles/app.css?v=blue2"><link rel="stylesheet" href="/Styles/signup.css?v=blue2"></head><body><nav class="navbar"><div class="container navbar-inner"><a href="/index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo"></a></div></nav><main class="container"><form id="request" class="signup-form"><h2>Reset your password</h2><label>Email <input type="email" name="email" required></label><button class="btn btn-primary">Send recovery link</button></form><form id="complete" class="signup-form" hidden><h2>Choose a new password</h2><label>New password <input type="password" name="password" minlength="8" required></label><button class="btn btn-primary">Change password</button></form><p id="status" role="status"></p></main><script src="/Scripts/recover.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Recover password</title>
+    <meta name="description" content="Reset your HelloDoc password through a secure email recovery link." />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand"><img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" /></a>
+        <div class="navbar-actions">
+          <a href="login.html" class="btn btn-ghost">Login</a>
+          <a href="signup.html" class="btn btn-primary">Sign Up</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="auth-page">
+      <section class="auth-card" aria-labelledby="recover-title">
+        <p class="eyebrow">Account recovery</p>
+        <h1 id="recover-title">Reset your password</h1>
+        <p class="auth-sub">We email a one-time recovery link. It works once and expires quickly.</p>
+
+        <form id="request" class="auth-form" method="post" novalidate>
+          <div class="form-grp">
+            <label for="recover-email">Email address</label>
+            <input type="email" id="recover-email" name="email" autocomplete="email" maxlength="254" required />
+          </div>
+          <button type="submit" class="btn btn-primary auth-submit">Send recovery link</button>
+          <div class="auth-links"><a href="login.html">Back to login</a></div>
+        </form>
+
+        <form id="complete" class="auth-form" method="post" novalidate hidden>
+          <div class="form-grp">
+            <label for="new-password">New password</label>
+            <div class="password-field">
+              <input type="password" id="new-password" name="password" autocomplete="new-password" minlength="8" maxlength="1024" required />
+              <button type="button" class="password-toggle" id="togglePassword" aria-pressed="false" aria-controls="new-password">Show</button>
+            </div>
+          </div>
+          <div class="form-grp">
+            <label for="confirm-password">Confirm new password</label>
+            <input type="password" id="confirm-password" name="confirmPassword" autocomplete="new-password" minlength="8" maxlength="1024" required />
+          </div>
+          <button type="submit" class="btn btn-primary auth-submit">Change password</button>
+        </form>
+
+        <p id="status" class="auth-note" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="./Scripts/recover.js"></script>
+  </body>
+</html>

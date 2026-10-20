@@ -9,7 +9,7 @@ Applied via connected migration API on 2026-10-17:
 - `005_admin_management.sql`: admin_audit_logs, private.admin_bootstrap, profile phone/suspension, qualification/review fields, restricted admin RPCs, repair for missing profiles and idempotent first-admin operation.
 - `006_directory_suspension.sql`: suspended clinicians excluded from directory/slots/booking, clinician locking during booking and qualification/evidence application RPC.
 
-`001` and `002` are retained **MySQL-only** history; do not execute in PostgreSQL. `004` is an older test specification, not a migration. `007_security_regression.sql` is a rollback-only executable **test**, not a migration. Remote migration versions are API-generated timestamps; names map to the files above. An initial 005 attempt failed on an alias and rolled back; the corrected transaction succeeded.
+`001` and `002` were **MySQL-only** migrations and were deleted together with the MySQL backend; never execute them in PostgreSQL. `004` is an older test specification, not a migration. `007_security_regression.sql` is a rollback-only executable **test**, not a migration. Remote migration versions are API-generated timestamps; names map to the files above. An initial 005 attempt failed on an alias and rolled back; the corrected transaction succeeded.
 
 ## Runtime and authentication
 
@@ -25,7 +25,7 @@ npm ci --prefix backend
 # Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and APP_ORIGIN privately.
 FLASK_AUTOSTART=false PORT=3000 npm start --prefix backend
 ```
-Environment is loaded by dotenv relative to the working directory. Use exported variables, or deliberately launch from the directory containing your ignored .env. Never expose service keys in public variables. Production fails closed if Supabase or APP_ORIGIN are missing. Legacy MySQL code is retained for old tests/local use but is not mounted when Supabase is configured.
+Environment is loaded by dotenv relative to the working directory. Use exported variables, or deliberately launch from the directory containing your ignored .env. Never expose service keys in public variables. Production fails closed if Supabase or APP_ORIGIN are missing. The legacy MySQL implementation has been removed: Supabase is the only account backend and the API fails closed while it is unconfigured.
 
 ## First administrator — not yet provisioned
 

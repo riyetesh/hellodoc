@@ -20,6 +20,34 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.cookie('hd_refresh', session.refresh_token, { ...cookieOptions(), maxAge: 30 * 24 * 3600 * 1000 });
   }
   function clear(res) { res.clearCookie('hd_access', cookieOptions()); res.clearCookie('hd_refresh', cookieOptions()); }
+  // Refresh tokens rotate, so concurrent requests that arrive with the same
+  // expired session must share one refresh. Without this cache the losers are
+  // told the token was already used and their cookies were cleared, which the
+  // user experienced as being randomly signed out mid-session.
+  const refreshes = new Map(); // refresh token -> in-flight refresh promise
+  const rotated = new Map(); // consumed refresh token -> { session, at }
+  function recentSession(token) {
+    const entry = rotated.get(token);
+    if (!entry) return null;
+    if (Date.now() - entry.at > 60 * 1000) { rotated.delete(token); return null; }
+    return entry.session;
+  }
+  function refreshOnce(api, token) {
+    const pending = refreshes.get(token);
+    if (pending) return pending;
+    const request = api.auth.refreshSession({ refresh_token: token })
+      .then(({ data, error }) => {
+        if (data?.session) {
+          rotated.set(token, { session: data.session, at: Date.now() });
+          if (rotated.size > 500) for (const [key, value] of rotated) if (Date.now() - value.at > 60 * 1000) rotated.delete(key);
+        }
+        return { session: data?.session || null, error };
+      })
+      .catch((error) => ({ session: null, error }))
+      .finally(() => refreshes.delete(token));
+    refreshes.set(token, request);
+    return request;
+  }
   async function identity(req, res, next) {
     try {
       const api = client();
@@ -30,11 +58,19 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         user = result.data.user;
       }
       if (!user && refresh) {
-        const result = await api.auth.refreshSession({ refresh_token: refresh });
-        if (result.data.session) {
-          save(res, result.data.session);
-          token = result.data.session.access_token;
-          user = result.data.user;
+        const reused = recentSession(refresh);
+        const result = reused ? { session: reused } : await refreshOnce(api, refresh);
+        if (result.session) {
+          save(res, result.session);
+          token = result.session.access_token;
+          user = result.session.user || null;
+        } else {
+          // Only a definitive rejection ends the session. A network blip, a rate
+          // limit or a Supabase 5xx must not discard a 30-day refresh token.
+          const status = result.error?.status;
+          if (status === 400 || status === 401) { clear(res); return res.status(401).json({ message: 'Session expired. Sign in again.' }); }
+          report('refresh', result.error);
+          return res.status(503).json({ message: 'Authentication service is temporarily unavailable. Please retry.' });
         }
       }
       if (!user) { clear(res); return res.status(401).json({ message: 'Not authenticated' }); }
@@ -49,33 +85,56 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       next();
     } catch (error) { report('identity', error); res.status(503).json({ message: 'Authentication unavailable' }); }
   }
+  // Doctors hold the `doctor` role from the moment they register; verification
+  // status decides what they may do. `session` guards the pending-verification
+  // dashboard, `guard('doctor')` guards clinical work and therefore re-checks
+  // approval on every request.
+  const session = (roles, handler) => [identity, async (req, res) => {
+    if (roles && !roles.includes(req.care.profile.role)) return res.status(403).json({ message: 'Access denied' });
+    try {
+      await handler(req, res, req.care);
+    } catch { res.status(503).json({ message: 'Service unavailable' }); }
+  }];
   const guard = (role, handler) => [identity, async (req, res) => {
     if (role && req.care.profile.role !== role) return res.status(403).json({ message: 'Access denied' });
     try {
       if (role === 'doctor') {
         const approval = await req.care.db.from('doctor_profiles').select('verification_status').eq('user_id',req.care.user.id).single();
-        if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ message: 'Doctor approval required' });
+        if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ code:'DOCTOR_NOT_VERIFIED', message: 'Doctor verification required for clinical features' });
       }
       await handler(req, res, req.care);
     } catch { res.status(503).json({ message: 'Service unavailable' }); }
   }];
+  const verificationOf = async (db, userId) => {
+    const result = await db.from('doctor_profiles').select('verification_status,specialty,professional_bio,institution,years_experience,is_accepting_appointments').eq('user_id', userId).single();
+    if (result.error || !result.data) return { status: 'pending', profile: null };
+    return { status: result.data.verification_status, profile: result.data };
+  };
   const attempts = new Map();
+  // Count unsuccessful credential attempts only: a legitimate sign-in should not
+  // consume the brute-force budget, but every rejection or validation failure
+  // does. Per-process only; use a shared store for multi-instance deployments.
   function limit(req, res, next) {
-    const name = `${req.ip}:${req.path}`; const now = Date.now();
+    // req.path is '/' inside a mounted router.use(paths, ...) middleware, which
+    // would put every credential endpoint in one bucket; key on the real URL.
+    const name = `${req.ip}:${req.originalUrl.split('?')[0]}`; const now = Date.now();
     const record = attempts.get(name);
     const entry = record && record.expires > now ? record : { count:0, expires:now+15*60*1000 };
-    if (++entry.count > 15) return res.status(429).json({ message:'Too many attempts; try again later' });
+    if (entry.count >= 15) return res.status(429).json({ message:'Too many attempts; try again later' });
     attempts.set(name,entry);
+    res.on('finish', () => { if (res.statusCode >= 400) entry.count += 1; });
     if (attempts.size > 5000) { for (const [key,value] of attempts) if (value.expires < now) attempts.delete(key); }
     next();
   }
   router.use(['/auth/signup','/auth/doctor-signup','/auth/login','/auth/recover','/patient/appointments'], limit);
   router.post('/auth/signup', async (req, res) => {
-    const { firstName, lastName, email, password, role } = req.body || {};
+    const { firstName, lastName, email, password, confirmPassword, phone = '', role } = req.body || {};
     if (role !== undefined) return res.status(403).json({ message: 'Roles cannot be assigned at registration' });
     if (![firstName,lastName,email,password].every((v) => typeof v === 'string') || !firstName.trim() || !lastName.trim() || !/^\S+@\S+\.\S+$/.test(email) || email.length > 254 || firstName.length > 100 || lastName.length > 100 || password.length < 8 || password.length > 1024) return res.status(400).json({ message: 'Invalid account details' });
+    if (typeof phone !== 'string' || phone.length > 40 || (phone && !/^[+()\-\s0-9]{6,40}$/.test(phone))) return res.status(400).json({ message: 'Enter a valid phone number or leave it blank' });
+    if (confirmPassword !== undefined && confirmPassword !== password) return res.status(400).json({ message: 'Passwords do not match' });
     try {
-      const { data, error } = await client().auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/`, data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim() } } });
+      const { data, error } = await client().auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/`, data: { full_name: `${firstName.trim()} ${lastName.trim()}`.trim(), ...(phone.trim() ? { phone: phone.trim() } : {}) } } });
       if (error) return res.status(400).json({ message: error.message });
       if (data.session) save(res, data.session);
       res.status(201).json({ authenticated: Boolean(data.session), redirectTo: data.session ? '/patient.html' : null, message: data.session ? 'Account created' : 'Check your email to confirm your account before logging in.' });
@@ -83,16 +142,21 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   });
   router.post('/auth/doctor-signup', async (req, res) => {
     if (['role','status','approved','approvalStatus','permissions','account_type'].some((field) => Object.hasOwn(req.body || {}, field))) return res.status(403).json({ message: 'Roles and approval permissions cannot be assigned at registration' });
-    const { firstName, lastName, email, password, specialty, licenseNumber, qualifications, evidenceReference } = req.body || {};
+    const { firstName, lastName, email, password, confirmPassword, phone = '', specialty, licenseNumber, qualifications, institution, yearsExperience, evidenceReference = '' } = req.body || {};
     const clean = (value) => typeof value === 'string' ? value.trim() : '';
-    const values = { firstName:clean(firstName), lastName:clean(lastName), email:clean(email), password, specialty:clean(specialty), licenseNumber:clean(licenseNumber), qualifications:clean(qualifications), evidenceReference:clean(evidenceReference) };
+    const values = { firstName:clean(firstName), lastName:clean(lastName), email:clean(email), password, phone:clean(phone), specialty:clean(specialty), licenseNumber:clean(licenseNumber), qualifications:clean(qualifications), institution:clean(institution), evidenceReference:clean(evidenceReference) };
+    const experience = yearsExperience === undefined || yearsExperience === '' ? null : Number(yearsExperience);
     if (!values.firstName || values.firstName.length > 100 || !values.lastName || values.lastName.length > 100 ||
         !/^\S+@\S+\.\S+$/.test(values.email) || values.email.length > 254 ||
         typeof values.password !== 'string' || values.password.length < 8 || values.password.length > 1024 ||
+        (confirmPassword !== undefined && confirmPassword !== values.password) ||
+        (values.phone && !/^[+()\-\s0-9]{6,40}$/.test(values.phone)) ||
         values.specialty.length < 2 || values.specialty.length > 120 ||
         values.licenseNumber.length < 3 || values.licenseNumber.length > 120 ||
         values.qualifications.length < 5 || values.qualifications.length > 2000 ||
-        values.evidenceReference.length < 5 || values.evidenceReference.length > 1000) {
+        values.institution.length < 2 || values.institution.length > 200 ||
+        (experience !== null && (!Number.isInteger(experience) || experience < 0 || experience > 80)) ||
+        (values.evidenceReference && (values.evidenceReference.length < 5 || values.evidenceReference.length > 1000))) {
       return res.status(400).json({ message: 'Complete every field with valid details. Passwords must be at least 8 characters.' });
     }
     try {
@@ -101,34 +165,100 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         password: values.password,
         options: { emailRedirectTo: `${origin}/`, data: {
           full_name: `${values.firstName} ${values.lastName}`.trim(),
-          account_type: 'doctor_applicant',
+          account_type: 'doctor',
+          ...(values.phone ? { phone: values.phone } : {}),
           specialty: values.specialty,
           license_number: values.licenseNumber,
           qualifications: values.qualifications,
-          evidence_reference: values.evidenceReference
+          institution: values.institution,
+          ...(experience !== null ? { years_experience: experience } : {}),
+          ...(values.evidenceReference ? { evidence_reference: values.evidenceReference } : {})
         } }
       });
       if (error) return res.status(400).json({ message: error.message });
       if (data.session) save(res, data.session);
-      return res.status(201).json({ authenticated: Boolean(data.session), message: data.session ? 'Doctor application created.' : 'Check your email to confirm your account. Your doctor application is saved as pending.' });
+      return res.status(201).json({ authenticated: Boolean(data.session), verificationStatus: 'pending', redirectTo: data.session ? '/doctor.html' : null, message: data.session ? 'Doctor account created. Your verification is pending review.' : 'Check your email to confirm your account. Your doctor verification is saved as pending.' });
     } catch (error) { report('doctor_signup', error); return res.status(503).json({ message: 'Doctor registration unavailable. Please try again later.' }); }
   });
-  router.get('/doctor/application-status', ...guard(null, async (req, res, { db, profile, user }) => {
-    if (!['doctor_applicant','doctor'].includes(profile.role)) return res.status(403).json({ message: 'This portal is for doctor applicants and approved doctors.' });
-    if (profile.role === 'doctor') {
-      const approval = await db.from('doctor_profiles').select('verification_status').eq('user_id', user.id).single();
-      if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ code: 'DOCTOR_NOT_APPROVED', message: 'Doctor approval could not be verified. Contact support.' });
-      return res.json({ role: 'doctor', approved: true });
+  router.get('/doctor/application-status', ...session(['doctor','doctor_applicant'], async (req, res, { db, profile, user }) => {
+    const verified = await verificationOf(db, user.id);
+    if (!verified.profile) return res.status(409).json({ code: 'APPLICATION_INCONSISTENT', message: 'Your doctor profile is incomplete. Contact support; do not create another account.' });
+    const result = await db.from('doctor_applications').select('status,specialty,license_number,qualifications,institution,years_experience,review_reason,created_at,updated_at').eq('applicant_id', user.id).single();
+    if (result.error && result.error.code !== 'PGRST116') return res.status(503).json({ message: 'Application status is unavailable. Please retry.' });
+    res.json({
+      role: profile.role,
+      approved: verified.status === 'approved',
+      verificationStatus: verified.status,
+      application: result.data || null,
+    });
+  }));
+  // The pending-verification dashboard: any doctor account can see its own status
+  // and profile, but no appointments or clinical data until approved.
+  router.get('/doctor/overview', ...session(['doctor','doctor_applicant'], async (req, res, { db, user, profile }) => {
+    const verified = await verificationOf(db, user.id);
+    const application = await db.from('doctor_applications')
+      .select('status,specialty,license_number,qualifications,institution,years_experience,review_reason,created_at,updated_at')
+      .eq('applicant_id', user.id).single();
+    if (application.error && application.error.code !== 'PGRST116') return res.status(503).json({ message: 'Dashboard unavailable' });
+    const approved = verified.status === 'approved';
+    res.json({
+      profile: {
+        firstName: profile.full_name.split(' ')[0],
+        lastName: profile.full_name.split(' ').slice(1).join(' '),
+        email: user.email,
+        role: profile.role,
+      },
+      approved,
+      verificationStatus: verified.status,
+      specialty: verified.profile?.specialty || application.data?.specialty || null,
+      institution: verified.profile?.institution || application.data?.institution || null,
+      application: application.data || null,
+      canAttendConsultations: approved && Boolean(verified.profile?.is_accepting_appointments),
+      appointments: [],
+    });
+  }));
+  // Own-profile updates only; the RPC controls which columns may change, so a
+  // patient or doctor can never edit a role or verification status.
+  const fullName = (firstName, lastName) => {
+    const first = typeof firstName === 'string' ? firstName.trim() : '';
+    const last = typeof lastName === 'string' ? lastName.trim() : '';
+    if (first.length < 1 || first.length > 100 || last.length > 100) return null;
+    return `${first} ${last}`.trim();
+  };
+  router.patch('/patient/profile', ...guard('patient', async (req, res, { db, user }) => {
+    const name = fullName(req.body?.firstName, req.body?.lastName);
+    const phone = req.body?.phone === undefined ? null : String(req.body.phone).trim();
+    if (!name || (phone && (!/^[+()\-\s0-9]{6,40}$/.test(phone) || phone.length > 40))) return res.status(400).json({ message: 'Enter a valid name and phone number' });
+    const result = await db.rpc('update_own_profile', { p_full_name: name, p_phone: phone || null });
+    if (result.error) return res.status(503).json({ message: 'Profile update unavailable' });
+    res.json({ firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), phone: phone || null, userId: user.id });
+  }));
+  router.patch('/doctor/profile', ...session(['doctor','doctor_applicant'], async (req, res, { db, user }) => {
+    const name = fullName(req.body?.firstName, req.body?.lastName);
+    const bio = req.body?.bio === undefined ? '' : String(req.body.bio).trim();
+    const institution = req.body?.institution === undefined ? '' : String(req.body.institution).trim();
+    const experience = req.body?.yearsExperience === undefined || req.body.yearsExperience === '' ? null : Number(req.body.yearsExperience);
+    if (!name || bio.length > 2000 || institution.length > 200 || (experience !== null && (!Number.isInteger(experience) || experience < 0 || experience > 80))) return res.status(400).json({ message: 'Invalid profile details' });
+    const result = await db.rpc('update_own_doctor_profile', { p_full_name: name, p_bio: bio, p_institution: institution || null, p_years_experience: experience });
+    if (result.error) return res.status(503).json({ message: 'Profile update unavailable' });
+    res.json({ firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), bio, institution: institution || null, yearsExperience: experience, userId: user.id });
+  }));
+  // Resubmission after rejection: professional details only, and only while the
+  // application is rejected or awaiting resubmission.
+  router.post('/doctor/application/resubmit', ...session(['doctor','doctor_applicant'], async (req, res, { db }) => {
+    const clean = (value) => typeof value === 'string' ? value.trim() : '';
+    const specialty = clean(req.body?.specialty), license = clean(req.body?.licenseNumber), qualifications = clean(req.body?.qualifications), institution = clean(req.body?.institution);
+    const experience = req.body?.yearsExperience === undefined || req.body.yearsExperience === '' ? null : Number(req.body.yearsExperience);
+    if (specialty.length < 2 || specialty.length > 120 || license.length < 3 || license.length > 120 || qualifications.length < 5 || qualifications.length > 2000 || institution.length < 2 || institution.length > 200 || (experience !== null && (!Number.isInteger(experience) || experience < 0 || experience > 80))) {
+      return res.status(400).json({ message: 'Complete every verification field with valid details' });
     }
-    const result = await db.from('doctor_applications').select('status,specialty,created_at,review_reason').eq('applicant_id', user.id).single();
-    if (result.error?.code === 'PGRST116' || (!result.error && !result.data)) return res.status(404).json({ code: 'APPLICATION_MISSING', message: 'No application was found. Retry or contact support; do not create another account.' });
-    if (result.error) return res.status(503).json({ message: 'Application status is unavailable. Please retry.' });
-    if (!['pending','rejected'].includes(result.data.status)) return res.status(409).json({ code: 'APPLICATION_INCONSISTENT', message: 'Your application needs administrator attention. Contact support.' });
-    res.json({ role: profile.role, application: result.data });
+    const result = await db.rpc('resubmit_doctor_application', { p_specialty: specialty, p_license: license, p_qualifications: qualifications, p_institution: institution, p_years_experience: experience });
+    if (result.error) return res.status(409).json({ message: 'Resubmission is not available for your application right now' });
+    res.json({ verificationStatus: 'pending', application: result.data });
   }));
   router.post('/auth/login', async (req, res) => {
     const { email, password, portal } = req.body || {};
-    if (portal !== undefined && !['patient','doctor'].includes(portal)) return res.status(400).json({ message: 'Choose patient or doctor login' });
+    if (portal !== undefined && !['patient','doctor','admin'].includes(portal)) return res.status(400).json({ message: 'Choose patient, doctor or admin login' });
     if (typeof email !== 'string' || typeof password !== 'string' || email.length > 254 || password.length > 1024) return res.status(400).json({ message: 'Invalid credentials' });
     try {
       const { data, error } = await client().auth.signInWithPassword({ email, password });
@@ -138,17 +268,32 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       if (profile.data?.suspended) return res.status(403).json({ message: 'Account suspended. Contact support.' });
       if (profile.error) { report('login_profile', profile.error); return res.status(503).json({ message: 'Profile unavailable. Contact support.' }); }
       const role = profile.data?.role;
-      const destinations = { patient:'/patient.html', doctor:'/doctor.html', doctor_applicant:'/doctor-portal.html', admin:'/admin' };
+      const destinations = { patient:'/patient.html', doctor:'/doctor.html', admin:'/admin' };
       if (!destinations[role]) return res.status(403).json({ message: 'Account role unavailable. Contact support.' });
-      if (portal && role !== 'admin' && (portal === 'patient' ? role !== 'patient' : !['doctor','doctor_applicant'].includes(role))) {
-        return res.status(403).json({ code:'WRONG_PORTAL', message: role === 'patient' ? 'This is a patient account. Choose patient login.' : 'This is a doctor account. Choose doctor login.' });
+      // The selected portal is a preference, never a grant: it can only match the
+      // role already stored by the database.
+      if (portal) {
+        const matches = portal === 'admin' ? role === 'admin'
+          : portal === 'doctor' ? role === 'doctor'
+          : role === 'patient';
+        if (!matches) {
+          const correct = role === 'admin' ? 'admin login' : role === 'doctor' ? 'doctor login' : 'patient login';
+          return res.status(403).json({ code:'WRONG_PORTAL', portal: role === 'admin' ? 'admin' : role === 'doctor' ? 'doctor' : 'patient', message: `This is a ${role} account. Choose ${correct}.` });
+        }
       }
+      // Pending doctors may sign in and see their own dashboard; clinical
+      // endpoints stay blocked until an administrator approves the application.
+      let verificationStatus = null;
       if (role === 'doctor') {
-        const approval = await db.from('doctor_profiles').select('verification_status').eq('user_id',data.user.id).single();
-        if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ message:'Doctor approval required. Contact support.' });
+        const verified = await verificationOf(db, data.user.id);
+        if (verified.status === 'rejected' || verified.status === 'resubmission_required') {
+          verificationStatus = verified.status;
+        } else {
+          verificationStatus = verified.status === 'approved' ? 'approved' : 'pending';
+        }
       }
       save(res, data.session);
-      res.json({ role, redirectTo:destinations[role], message: 'Login successful' });
+      res.json({ role, verificationStatus, redirectTo:destinations[role], message: 'Login successful' });
     } catch (error) { report('login', error); res.status(503).json({ message: 'Login unavailable' }); }
   });
   router.post('/auth/recover', async (req, res) => {
@@ -190,15 +335,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   });
   router.get('/auth/current-user', ...guard(null, async (req, res, { user, profile }) => res.json({ userId: user.id, email: user.email, role: profile.role, user: { firstName: profile.full_name.split(' ')[0] } })));
   router.get('/auth/profile', ...guard('patient', async (req, res, { user, profile }) => res.json({ id: user.id, firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email })));
-  router.post('/doctor/apply', ...guard('patient', async (req, res, { db }) => {
-    const { specialty, licenseNumber, qualifications = '', evidenceReference = '' } = req.body || {};
-    if (typeof specialty !== 'string' || typeof licenseNumber !== 'string' || specialty.trim().length < 2 || specialty.length > 120 || licenseNumber.trim().length < 3 || licenseNumber.length > 120) return res.status(400).json({ message:'Valid specialty and license number required' });
-    const hasEvidence = qualifications !== '' || evidenceReference !== '';
-    if (hasEvidence && (typeof qualifications !== 'string' || qualifications.trim().length < 5 || qualifications.length > 2000 || typeof evidenceReference !== 'string' || evidenceReference.trim().length < 5 || evidenceReference.length > 1000)) return res.status(400).json({ message: 'Valid qualifications and evidence reference required' });
-    const result = hasEvidence ? await db.rpc('submit_doctor_application', { p_specialty:specialty.trim(), p_license:licenseNumber.trim(), p_qualifications:qualifications, p_evidence:evidenceReference }) : await db.rpc('apply_as_doctor', { p_specialty:specialty.trim(), p_license_number:licenseNumber.trim() });
-    if (result.error) return res.status(result.error.code === '23505' ? 409 : 503).json({ message:result.error.code === '23505' ? 'Application already submitted' : result.error.code === 'PGRST202' || result.error.code === '42P01' ? 'Doctor applications are not configured in this database. Contact the site administrator.' : 'Application unavailable. Please try again later.' });
-    res.status(201).json({ status:result.data.status });
-  }));
+  // Doctor registration is the only path to a doctor account; a patient account
+  // can no longer be converted into an application from the API.
   router.get('/doctors', async (req, res) => {
     const api = client();
     const result = await api.rpc('public_doctors');
@@ -307,7 +445,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.post('/admin/actions', ...guard('admin', async (req, res, { db }) => {
     const { action, target, reason, details = {} } = req.body || {};
-    if (!['approve_doctor','reject_doctor','suspend','reactivate','update_doctor','cancel_appointment'].includes(action) || !isUuid(target) || typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 500 || !details || typeof details !== 'object' || Array.isArray(details)) return res.status(400).json({ message: 'Valid target, action and review reason required' });
+    if (!['approve_doctor','reject_doctor','request_resubmission','suspend','reactivate','update_doctor','cancel_appointment'].includes(action) || !isUuid(target) || typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 500 || !details || typeof details !== 'object' || Array.isArray(details)) return res.status(400).json({ message: 'Valid target, action and review reason required' });
     const result = await db.rpc('admin_action', { p_action: action, p_target: target, p_reason: reason.trim(), p_details: details });
     if (result.error) return res.status(409).json({ message: 'Action refused. Check verification, account and appointment state.' });
     res.json({ message: 'Administrative action saved and audited.' });

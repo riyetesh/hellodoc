@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Login</title>
+    <meta name="description" content="Sign in to HelloDoc as a patient, doctor or administrator. Your role is verified by the server, never chosen for you." />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg" />
+  </head>
+  <body>
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand">
+          <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+        </a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="index.html#about" class="nav-link">About</a></li>
+          <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+          <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+          <li><a href="story.html" class="nav-link">My Story</a></li>
+          <li><a href="help.html" class="nav-link">Help</a></li>
+        </ul>
+        <div class="navbar-actions" id="navActions">
+          <a href="login.html" class="btn btn-ghost" id="loginBtn" aria-current="page">Login</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
+          <button class="user-chip" id="userChip" hidden>
+            <span class="avatar" id="userAvatar">U</span>
+            <span class="user-name" id="userName">Guest</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="auth-page">
+      <section class="auth-card" aria-labelledby="auth-title">
+        <p class="eyebrow">Welcome back</p>
+        <h1 id="auth-title">Sign in to HelloDoc</h1>
+        <p class="auth-sub">Choose how you sign in. Your account role is checked by the server &mdash; selecting a tab never grants access.</p>
+
+        <div class="auth-tabs" role="tablist" aria-label="Sign-in role">
+          <button type="button" role="tab" id="tab-patient" class="auth-tab" aria-selected="true" aria-controls="auth-form" data-role="patient">Patient Login</button>
+          <button type="button" role="tab" id="tab-doctor" class="auth-tab" aria-selected="false" aria-controls="auth-form" data-role="doctor">Doctor Login</button>
+          <button type="button" role="tab" id="tab-admin" class="auth-tab" aria-selected="false" aria-controls="auth-form" data-role="admin">Admin Login</button>
+        </div>
+        <p class="auth-hint" id="auth-hint">Sign in to book visits and view your patient dashboard.</p>
+
+        <form id="loginForm" class="auth-form" method="post" novalidate>
+          <div class="form-grp">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" autocomplete="email" maxlength="254" required aria-describedby="email-error" />
+            <small class="field-error" id="email-error" hidden></small>
+          </div>
+
+          <div class="form-grp">
+            <label for="password">Password</label>
+            <div class="password-field">
+              <input type="password" id="password" name="password" autocomplete="current-password" maxlength="1024" required aria-describedby="password-error" />
+              <button type="button" class="password-toggle" id="togglePassword" aria-pressed="false" aria-controls="password">Show</button>
+            </div>
+            <small class="field-error" id="password-error" hidden></small>
+          </div>
+
+          <div class="form-summary" id="formSummary" role="alert" aria-live="assertive" aria-atomic="true" hidden></div>
+
+          <button type="submit" class="btn btn-primary auth-submit" id="submitBtn">Login</button>
+
+          <div class="auth-links">
+            <a href="recover.html">Forgot password?</a>
+            <a href="signup.html">Create an account</a>
+          </div>
+          <p class="auth-note">Admin accounts are provisioned by HelloDoc staff; you cannot create one from this page.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a></p>
+      </div>
+    </footer>
+
+    <script src="./Scripts/nav.js"></script>
+    <script src="./Scripts/login-page.js"></script>
+  </body>
+</html>

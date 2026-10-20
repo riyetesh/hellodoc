@@ -17,11 +17,9 @@
 </head>
   <body>
     <!-- ===== Shared navbar (canonical block) =====
-         Identical items in the same order on every page. The current page is
-         highlighted by Scripts/nav.js from the URL, so no page hard-codes an
-         `active` class. The three story pages are distinct:
-           About   - what HelloDoc is (home page section)
-           My Story- why it was built (the personal account)
+         Exactly two authentication actions on every page: Login and Sign Up.
+         Login opens login.html, which owns the Patient/Doctor/Admin role
+         selector; no other page links to a role-specific login form.
     -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
@@ -43,9 +41,8 @@
         </ul>
 
         <div class="navbar-actions" id="navActions">
-          <a href="index.html?login=patient" class="btn btn-ghost" id="loginBtn">Log in as a patient</a>
-          <a href="index.html?login=doctor" class="btn btn-outline" id="doctorLoginBtn">Log in as a doctor</a>
-          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign up</a>
+          <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
+          <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
           <button class="user-chip" id="userChip" hidden>
             <span class="avatar" id="userAvatar">U</span>
             <span class="user-name" id="userName">Guest</span>
@@ -61,7 +58,7 @@
           <p class="home-lead">Find a doctor and plan a visit. One simple place to start.</p>
           <div class="home-cta-row">
             <a href="dashboard.html" class="btn btn-primary">Find a doctor</a>
-            <a href="doctor-apply.html" class="btn btn-outline">Open doctor portal</a>
+            <a href="signup.html?role=doctor" class="btn btn-outline">Join as a doctor</a>
             <a href="demo.html" class="btn btn-ghost">Explore demo</a>
           </div>
           <a href="./story.html#builder" class="contact-btn">Meet the builder</a>
@@ -93,7 +90,7 @@
         </article>
         <article class="about-card">
           <h3>For clinicians</h3>
-          <p>Doctors can apply for a verified workspace to manage their appointments.</p>
+          <p>Doctors register, submit credentials for verification and manage appointments once approved.</p>
         </article>
       </div>
 
@@ -108,48 +105,7 @@
       </div>
     </footer>
 
-    <!-- Login Modal -->
-    <div id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
-      <div class="modal-content">
-        <span class="close-btn" role="button" tabindex="0" aria-label="Close login">&times;</span>
-        <h2 id="login-modal-title">Log in as a patient</h2>
-        <p id="login-role-description">Sign in to book visits and view your patient dashboard.</p>
-        <p><a href="?login=patient" data-login-role="patient">Patient login</a> · <a href="?login=doctor" data-login-role="doctor">Doctor login</a></p>
-        <!-- novalidate hands validation to Scripts/form-validation.js, which
-             explains each problem in place instead of showing browser bubbles.
-             method="post" keeps entered values out of the URL if the script
-             never loads. -->
-        <form method="post" novalidate>
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="Enter your email" required>
-
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Enter your password" required>
-
-          <!-- Live region: the validation summary is announced from here -->
-          <div
-            class="form-summary"
-            data-form-summary
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-            hidden
-          ></div>
-          <button type="submit" class="continue-btn">Continue</button>
-          <a href="recover.html" class="forgot-password">Forgot Password?</a>
-          <p>Patients and approved doctors sign in here. Doctor applicants can check application status in the doctor portal.</p>
-          <a href="signup.html">Create a patient account</a> · <a href="doctor-apply.html">Apply as a doctor</a>
-
-          <div class="divider">or</div>
-          <button class="google-login" type="button" disabled aria-disabled="true" title="Google sign-in is not configured">
-            <img src="./Asset/Login/google1.png" alt="Google" class="google"> Google login coming soon
-          </button>
-        </form>
-      </div>
-    </div>
     <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js"></script>
-    <script src="./Scripts/form-validation.js" defer></script>
-    <script src="./Scripts/login.js" defer></script>
   </body>
 </html>

@@ -1,44 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HelloDoc | Doctor portal</title>
-  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
-  <link rel="stylesheet" href="/Styles/app.css?v=blue2">
-  <link rel="stylesheet" href="/Styles/signup.css?v=blue2">
-</head>
-<body>
-  <nav class="navbar"><div class="container navbar-inner">
-    <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo"></a>
-    <ul class="nav-links"><li><a href="index.html" class="nav-link">Home</a></li><li><a href="doctor-portal.html" class="nav-link active" aria-current="page">Doctor portal</a></li><li><a href="demo.html" class="nav-link">Demo mode</a></li></ul>
-    <div class="navbar-actions"><a class="btn btn-ghost" href="index.html?login=doctor">Sign in</a></div>
-  </div></nav>
-  <main class="container" style="padding-block:3rem 5rem;max-width:850px">
-    <section class="signup-card">
-      <p class="eyebrow">For healthcare professionals</p>
-      <h1>Doctor portal</h1>
-      <p class="form-sub">Create a separate doctor-applicant account. You do not need a patient account. Your application will remain pending until an administrator independently verifies your professional credentials.</p>
-      <form id="doctorApplicationForm" class="signup-form" novalidate>
-        <div class="lower">
-          <div class="name">
-            <div class="form-grp"><label for="firstName">First name</label><input id="firstName" name="firstName" autocomplete="given-name" required maxlength="100"></div>
-            <div class="form-grp"><label for="lastName">Last name</label><input id="lastName" name="lastName" autocomplete="family-name" required maxlength="100"></div>
-          </div>
-          <div class="form-grp"><label for="email">Work email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="254"></div>
-          <div class="form-grp"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required><small>Use at least 8 characters.</small></div>
-          <hr>
-          <div class="form-grp"><label for="specialty">Medical specialty</label><input id="specialty" name="specialty" required minlength="2" maxlength="120" placeholder="e.g. General practice"></div>
-          <div class="form-grp"><label for="licenseNumber">Professional licence number</label><input id="licenseNumber" name="licenseNumber" required minlength="3" maxlength="120" autocomplete="off"></div>
-          <div class="form-grp"><label for="qualifications">Qualifications</label><textarea id="qualifications" name="qualifications" required minlength="5" maxlength="2000" rows="3" placeholder="Relevant qualifications and training"></textarea></div>
-          <div class="form-grp"><label for="evidenceReference">Verification evidence reference</label><textarea id="evidenceReference" name="evidenceReference" required minlength="5" maxlength="1000" rows="2" placeholder="Licensing registry reference or secure evidence location. Do not include patient information."></textarea></div>
-          <div class="form-summary" id="applicationMessage" role="status" aria-live="polite"></div>
-          <button class="btn btn-primary" type="submit">Create doctor account and apply</button>
-          <p class="muted">Submitting does not grant clinical access. Approved doctors use the same sign-in page and are directed to their doctor workspace.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelloDoc | Doctor sign up</title>
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content="0; url=signup.html?role=doctor" />
+    <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
+    <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container navbar-inner">
+        <a href="index.html" class="navbar-brand"><img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" /></a>
+        <div class="navbar-actions">
+          <a href="login.html" class="btn btn-ghost">Login</a>
+          <a href="signup.html" class="btn btn-primary">Sign Up</a>
         </div>
-      </form>
-      <div id="applicationStatus" hidden></div>
-    </section>
-  </main>
-  <script src="/Scripts/doctor-apply.js"></script>
-</body>
+      </div>
+    </nav>
+    <main class="auth-page">
+      <section class="auth-card">
+        <h1>Doctor registration has moved</h1>
+        <p class="auth-sub">Doctor sign up now lives on the shared sign-up page. Pick <strong>Doctor Sign Up</strong> there.</p>
+        <p><a class="btn btn-primary" href="signup.html?role=doctor">Continue to Doctor Sign Up</a></p>
+      </section>
+    </main>
+    <script>window.location.replace('signup.html?role=doctor');</script>
+  </body>
 </html>

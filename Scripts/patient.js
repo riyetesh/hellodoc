@@ -15,7 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   try {
     const response = await fetch('/api/patient/overview', { credentials:'same-origin' });
-    if (!response.ok) throw new Error(response.status === 401 ? 'Log in to view your health portal.' : response.status === 403 ? 'This portal is for patients only.' : 'Health information is unavailable. Please try again later.');
+    if (response.status === 401) {
+      // Session expired or never started: send the visitor back to the patient
+      // login instead of leaving a dead panel on screen.
+      $('#portalMessage').textContent = 'Your session has ended. Taking you to the patient login…';
+      setTimeout(() => window.location.replace('login.html?role=patient'), 1200);
+      return;
+    }
+    if (!response.ok) throw new Error(response.status === 403 ? 'This portal is for patient accounts only.' : 'Health information is unavailable. Please try again later.');
     const data = await response.json();
     $('#greeting').textContent = `Hello, ${data.profile.firstName}`;
     $('#profile').textContent = `${data.profile.firstName} ${data.profile.lastName} · ${data.profile.email}`;
@@ -23,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#nextVisit').textContent = upcoming.length ? `Next visit: ${upcoming[0].doctorName} on ${date(upcoming[0].startsAt)} (${upcoming[0].status}).` : 'No upcoming visits. Find a doctor to request an appointment.';
     const metrics = data.metrics;
     $('#visitMetrics').textContent = metrics ? `Your appointments: ${metrics.upcoming} upcoming, ${metrics.completed} completed, ${metrics.cancelled} cancelled.` : 'Appointment metrics unavailable.';
-    $('#tasks').textContent = 'No tasks available during migration.';
+    $('#tasks').textContent = 'No follow-up tasks are assigned to you.';
     list('#visits',upcoming,(a) => [a.doctorName,`${date(a.startsAt)} · ${a.status}`],'No upcoming appointments.');
     list('#history',data.appointments.filter((a) => !upcoming.includes(a)),(a) => [a.doctorName,`${date(a.startsAt)} · ${a.status}`],'No past visits yet.');
     $('#portal').hidden = false; $('#portalMessage').hidden = true;
