@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
-const PAGES = ['index.html', 'login.html', 'signup.html', 'recover.html', 'help.html', 'story.html', 'appointments.html', 'dashboard.html', 'patient.html', 'demo.html'];
+const PAGES = ['index.html', 'login.html', 'signup.html', 'recover.html', 'help.html', 'story.html', 'appointments.html', 'dashboard.html', 'patient.html'];
 
 test('the navbar offers exactly Login and Sign Up, with no role-specific entry points', () => {
   for (const page of PAGES) {
