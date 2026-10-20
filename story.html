@@ -435,12 +435,14 @@
             <li>scikit learn</li>
             <li>NumPy</li>
             <li>pandas</li>
-            <li>MySQL</li>
-            <li>Vercel</li>
+            <li>Supabase</li>
+            <li>PostgreSQL</li>
+            <li>Vercel services config</li>
           </ul>
           <p class="hs-note">
-            Accounts additionally use bcrypt password hashing, JSON Web Tokens, and server side
-            sessions. A separate React + Vite chatbot app lives in the repository and talks to a
+            Accounts are handled by Supabase Auth. The Express API verifies the session and keeps
+            tokens in HTTP only cookies, so no database key or password hash is exposed to browser
+            JavaScript. A separate React + Vite chatbot app lives in the repository and talks to a
             generative API endpoint configured through an environment variable.
           </p>
 
@@ -459,8 +461,9 @@
           <div class="hs-subsection" id="architecture">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-arch-title">How a symptom check travels through the system</h3>
             <p class="hs-prose__intro">
-              Select a step to read what it does, or play the flow to watch the sequence. The account
-              lane is shown separately because signing in and predicting are independent paths.
+              Select a step to read what it does, or play the flow to watch the sequence. An
+              assessment requires an approved doctor and an appointment, so the account lane is shown
+              separately from the model path.
             </p>
 
             <div class="hs-diagram" data-diagram>
@@ -473,24 +476,24 @@
               </div>
 
               <div class="hs-lane">
-                <h4 class="hs-lane__title">Prediction path <span>/predict</span></h4>
+                <h4 class="hs-lane__title">Assessment path <span>/api/doctor/assessments</span></h4>
                 <ol class="hs-flow">
                   <li>
                     <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-browser">
                       <span class="hs-node__tag">Browser</span>
-                      <span class="hs-node__name">Symptom form</span>
+                      <span class="hs-node__name">Doctor assessment form</span>
                     </button>
                   </li>
                   <li>
                     <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-routing">
                       <span class="hs-node__tag">Routing</span>
-                      <span class="hs-node__name">Express proxy or Vercel rewrite</span>
+                      <span class="hs-node__name">Express API</span>
                     </button>
                   </li>
                   <li>
                     <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-flask">
                       <span class="hs-node__tag">Python</span>
-                      <span class="hs-node__name">Flask /predict</span>
+                      <span class="hs-node__name">Private model service</span>
                     </button>
                   </li>
                   <li>
@@ -514,13 +517,13 @@
                   <li>
                     <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-lookup">
                       <span class="hs-node__tag">Lookup</span>
-                      <span class="hs-node__name">Dataset records</span>
+                      <span class="hs-node__name">Dataset rows</span>
                     </button>
                   </li>
                   <li>
                     <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-results">
                       <span class="hs-node__tag">Response</span>
-                      <span class="hs-node__name">Results page</span>
+                      <span class="hs-node__name">Assessment record and PDF</span>
                     </button>
                   </li>
                 </ol>
@@ -536,15 +539,15 @@
                     </button>
                   </li>
                   <li>
-                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-mysql">
-                      <span class="hs-node__tag">MySQL</span>
-                      <span class="hs-node__name">Users table</span>
+                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-supabase">
+                      <span class="hs-node__tag">Supabase</span>
+                      <span class="hs-node__name">Auth and profiles</span>
                     </button>
                   </li>
                 </ol>
                 <p class="hs-note hs-note--tight">
-                  This lane never touches the classifier, and a symptom check never requires an
-                  account.
+                  This lane controls who may open an assessment. The model service never sees an
+                  account, a patient name or a clinical note.
                 </p>
               </div>
 
@@ -557,29 +560,31 @@
               <!-- Detail copy kept in the document so nothing depends on JS-generated text -->
               <div hidden data-detail-source>
                 <div id="flow-browser">
-                  <h5>Symptom form</h5>
+                  <h5>Doctor assessment form</h5>
                   <p>
-                    The predictor page collects symptoms and posts them to <code>/predict</code>. In
-                    the current build the input is a tag field that accepts one symptom name at a
-                    time, up to four.
+                    An approved doctor opens an appointment, then records patient reported symptoms,
+                    doctor observed symptoms and free text observations. Only the exact 132 symptom
+                    identifiers are sent for prediction; free text stays out of the model and stays in
+                    the clinical record.
                   </p>
                 </div>
                 <div id="flow-routing">
                   <h5>Routing</h5>
                   <p>
-                    Locally, <code>backend/server.js</code> serves the static site and proxies
-                    <code>/predict</code> and <code>/static</code> to the Flask service on
-                    <code>127.0.0.1:5001</code>. In production, <code>vercel.json</code> routes
-                    <code>/api/*</code> to the Express service and everything else to the Flask app
-                    service, so there is no proxy hop.
+                    Locally, <code>backend/server.js</code> serves the static site and the API, and
+                    starts the private Flask service on <code>127.0.0.1:5001</code>. The Vercel
+                    configuration routes <code>/api/*</code> to the Express service and
+                    everything else to a static build, but no Python model is deployed there, so
+                    prediction routes fail closed until an external model origin is configured.
                   </p>
                 </div>
                 <div id="flow-flask">
-                  <h5>Flask /predict</h5>
+                  <h5>Private model service</h5>
                   <p>
-                    <code>Algo/main.py</code> exposes <code>GET</code> and <code>POST</code>
-                    <code>/predict</code>. It splits the submitted string on commas, strips each
-                    entry, and passes the list to the prediction helper.
+                    <code>Algo/main.py</code> accepts token protected <code>/internal/assess</code>
+                    requests. Its public <code>/predict</code> route returns 403, so the classifier is
+                    reachable only from the Express backend. The shared token is read from the
+                    environment and never reaches the browser.
                   </p>
                 </div>
                 <div id="flow-vector">
@@ -587,7 +592,8 @@
                   <p>
                     A dictionary maps each known symptom name to a position. The service builds a
                     zero filled array of 132 positions and sets a 1 for every recognised symptom, so
-                    the model receives a sparse binary vector. Unknown names are simply ignored.
+                    the model receives a sparse binary vector. Unknown names are rejected before
+                    prediction rather than silently ignored.
                   </p>
                 </div>
                 <div id="flow-model">
@@ -609,35 +615,39 @@
                   </p>
                 </div>
                 <div id="flow-lookup">
-                  <h5>Dataset records</h5>
+                  <h5>Dataset rows</h5>
                   <p>
                     The predicted name is used to filter pandas data frames for a description,
-                    precautions, medications, diet, and workout guidance. These are lookups on
-                    reference tables, not further machine learning inference.
+                    precautions, medications, diet, and workout guidance. These rows are general
+                    reference content, not a prescription or a plan for this patient, and the page
+                    labels them as requiring clinician review.
                   </p>
                 </div>
                 <div id="flow-results">
-                  <h5>Results page</h5>
+                  <h5>Assessment record and PDF</h5>
                   <p>
-                    Flask renders the results template with the prediction and the retrieved rows and
-                    sends the finished page back to the browser.
+                    Express stores the prediction beside the doctor's own assessment and plan. The
+                    assessment page reloads that stored record, and the PDF is generated from the
+                    same row. The model output cannot be edited; editing symptoms creates a new
+                    revision and leaves the earlier prediction unchanged.
                   </p>
                 </div>
                 <div id="auth-express">
                   <h5>Express authentication</h5>
                   <p>
-                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/current user</code>,
-                    and <code>/logout</code> hash passwords with bcrypt, issue a JSON Web Token, and
-                    keep a server side session. The legacy <code>/auth/*</code> prefix is mounted on
-                    the same router.
+                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/recover</code> and
+                    <code>/logout</code> call Supabase Auth with the public key, then set HTTP only
+                    session cookies. State changing requests also require the trusted application
+                    origin. The browser never receives a Supabase key or a service role secret.
                   </p>
                 </div>
-                <div id="auth-mysql">
-                  <h5>MySQL users table</h5>
+                <div id="auth-supabase">
+                  <h5>Supabase Auth and profiles</h5>
                   <p>
-                    Accounts are stored in MySQL through a connection pool. Credentials come from
-                    environment variables, never from the repository, and the pool is created lazily
-                    so the service can still boot when the database is unreachable.
+                    Supabase stores credentials and the <code>profiles</code> table, which carries the
+                    role, suspension flag and doctor verification status. Row level security scopes
+                    appointments, assessments and notes to the signed in patient, doctor or
+                    administrator.
                   </p>
                 </div>
               </div>
@@ -818,10 +828,11 @@
                 <summary>Frontend structure</summary>
                 <div class="hs-details__body">
                   <p>
-                    The main site is plain HTML, CSS, and JavaScript with no build step: shared
+                    The main site is plain HTML, CSS and JavaScript with no build step: shared
                     styling tokens live in <code>Styles/app.css</code>, shared navbar behaviour in
-                    <code>Scripts/nav.js</code>, and each page adds its own stylesheet. The symptom
-                    predictor is a separate Flask template with its own stylesheet.
+                    <code>Scripts/nav.js</code>, and each page adds its own stylesheet. The doctor
+                    assessment page is part of this static site. Older Flask templates remain in
+                    <code>Algo/templates</code> but are not served.
                   </p>
                 </div>
               </details>
@@ -830,10 +841,10 @@
                 <summary>Express backend and API responsibilities</summary>
                 <div class="hs-details__body">
                   <p>
-                    <code>backend/server.js</code> owns accounts, sessions, and development routing.
-                    It also serves the static site locally and proxies prediction requests to Flask.
-                    Database errors are caught and returned as a plain 503 rather than leaking
-                    internals to the client.
+                    <code>backend/production.js</code> exposes the API with no static files, and
+                    <code>backend/server.js</code> adds local static serving plus the Flask autostart.
+                    Account data, sessions and roles come from Supabase. Database errors are logged
+                    by event name and returned as a plain 503 rather than leaking internals.
                   </p>
                 </div>
               </details>
@@ -851,13 +862,13 @@
               </details>
 
               <details class="hs-details">
-                <summary>MySQL backed account functionality</summary>
+                <summary>Supabase accounts and row level security</summary>
                 <div class="hs-details__body">
                   <p>
-                    Account records live in a <code>users</code> table reached through a
-                    <code>mysql2</code> connection pool. Connection details and secrets are read from
-                    environment variables; the pool is created lazily so the service can start even if
-                    the database is unavailable.
+                    Supabase Auth holds credentials and the <code>profiles</code> table holds role,
+                    suspension and verification state. The server uses the public publishable key;
+                    the service role key is only accepted by the one time administrator bootstrap
+                    script and is never loaded by a web handler.
                   </p>
                 </div>
               </details>
@@ -866,11 +877,11 @@
                 <summary>Authentication mechanisms</summary>
                 <div class="hs-details__body">
                   <p>
-                    Passwords are hashed with bcrypt. A successful login issues a JSON Web Token with
-                    a configurable expiry and also records a server side session in an
-                    <code>httpOnly</code> cookie. Login failures return the same message whether the
-                    address is unknown or the password is wrong, so the API does not reveal which
-                    emails are registered.
+                    Supabase Auth verifies the password and returns a session. Express keeps the
+                    access and refresh tokens in <code>httpOnly</code>, <code>SameSite=Lax</code>
+                    cookies that are marked <code>Secure</code> when the trusted origin is HTTPS.
+                    Login failures do not reveal whether an email exists. Every protected route
+                    rechecks the database role, suspension flag and doctor approval.
                   </p>
                 </div>
               </details>
@@ -894,7 +905,9 @@
                   <p>
                     Reference tables are read once into pandas data frames. After a prediction, the
                     helper filters those frames by disease name to assemble the description,
-                    precautions, medications, diet, and workout sections shown on the results page.
+                    precautions, medications, diet and workout sections shown on the assessment page
+                    and in the PDF. They describe the dataset row, not this patient, and are labelled
+                    as general guidance requiring clinician review.
                   </p>
                 </div>
               </details>
@@ -903,11 +916,11 @@
                 <summary>Deployment architecture</summary>
                 <div class="hs-details__body">
                   <p>
-                    <code>vercel.json</code> declares four services: the root Flask app, the
-                    <code>Algo</code> Flask service, the Express backend, and the chatbot. Rewrites
-                    send <code>/api/*</code> to the backend and every other path to the root app. The
-                    prediction service therefore runs as its own deployment unit rather than as part
-                    of the account backend.
+                    <code>vercel.json</code> declares two services: an Express API and a static web
+                    build. Rewrites send <code>/api/*</code> to the API and every other path to the
+                    static output. The Flask model is not deployed, so a Vercel environment must
+                    point at a separate private model service or prediction routes stay unavailable.
+                    This configuration has not been verified on a live Vercel project.
                   </p>
                 </div>
               </details>
@@ -939,7 +952,8 @@
               <p class="hs-builder__lead">
                 HelloDoc is designed, built, and maintained by one developer today. What started as a
                 simple idea to make healthcare accessible from home grew into a full featured web app
-                with doctor search, appointment booking, symptom prediction, and user authentication.
+                with doctor search, appointment booking, a doctor led symptom assessment and user
+                authentication.
               </p>
               <p>
                 I designed the interface from scratch and implemented the login and signup flows with
@@ -958,6 +972,15 @@
             <summary>What still needs work</summary>
             <div class="hs-details__body">
               <ul class="hs-list">
+                <li>
+                  <strong>Patient facing results.</strong> Assessments are stored and a doctor can
+                  download a PDF, but a patient cannot open a clinical result in the portal yet.
+                </li>
+                <li>
+                  <strong>Public symptom checks.</strong> The public checker is withdrawn. Reopening
+                  it would need validation, safety review and a clear path into care, not only a
+                  working model.
+                </li>
                 <li>
                   <strong>Model validation.</strong> Evaluate the classifier on data that reflects
                   real presentation, not only the dataset it was trained on, and report honest

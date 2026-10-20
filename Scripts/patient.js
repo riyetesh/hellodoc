@@ -22,7 +22,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => window.location.replace('login.html?role=patient'), 1200);
       return;
     }
-    if (!response.ok) throw new Error(response.status === 403 ? 'This portal is for patient accounts only.' : 'Health information is unavailable. Please try again later.');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      // A suspended account is not an authorization mistake; keep the reason on
+      // screen instead of suggesting the wrong portal or redirecting.
+      if (body.code === 'ACCOUNT_SUSPENDED') {
+        $('#portalMessage').textContent = body.message || 'Account restricted. Contact HelloDoc support.';
+        return;
+      }
+      throw new Error(response.status === 403 ? 'This portal is for patient accounts only.' : 'Health information is unavailable. Please try again later.');
+    }
     const data = await response.json();
     $('#greeting').textContent = `Hello, ${data.profile.firstName}`;
     $('#profile').textContent = `${data.profile.firstName} ${data.profile.lastName} · ${data.profile.email}`;
@@ -30,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#nextVisit').textContent = upcoming.length ? `Next visit: ${upcoming[0].doctorName} on ${date(upcoming[0].startsAt)} (${upcoming[0].status}).` : 'No upcoming visits. Find a doctor to request an appointment.';
     const metrics = data.metrics;
     $('#visitMetrics').textContent = metrics ? `Your appointments: ${metrics.upcoming} upcoming, ${metrics.completed} completed, ${metrics.cancelled} cancelled.` : 'Appointment metrics unavailable.';
-    $('#tasks').textContent = 'No follow-up tasks are assigned to you.';
+    $('#tasks').textContent = 'No follow up tasks are available in this prototype.';
     list('#visits',upcoming,(a) => [a.doctorName,`${date(a.startsAt)} · ${a.status}`],'No upcoming appointments.');
     list('#history',data.appointments.filter((a) => !upcoming.includes(a)),(a) => [a.doctorName,`${date(a.startsAt)} · ${a.status}`],'No past visits yet.');
     $('#portal').hidden = false; $('#portalMessage').hidden = true;

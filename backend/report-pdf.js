@@ -261,7 +261,7 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
   }
   doc.paragraph(assessment.description || 'No description is available for this condition.', { gray: 0.2 });
 
-  doc.heading('Guidance from the model');
+  doc.heading('Guidance from the dataset');
   doc.paragraph('General dataset-associated guidance requiring clinician review. It is not a prescription, dose or individually validated treatment plan.', { size: 9, gray: 0.4 });
   doc.subheading('Precautions');
   doc.bullets(assessment.precautions, 'No precautions were available.');

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HelloDoc | Help</title>
-    <meta name="description" content="Answers to common questions about HelloDoc: booking and cancelling appointments, finding a doctor, symptom checks, accounts and privacy." />
+    <meta name="description" content="Answers to common questions about HelloDoc: booking and cancelling appointments, finding a doctor, accounts, privacy and the limits of the experimental assessment model." />
     <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="./Styles/help.css?v=blue2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
@@ -92,28 +92,28 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How do I create an account?</button>
         <div class="accordion-panel">
-          <p>Click Sign Up, enter your name, email, and password, and follow the steps to register.</p>
+          <p>Click Sign Up, choose Patient or Doctor, and enter your name, email and password. Doctor accounts also require professional details for review.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How can I update my account information?</button>
         <div class="accordion-panel">
-          <p>Go to Account Settings in your dashboard to edit your details.</p>
+          <p>The patient page currently has no profile editor. Ask support to correct your account details. Doctors can resubmit professional details from the doctor dashboard.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What do I do if I forget my password?</button>
         <div class="accordion-panel">
-          <p>Click Forgot Password? on the login page and follow the steps to reset it.</p>
+          <p>Use the recovery link on the login page. HelloDoc asks Supabase to send an email; delivery depends on the project mail settings. If nothing arrives, contact support.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Can I delete my account?</button>
         <div class="accordion-panel">
-          <p>Yes. You can delete your account via Account Settings or by contacting support.</p>
+          <p>Self service account deletion is not available in this prototype. Contact support to request removal.</p>
         </div>
       </div>
 
@@ -127,14 +127,14 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How do I log out of my account?</button>
         <div class="accordion-panel">
-          <p>Use the logout control in your dashboard or profile menu. Your session ends immediately.</p>
+          <p>Use the logout control on your dashboard. The session cookie is cleared and the server attempts to revoke the Supabase session.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What happens to my data if I delete my account?</button>
         <div class="accordion-panel">
-          <p>Your account and personal data are permanently deleted within 30 days of your request.</p>
+          <p>There is no automatic deletion or retention period yet. A removal request is handled manually and is not instant.</p>
         </div>
       </div>
     </div>
@@ -164,28 +164,28 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Can I reschedule my appointment?</button>
         <div class="accordion-panel">
-          <p>Yes. You can reschedule through the My Appointments section of your dashboard.</p>
+          <p>No. Cancel the booking from My Appointments and request a new slot from the doctor directory.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Is there a fee for cancelling an appointment?</button>
         <div class="accordion-panel">
-          <p>Cancellation policies depend on the doctor’s terms. Check the cancellation terms when booking.</p>
+          <p>HelloDoc does not collect payment in this prototype, so no cancellation fee is charged.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Can I book an appointment for someone else?</button>
         <div class="accordion-panel">
-          <p>Yes. You can book for a family member or friend by entering their details during booking.</p>
+          <p>No. A booking is attached to the signed in patient account, and there is no field for another person.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How do I know if my appointment is confirmed?</button>
         <div class="accordion-panel">
-          <p>Once your booking is confirmed, you will receive a confirmation and an email with the appointment details.</p>
+          <p>Open My Appointments. The booking appears with status pending or confirmed. HelloDoc does not send email or SMS notifications.</p>
         </div>
       </div>
     </div>
@@ -207,35 +207,35 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What information do you collect from users?</button>
         <div class="accordion-panel">
-          <p>We collect basic information such as name, email, and phone number during registration, as well as details relevant to your use of the platform.</p>
+          <p>Registration stores your name, email and optional phone number. A booking stores the reason you type, and an assessment stores the symptoms and clinical notes a doctor records.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How is my personal information used?</button>
         <div class="accordion-panel">
-          <p>Your information is used to provide services, such as managing appointments and improving the user experience.</p>
+          <p>Your information is used to sign you in, manage appointments and show a doctor the consultation you booked. It is not used to train the model.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Is my data shared with third parties?</button>
         <div class="accordion-panel">
-          <p>Your data is not shared with third parties without your consent, except as required by law or to provide essential services.</p>
+          <p>Supabase hosts authentication and the database. Apart from that processor and legal requirements, the prototype does not share your data.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How can I request the deletion of my data?</button>
         <div class="accordion-panel">
-          <p>You can request data deletion by contacting support. Once processed, your data will be permanently removed from our systems.</p>
+          <p>Contact support to request deletion. There is no self service delete action, and no automatic retention period has been implemented.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Where can I find your terms of service and privacy policy?</button>
         <div class="accordion-panel">
-          <p>Our terms of service and privacy policy are available in the website footer and in the Privacy and Legal section of your account.</p>
+          <p>This prototype has no separate terms of service or privacy policy page. Use the contact details below for questions.</p>
         </div>
       </div>
     </div>
@@ -271,14 +271,14 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Why is the app running slowly?</button>
         <div class="accordion-panel">
-          <p>This may be due to high server traffic or a slow internet connection. Make sure you are using the latest version of the app.</p>
+          <p>This may be due to server load or a slow connection. Reload the page and try again later.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How do I report a technical issue?</button>
         <div class="accordion-panel">
-          <p>You can report issues through the Support section in the app or website, including screenshots or details of the problem.</p>
+          <p>Use the email address or phone number below. There is no in app support form or ticket system.</p>
         </div>
       </div>
 
@@ -299,21 +299,21 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What accessibility features does the platform offer?</button>
         <div class="accordion-panel">
-          <p>We support keyboard navigation, screen readers, and high contrast text across all pages.</p>
+          <p>Pages use labelled forms, keyboard navigation and visible focus styles. A formal WCAG audit has not been completed.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How do I request a refund for a cancelled appointment?</button>
         <div class="accordion-panel">
-          <p>Refund eligibility depends on the cancellation terms set by the doctor. Contact support for assistance.</p>
+          <p>HelloDoc does not take payments, so there is nothing to refund.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Can I leave a review for a doctor after my appointment?</button>
         <div class="accordion-panel">
-          <p>Yes. You can rate and review doctors from your appointment history to help other patients.</p>
+          <p>No. Ratings and reviews are not implemented.</p>
         </div>
       </div>
     </div>
@@ -336,35 +336,35 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What is this platform about?</button>
         <div class="accordion-panel">
-          <p>This platform connects patients with doctors, allowing users to book appointments, access medical records, and communicate for follow up queries.</p>
+          <p>HelloDoc connects patients with approved doctors for appointment booking. During a visit a doctor can record an experimental model assisted assessment. It does not provide emergency care, prescriptions or messaging.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How can I get in touch with support?</button>
         <div class="accordion-panel">
-          <p>You can contact support through the Contact section on the website or through our customer service number in the app.</p>
+          <p>Use the email address or phone number in the Contact panel below.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Is this platform available globally?</button>
         <div class="accordion-panel">
-          <p>Currently, our services are available in select countries. Check the availability on the website or app for your region.</p>
+          <p>HelloDoc is a prototype, not a live service offered in any region.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">What services are offered through this platform?</button>
         <div class="accordion-panel">
-          <p>Our platform offers appointment scheduling, doctor search, medical records management, and follow up messaging services.</p>
+          <p>Doctor search, appointment booking and cancellation, doctor verification, and a doctor led assessment record with PDF export. Prescriptions, payments and messaging are not available.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How can I provide feedback about my experience?</button>
         <div class="accordion-panel">
-          <p>You can submit feedback through the Feedback section on the app or website, where you can rate your experience and share suggestions.</p>
+          <p>Use the email link at the bottom of this page. There is no in app feedback form.</p>
         </div>
       </div>
     </div>
@@ -386,7 +386,7 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">How can I contact customer support?</button>
         <div class="accordion-panel">
-          <p>You can contact customer support through the Contact section on the website or the app. You can also reach us by email or our support hotline.</p>
+          <p>Use the email address or phone number below. These are the only support channels in this prototype.</p>
         </div>
       </div>
 
@@ -400,7 +400,7 @@
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">Can I contact support outside working hours?</button>
         <div class="accordion-panel">
-          <p>Yes. You can send an email or use the support form at any time, and we will respond as soon as possible during working hours.</p>
+          <p>You can send an email or leave a phone message at any time. Replies happen during working hours.</p>
         </div>
       </div>
 
@@ -438,17 +438,19 @@
         <button class="accordion" aria-expanded="false">For Patients</button>
         <div class="accordion-panel">
           <p><strong>How do I create an account?</strong> Create an account by clicking the Sign Up button on the homepage. You can register with your email address.</p>
-          <p><strong>How can I search for a doctor?</strong> Use the search bar on the homepage to look for doctors by symptom, location, or speciality.</p>
-          <p><strong>How do I book an appointment?</strong> Select a doctor from the search results, choose an available time slot, and confirm your appointment.</p>
+          <p><strong>How can I search for a doctor?</strong> Use the search bar on the Find a doctor page to filter by doctor name, speciality or language. Search by symptom or location is not available.</p>
+          <p><strong>How do I book an appointment?</strong> Select a doctor from the results, choose a free time slot, and confirm the request.</p>
+          <p><strong>Can I check symptoms without an account?</strong> No. The public symptom checker has been withdrawn. The experimental model runs only inside the doctor assessment workflow for an appointment.</p>
+          <p><strong>Are results a diagnosis?</strong> No. The model returns one condition label with no calibrated confidence. It is decision support, and the doctor's own assessment is stored separately.</p>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion" aria-expanded="false">For Doctors</button>
         <div class="accordion-panel">
-          <p><strong>How do I register as a doctor?</strong> Click on Register as a Doctor on the homepage. Provide your medical credentials and complete the verification process.</p>
-          <p><strong>What credentials are required?</strong> You need a valid medical license and proof of identity to register as an authorised doctor.</p>
-          <p><strong>How do I update my doctor profile?</strong> Use the profile settings in your dashboard to edit your speciality, experience, and hourly fee.</p>
+          <p><strong>How do I register as a doctor?</strong> Use Join as a doctor on the home page, choose the Doctor tab, and enter your professional details. An administrator reviews them before clinical tools unlock.</p>
+          <p><strong>What credentials are required?</strong> Specialty, registration or licence number, institution, years of experience and a written qualifications summary. No documents are uploaded in this prototype.</p>
+          <p><strong>How do I update my doctor profile?</strong> Resubmit professional details from the doctor dashboard while a review is pending or was rejected. An administrator updates the consultation fee and whether you are accepting appointments.</p>
         </div>
       </div>
     </div>
@@ -460,8 +462,8 @@
         <div class="help-feedback__inner">
           <h2 class="section-title" style="margin-bottom:0.5rem">Feedback and suggestions</h2>
           <p class="lead">
-            We value your input and use it to improve the platform. Please share your thoughts using the
-            feedback form or contact us.
+            We value your input and use it to improve the platform. There is no feedback form in
+            this prototype, so please use the email link below.
           </p>
           <a href="mailto:hi@hellodoc.com" class="btn btn-primary">
             Give feedback

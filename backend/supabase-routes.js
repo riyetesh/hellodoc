@@ -364,7 +364,10 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const doctors = new Map(directory.data.map((d) => [d.id,d]));
     res.json({ profile: { firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email },
       appointments: result.data.map((a) => ({ id:a.id, doctorName:doctors.get(a.doctor_id)?.name || 'Doctor', specialty:doctors.get(a.doctor_id)?.specialty || 'Consultation', startsAt:a.scheduled_start, status:a.status, reason:a.reason })),
-      metrics: activity.data, symptoms:[], assessments:[], carePlans:[], prescriptions:[], notifications:[] });
+      // Only implemented data is returned. Clinical results, care plans,
+      // prescriptions, notifications and tasks have no backing yet, so they are
+      // omitted rather than sent as convincing empty arrays.
+      metrics: activity.data });
   }));
   router.post('/patient/appointments', ...guard('patient', async (req, res, { db }) => {
     const { slotId, idempotencyKey, reason = '' } = req.body || {};
@@ -669,7 +672,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const patients = ids.length ? await db.rpc('assigned_patient_names') : { data:[],error:null };
     if (patients.error) return res.status(503).json({ message:'Dashboard unavailable' });
     const names = new Map(patients.data.map((p) => [p.id,p.full_name]));
-    res.json({ appointments:result.data.map((a) => ({ id:a.id, startsAt:a.scheduled_start,status:a.status,reason:a.reason, firstName:names.get(a.patient_id) || 'Patient' })), tasks:[],drafts:[] });
+    res.json({ appointments:result.data.map((a) => ({ id:a.id, startsAt:a.scheduled_start,status:a.status,reason:a.reason, firstName:names.get(a.patient_id) || 'Patient' })) });
   }));
   router.get('/doctor/appointments/:id', ...guard('doctor', async (req, res, { db, user }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message:'Invalid appointment' });
@@ -677,7 +680,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return res.status(404).json({ message:'Appointment not found' });
     const people = await db.rpc('assigned_patient_names');
     if (people.error) return res.status(503).json({message:'Patient unavailable'});
-    res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:people.data.find((p) => p.id===result.data.patient_id)?.full_name || 'Patient' }, symptoms:[],history:[],assessments:[],plans:[],prescriptions:[],predictions:[],tasks:[] });
+    res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:people.data.find((p) => p.id===result.data.patient_id)?.full_name || 'Patient' } });
   }));
   router.patch('/doctor/appointments/:id/status', ...guard('doctor', async (req, res, { db }) => {
     if (!isUuid(req.params.id) || !['confirmed','cancelled','completed','no_show'].includes(req.body?.status)) return res.status(400).json({ message:'Invalid status' });

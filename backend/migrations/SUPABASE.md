@@ -139,7 +139,7 @@ RLS enabled on every public application table. No ordinary client writes bypass 
 
 ## Bookings
 
-Appointments persist in PostgreSQL, not localStorage. Eligible approved clinicians + future open slots only. Thirty-minute UTC timestamptz slots; exclusion constraints protect both clinician and patient overlapping pending/confirmed ranges. Slot lock and account lock protect booking against competing reservations/suspension; per-patient advisory lock serializes retries. Same idempotency key returns the same booking. Patients cannot confirm; doctors can confirm/cancel assigned future appointments, complete/no-show confirmed finished appointments. No fabricated booking confirmations or notifications are emitted. Notifications/clinical tables from the old MySQL implementation are not available in Supabase; corresponding screens show no records, not imported/demo records.
+Appointments persist in PostgreSQL, not localStorage. Eligible approved clinicians + future open slots only. Thirty-minute UTC timestamptz slots; exclusion constraints protect both clinician and patient overlapping pending/confirmed ranges. Slot lock and account lock protect booking against competing reservations/suspension; per-patient advisory lock serializes retries. Same idempotency key returns the same booking. Patients cannot confirm; doctors can confirm/cancel assigned future appointments, complete/no-show confirmed finished appointments. No fabricated booking confirmations or notifications are emitted. Notifications and other clinical tables from the old MySQL implementation are not available in Supabase. The API omits those fields and no screen presents them, rather than showing empty placeholder panels.
 
 ## Checks actually performed
 

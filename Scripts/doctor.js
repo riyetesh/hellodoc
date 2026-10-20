@@ -17,6 +17,7 @@
       // first one may send the doctor back to the sign-in page.
       const error = new Error(body.message || 'Request failed');
       error.status = response.status;
+      error.code = body.code;
       throw error;
     }
     return body;
@@ -204,6 +205,9 @@
       message(error.status === 403 && /^access denied$/i.test(error.message) ? 'Sign in with a doctor account to open this dashboard.' : error.message);
       // A pending doctor, a paused model service or a Supabase 503 is not a
       // sign-out; only an authentication rejection returns to the login page.
+      // A suspended account keeps its explanation on screen instead of being
+      // bounced to a login form that cannot help it.
+      if (error.code === 'ACCOUNT_SUSPENDED' || error.code === 'PROFILE_UNAVAILABLE') return;
       if (error.status === 401 || error.status === 403) setTimeout(() => window.location.assign('login.html?role=doctor'), 1500);
     }
   })();

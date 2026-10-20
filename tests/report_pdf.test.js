@@ -73,8 +73,10 @@ test('no confidence figure is invented when the model supplies none', () => {
 test('guidance is labelled as dataset guidance needing clinician review', () => {
   const text = textOf(renderAssessmentReport(base));
   assert.ok(text.includes('Symptoms used by the model'));
-  assert.ok(text.includes('Guidance from the model'));
+  assert.ok(text.includes('Guidance from the dataset'));
   assert.ok(text.includes('General dataset-associated guidance requiring clinician review.'));
+  // It is reference content looked up by condition, not model inference.
+  assert.equal(text.includes('Guidance from the model'), false);
 });
 
 test('a real confidence figure is shown when present', () => {

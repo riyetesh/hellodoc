@@ -410,7 +410,7 @@ First administrator (one-time, private shell only):
 | --- | --- | --- |
 | 2026-10-20 | Read-only catalog inspection of the connected project | 9 tables/9 RLS, 35 functions, 17 policies, 2 triggers, assessment lineage present |
 | 2026-10-20 | `VERIFY.sql` per-migration markers and privilege checks | all `true` |
-| 2026-10-20 | Node test suite | 62 tests: 58 passed, 4 skipped (live/optional) / 0 failed (see root README) |
+| 2026-10-20 | Node test suite | 68 tests: 64 passed, 4 skipped (live/optional) / 0 failed (see root README) |
 | 2026-10-20 | Python test suite | 64 passed, 14 pre-existing failures in legacy form/navigation tests |
 | 2026-10-20 | Ledger cross-check | ledger is incomplete (009/011/012 missing); objects verified instead |
 

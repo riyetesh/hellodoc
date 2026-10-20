@@ -19,12 +19,14 @@ and clinical review.
 
 ## What works in the code
 
-- **Patient:** registration/login/password recovery, own profile and phone
-  update, doctor directory, booking and cancelling own appointments. The patient
-  dashboard shows visits and appointment metrics; it does not yet show clinical
-  results, prescriptions or care plans.
-- **Doctor:** verification status and resubmission, attendance of assigned
-  appointments, confirmation/completion/no-show/cancellation of visits,
+- **Patient:** registration/login/password recovery, doctor directory, booking
+  and cancelling own appointments. `PATCH /api/patient/profile` updates name and
+  phone, but the patient page has no profile editor yet. The patient dashboard
+  shows visits and appointment metrics only; clinical results, prescriptions,
+  care plans, tasks and notifications are absent from both the page and the API
+  response rather than shown as empty panels.
+- **Doctor:** verification status and resubmission, access to appointments
+  assigned to them, confirmation/completion/no-show/cancellation of visits,
   availability slot creation, 30-day analytics, and the clinical assessment
   workflow:
   - open an appointment and load the server-verified patient and consultation
@@ -43,8 +45,9 @@ and clinical review.
   - save notes with the version that was loaded, so a second tab's newer save
     produces a visible conflict instead of silently overwriting it.
 - **Administrator:** real metrics, paginated patient/doctor/appointment/audit
-  lists, clinician approval/rejection/resubmission requests, suspension and
-  audited appointment cancellation.
+  lists, clinician approval/rejection/resubmission requests, consultation fee and
+  accepting-appointments updates, suspension/reactivation and audited
+  appointment cancellation.
 - **Model:** 132 binary symptom features, 41 conditions, model version hash and
   lookup guidance from the bundled datasets. The serialized linear SVC was
   trained with `probability=False`, so there is **no calibrated probability**;
@@ -52,6 +55,31 @@ and clinical review.
   counts.
 - **Optional chatbot:** a separate Vite/React app in [chatbot](chatbot) that is
   not embedded in the clinical workflow.
+
+## Implementation status
+
+This table is the source of truth for what the interface may claim. "Verified"
+means covered by a local test or a local run; it never means checked against a
+live Supabase project or a deployment.
+
+| Claimed feature | Status | Evidence or limit |
+| --- | --- | --- |
+| Patient signup, login, logout, password recovery | Implemented, not end to end verified | Routes and guards are unit tested with a stubbed Supabase client. Mailbox delivery, confirmation and recovery links were not exercised. |
+| Doctor directory, slot listing, booking, cancellation | Implemented, not end to end verified | UI and API exist; booking tests mock the database RPCs. No disposable project was booked against. |
+| Patient name and phone update | Partially implemented | `PATCH /api/patient/profile` works; the patient page has no profile editor, only a read only summary. |
+| Doctor registration, verification and resubmission | Implemented, not end to end verified | Doctor UI shows pending, rejected and resubmission states; admin approval is wired. No live reviewer flow was run. |
+| Doctor availability, analytics and appointment status changes | Implemented, not end to end verified | Present in the doctor workspace; covered by route tests with mocked RPCs. |
+| Clinical assessment: create, revise, view, download PDF | Implemented, not end to end verified | Appointment bound creation, revision lineage, conflicts and the PDF renderer are tested. No real doctor account completed the flow. |
+| Dataset guidance: precautions, medication, diet, workout | Implemented, locally verified | Sourced by lookup from bundled datasets and labelled as general guidance requiring clinician review on both the page and the PDF. This is not medical advice or a prescription. |
+| Model confidence | Planned or unavailable | The shipped linear SVC was fitted with `probability=False`, so no number is shown and none is inferred. |
+| Patient clinical results, prescriptions, care plans, tasks, notifications | Planned or unavailable | The patient page shows appointments and metrics only, and the API omits these fields instead of returning empty placeholder arrays. Row level security lets a patient read their own assessment row, but no API route or page exposes it yet. |
+| Appointment rescheduling | Planned or unavailable | Patients cancel and book again; there is no reschedule action. |
+| Doctor reviews, ratings, messaging, payments or refunds | Planned or unavailable | No UI, route, table or provider integration exists. |
+| Account deletion | Planned or unavailable | No deletion route, RPC or UI exists, and the help centre now says a request is handled manually. |
+| Public symptom checker | Withdrawn | Express `/predict` and Flask `/predict` return 403; the model is reachable only through the authenticated doctor assessment workflow. |
+| `POST /api/doctor/predict` | Implemented helper, unused by the UI | Returns a single label and model version; the assessment workflow uses `/api/doctor/assessments`. It is not a diagnosis and no page links to it. |
+| Email confirmations and recovery delivery | Depends on Supabase settings, not verified | The UI explains what to do if confirmation is enabled; delivery was not tested. |
+| Vercel deployment | Configured, not production verified | See the deployment status table below. |
 
 ## Repository layout
 
@@ -144,7 +172,10 @@ grant `admin`. Login compares the selected portal with the database role and
 refuses mismatches (`WRONG_PORTAL`) and suspended accounts. A doctor account can
 sign in immediately, but clinical endpoints and RPCs require
 `verification_status = 'approved'`; only an administrator can change that status,
-through audited `/api/admin/actions`.
+through audited `/api/admin/actions`. Every protected request re-reads the
+profile, so a suspension or role change applies on the next request rather than
+when the cookie expires; suspended pages keep the reason on screen instead of
+pretending it is the wrong login portal.
 
 Server-only secrets (`SUPABASE_SERVICE_ROLE_KEY`, `PREDICTION_INTERNAL_TOKEN`) are
 never read by browser code or returned by `/api`.
@@ -162,7 +193,8 @@ never read by browser code or returned by `/api`.
   `/appointments/:id/consultation`, `/availability`, `/analytics`,
   `/symptoms`, `/patients`, `/assessments`, `/assessments/:id`,
   `/assessments/:id/report.pdf`; `POST /api/doctor/availability`,
-  `/assessments`, `/assessments/:id/revision`, `/predict`;
+  `/assessments`, `/assessments/:id/revision`, and the legacy single label helper
+  `/predict` (not used by the interface);
   `PATCH /api/doctor/appointments/:id/status`,
   `/assessments/:id` (doctor assessment/plan only).
 - **Admin:** `GET /api/admin/overview`, `/api/admin/:kind`;
@@ -197,7 +229,7 @@ adds pytest to the runtime requirements.
 
 ```bash
 npm test                    # maintained regression suite: Node + current Python suites
-npm run test:node           # all 62 Node tests (live integration tests skip)
+npm run test:node           # all 68 Node tests (live integration tests skip)
 npm run test:routes         # routes, auth pages, production guards and model transport
 npm run test:assessment     # Supabase assessment, revision and consultation authorization
 npm run test:pdf            # PDF report rendering
@@ -210,7 +242,7 @@ npm run test:live           # live HTTP/Data API checks; skips unless configured
 
 ```bash
 cd backend
-npm test                    # same 62 Node tests, resolved through ../tests
+npm test                    # same 68 Node tests, resolved through ../tests
 npm run test:routes
 npm run test:assessment
 npm run test:pdf
@@ -241,8 +273,9 @@ production credentials, and never put a service-role key in these variables.
 
 ### Current results (2026-10-20)
 
-- **Node:** 58 passed, 4 skipped, 0 failed. This includes build-output, deployment-configuration
-  and private-prediction authorization tests.
+- **Node:** 64 passed, 4 skipped, 0 failed. This includes build-output,
+  deployment-configuration, private-prediction authorization and interface-copy
+  tests.
 - **Maintained Python suite:** 52 passed (`test:python:current`).
 - **Full Python suite:** 65 passed, 13 failed (`test:python`). All 13 failures are
   in `tests/test_form_validation.py`, which guards the retired signup/login
@@ -339,7 +372,7 @@ development is unaffected.
 | Area | Status |
 | --- | --- |
 | Static build from the working tree | **Locally verified** (2026-10-20): build completes, required pages/assets present, no private paths or secret markers. |
-| Node suite (routes, guards, PDF, build, deployment config) | **Locally verified** (2026-10-20): 62 tests, 58 passed, 4 skipped (live), 0 failed. |
+| Node suite (routes, guards, PDF, build, deployment config, interface copy) | **Locally verified** (2026-10-20): 68 tests, 64 passed, 4 skipped (live), 0 failed. |
 | Python suites | **Locally verified** (2026-10-20): maintained subset 52 passed; full suite 65 passed / 13 pre-existing failures in the retired `test_form_validation.py`. |
 | CI workflow | **Configured, not verified from this checkout.** [.github/workflows/tests.yml](.github/workflows/tests.yml) runs the Node suite and a static-build job, plus the maintained Python subset. Treat it as verified only after a green run is visible in Actions. |
 | Vercel production deployment | **Not verified.** No deployment or environment change was made from this workspace; routing, the Services framework setting, environment variables and the live model gap were not exercised on Vercel. |

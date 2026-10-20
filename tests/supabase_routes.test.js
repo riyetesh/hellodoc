@@ -180,6 +180,9 @@ test('patient overview includes only scoped server-side activity',async () => {
   const data=await response.json();
   assert.deepEqual(data.metrics,{upcoming:1,completed:2,cancelled:0});
   assert.ok(calls.some((call) => call.name==='patient_activity'));
+  // Only implemented collections are returned. Empty placeholder arrays used to
+  // imply that symptoms, prescriptions and care plans were simply empty.
+  assert.deepEqual(Object.keys(data).sort(),['appointments','metrics','profile']);
 });
 test('protected booking verifies Auth identity and role; failed writes never succeed',async () => {
   const slotId='33333333-3333-4333-8333-333333333333', idempotencyKey='44444444-4444-4444-8444-444444444444';
@@ -270,6 +273,16 @@ test('pending doctors reach their own dashboard but no clinical endpoint', async
   assert.equal((await post('/api/doctor/predict',{symptoms:['itching']})).status,403);
   profile={...profile,role:'patient'};
   verification={...verification,verification_status:'approved',is_accepting_appointments:true};
+});
+
+test('the doctor dashboard omits task and draft collections it cannot fill', async () => {
+  profile={...profile,role:'doctor',suspended:false};
+  verification={...verification,verification_status:'approved'};
+  const response=await fetch(origin+'/api/doctor/dashboard',{headers:{Cookie:'hd_access=valid'}});
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.deepEqual(Object.keys(data),['appointments']);
+  profile={...profile,role:'patient'};
 });
 
 test('login validates the selected portal against the database role and never grants it', async () => {
