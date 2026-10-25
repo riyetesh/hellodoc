@@ -11,11 +11,14 @@
     />
     <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/home.css?v=blue2" />
 
     
     <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
 </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
     <!-- ===== Shared navbar (canonical block) =====
          Exactly two authentication actions on every page: Login and Sign Up.
          Login opens login.html, which owns the Patient/Doctor/Admin role
@@ -51,56 +54,312 @@
         </div>
       </div>
     </nav>
-    <main class="home-hero">
-      <div class="home-hero-main">
-        <div class="home-copy">
-          <h1>A little help.<br>A healthier you.</h1>
-          <p class="home-lead">Find a doctor and plan a visit. One simple place to start.</p>
-          <div class="home-cta-row">
-            <a href="dashboard.html" class="btn btn-primary">Find a doctor</a>
-            <a href="signup.html?role=doctor" class="btn btn-outline">Join as a doctor</a>
+
+    <main id="main">
+      <!-- ===== Hero: messaging left, visit composition right ===== -->
+      <section class="lp-hero" aria-labelledby="hero-title">
+        <div class="container lp-hero__inner">
+          <div class="lp-hero__copy">
+            <p class="lp-eyebrow">Experimental model assisted assessment. Doctor led decisions.</p>
+            <h1 class="lp-hero__title" id="hero-title">
+              Better healthcare starts with a clearer picture.
+            </h1>
+            <p class="lp-hero__lead">
+              Find an approved doctor, book a slot, and keep the consultation record in
+              one place. The symptom model assists the doctor who sees you. It never
+              makes the decision.
+            </p>
+            <div class="lp-actions">
+              <a class="btn btn-primary btn-lg" href="dashboard.html">Find a doctor</a>
+              <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">Explore for doctors</a>
+            </div>
+            <p class="lp-hero__note">
+              <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
+              <span>Not for emergencies. HelloDoc is a prototype and does not replace a qualified healthcare professional.</span>
+            </p>
+            <a class="lp-builder-link" href="./story.html#builder">
+              Meet the builder
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
           </div>
-          <a href="./story.html#builder" class="contact-btn">Meet the builder</a>
+
+          <!-- Decorative: the same composition is described in the sections below. -->
+          <div class="lp-hero__visual" aria-hidden="true">
+            <div class="home-art">
+              <img src="./Asset/Illustrations/medicine.svg" alt="" class="med-right">
+              <div class="home-art-main">
+                <img src="./Asset/Illustrations/doctor.svg" alt="" class="doc-bottom">
+              </div>
+              <img src="./Asset/Illustrations/care.svg" alt="" class="med-left">
+              <div class="lp-art-card">
+                <p class="lp-art-card__label">Inside a visit</p>
+                <ul class="lp-art-card__list">
+                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Symptoms recorded</li>
+                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Assessment saved</li>
+                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Report available</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="home-art" aria-hidden="true">
-          <div class="home-art-main"><img src="./Asset/Illustrations/doctor.svg" alt="" class="doc-bottom"></div>
-          <img src="./Asset/Illustrations/medicine.svg" alt="" class="med-right">
-          <img src="./Asset/Illustrations/care.svg" alt="" class="med-left">
+      </section>
+
+      <!-- ===== About: what the product actually does ===== -->
+      <section class="lp-section" id="about" aria-labelledby="about-title">
+        <div class="container">
+          <header class="lp-section__head">
+            <p class="lp-eyebrow">What HelloDoc does</p>
+            <h2 class="lp-section__title" id="about-title">About HelloDoc</h2>
+            <p class="lp-section__lead">
+              HelloDoc is a digital front door to everyday healthcare: a directory of
+              verified doctors, a booking flow, and a consultation record your doctor
+              writes during the visit.
+            </p>
+          </header>
+
+          <div class="lp-features">
+            <article class="lp-feature">
+              <span class="lp-feature__icon"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i></span>
+              <h3>Structured symptom capture</h3>
+              <p>
+                During a visit your doctor records what you report from a fixed symptom
+                vocabulary, so the record stays consistent. Free text observations are
+                stored for the doctor and never reach the model.
+              </p>
+            </article>
+
+            <article class="lp-feature">
+              <span class="lp-feature__icon"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span>
+              <h3>Appointments with verified doctors</h3>
+              <p>
+                Compare speciality, consultation fee and open slots before you book.
+                Cancelling is in your hands if plans change, and every doctor in the
+                directory has been approved by an administrator.
+              </p>
+            </article>
+
+            <article class="lp-feature">
+              <span class="lp-feature__icon"><i class="fa-solid fa-file-medical" aria-hidden="true"></i></span>
+              <h3>Doctor led assessment</h3>
+              <p>
+                The model offers candidate conditions as decision support. Your doctor
+                reviews them against their own findings, records the assessment and plan,
+                and can download the report as a PDF.
+              </p>
+            </article>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- ===== How a visit works ===== -->
+      <section class="lp-section lp-section--tinted" aria-labelledby="steps-title">
+        <div class="container">
+          <header class="lp-section__head">
+            <p class="lp-eyebrow">How it works</p>
+            <h2 class="lp-section__title" id="steps-title">From a symptom to a signed assessment</h2>
+            <p class="lp-section__lead">
+              Four steps, nothing automatic. An appointment is only booked when you
+              choose a slot, and only your doctor can record clinical findings.
+            </p>
+          </header>
+
+          <ol class="lp-steps">
+            <li class="lp-step">
+              <span class="lp-step__number" aria-hidden="true">1</span>
+              <h3>Create your account</h3>
+              <p>Register as a patient, or apply as a doctor and wait for an administrator to verify your credentials.</p>
+            </li>
+            <li class="lp-step">
+              <span class="lp-step__number" aria-hidden="true">2</span>
+              <h3>Choose a doctor and a slot</h3>
+              <p>The directory lists speciality, fee and open availability, so you can decide before you book.</p>
+            </li>
+            <li class="lp-step">
+              <span class="lp-step__number" aria-hidden="true">3</span>
+              <h3>Attend the visit</h3>
+              <p>Your doctor records symptoms, reviews the model guidance and writes the clinical assessment.</p>
+            </li>
+            <li class="lp-step">
+              <span class="lp-step__number" aria-hidden="true">4</span>
+              <h3>Keep the record</h3>
+              <p>The assessment, any later revision and the PDF report stay attached to that appointment.</p>
+            </li>
+          </ol>
+
+          <p class="lp-callout">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>
+              The model suggests candidate conditions from reported symptoms. It is not a
+              diagnosis, no calibrated confidence is shown, and every clinical decision
+              belongs to the doctor.
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== Two sides of the same record ===== -->
+      <section class="lp-section" aria-labelledby="sides-title">
+        <div class="container">
+          <header class="lp-section__head">
+            <p class="lp-eyebrow">Two sides, one record</p>
+            <h2 class="lp-section__title" id="sides-title">Built for patients and for the clinic</h2>
+            <p class="lp-section__lead">
+              Each side sees only what it needs. Patients manage visits; doctors manage
+              consultations, availability and the clinical record.
+            </p>
+          </header>
+
+          <div class="lp-panels">
+            <article class="lp-panel">
+              <header class="lp-panel__head">
+                <span class="lp-panel__icon"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i></span>
+                <h3>For patients</h3>
+                <p>A plain view of who you can see, when, and what it costs.</p>
+              </header>
+              <ul class="lp-list">
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Search the doctor directory by speciality and fee</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Book an open slot and cancel it yourself</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> See upcoming and past appointments in one list</li>
+              </ul>
+              <p class="lp-panel__note">Clinical results are not shown to patients in this prototype.</p>
+              <a class="lp-panel__link" href="signup.html">
+                Create a patient account
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            </article>
+
+            <article class="lp-panel lp-panel--accent">
+              <header class="lp-panel__head">
+                <span class="lp-panel__icon"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i></span>
+                <h3>For doctors</h3>
+                <p>The consultation context you need, without extra paperwork.</p>
+              </header>
+              <ul class="lp-list">
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Appointments assigned to you, with status changes you record</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Availability slots and 30 day appointment analytics</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Symptom vocabulary, revisions and a PDF report per assessment</li>
+              </ul>
+              <p class="lp-panel__note">Clinical tools unlock only after an administrator approves your application.</p>
+              <a class="lp-panel__link" href="signup.html?role=doctor">
+                Apply as a doctor
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Trust and safety, limited to what the code supports ===== -->
+      <section class="lp-section lp-section--tinted" aria-labelledby="trust-title">
+        <div class="container">
+          <header class="lp-section__head">
+            <p class="lp-eyebrow">Safety and privacy</p>
+            <h2 class="lp-section__title" id="trust-title">How HelloDoc guards the record</h2>
+            <p class="lp-section__lead">
+              These are properties of the current build, not certifications. An
+              independent security and privacy review is still an open item.
+            </p>
+          </header>
+
+          <div class="lp-trust">
+            <article class="lp-trust__item">
+              <span class="lp-trust__icon"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
+              <h3>Approved clinicians only</h3>
+              <p>
+                Doctor accounts start pending. Only an administrator can approve one, and
+                every protected request checks the role, the approval and any suspension
+                again before it answers.
+              </p>
+            </article>
+            <article class="lp-trust__item">
+              <span class="lp-trust__icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+              <h3>Your identity stays out of the model</h3>
+              <p>
+                The model receives symptom identifiers only: no name, note or appointment
+                detail. It runs as a private service behind a server side token.
+              </p>
+            </article>
+            <article class="lp-trust__item">
+              <span class="lp-trust__icon"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
+              <h3>Records that keep their history</h3>
+              <p>
+                A symptom list can be revised, but the original prediction is kept. The
+                model output is frozen once stored, and the full lineage stays with the
+                assessment.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Final call to action ===== -->
+      <section class="lp-section" aria-labelledby="cta-title">
+        <div class="container">
+          <div class="lp-cta">
+            <div class="lp-cta__copy">
+              <h2 id="cta-title">Start with a clearer picture.</h2>
+              <p>Book a visit with an approved doctor, or apply to join as a clinician.</p>
+            </div>
+            <div class="lp-cta__actions">
+              <a class="btn btn-lg lp-btn-on-brand" href="dashboard.html">Find a doctor</a>
+              <a class="btn btn-lg lp-btn-outline-brand" href="signup.html">Create an account</a>
+            </div>
+            <p class="lp-cta__note">
+              HelloDoc is a prototype. Please do not enter real patient information.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <!-- About describes the product; My Story introduces its builder. -->
-    <section class="about-section" id="about" aria-labelledby="about-title">
-      <h2 id="about-title">About HelloDoc</h2>
-      <p class="about-lead">
-        HelloDoc is a digital front door to everyday healthcare: search a pool of
-        registered doctors and book an appointment.
-      </p>
-
-      <div class="about-grid">
-        <article class="about-card">
-          <h3>Find a doctor</h3>
-          <p>Browse in network doctors by speciality and fee, and see who is available today.</p>
-        </article>
-        <article class="about-card">
-          <h3>Book appointments</h3>
-          <p>Choose a slot and keep track of upcoming visits so nothing gets missed.</p>
-        </article>
-        <article class="about-card">
-          <h3>For clinicians</h3>
-          <p>Doctors register, submit credentials for verification and manage appointments once approved.</p>
-        </article>
-      </div>
-
-      <p class="about-note">
-        HelloDoc does not provide emergency care or replace advice from a qualified healthcare professional.
-      </p>
-    </section>
-
-    <footer>
+    <footer class="site-footer">
       <div class="container">
-        <p>&copy; Hellodoc 2025. All Rights Reserved. Contact us: <a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a> | +91 7608093320</p>
+        <div class="site-footer__grid">
+          <div class="site-footer__brand">
+            <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="site-footer__logo" />
+            <p>A digital front door to everyday healthcare. Built as a working prototype, not a deployed EHR.</p>
+          </div>
+
+          <nav class="site-footer__col" aria-labelledby="footer-explore">
+            <h2 id="footer-explore">Explore</h2>
+            <ul>
+              <li><a href="dashboard.html">Find a doctor</a></li>
+              <li><a href="appointments.html">Appointments</a></li>
+              <li><a href="help.html">Help centre</a></li>
+            </ul>
+          </nav>
+
+          <nav class="site-footer__col" aria-labelledby="footer-about">
+            <h2 id="footer-about">HelloDoc</h2>
+            <ul>
+              <li><a href="index.html#about">About</a></li>
+              <li><a href="story.html">My Story</a></li>
+              <li><a href="./story.html#builder">Meet the builder</a></li>
+            </ul>
+          </nav>
+
+          <nav class="site-footer__col" aria-labelledby="footer-account">
+            <h2 id="footer-account">Account</h2>
+            <ul>
+              <li><a href="login.html">Login</a></li>
+              <li><a href="signup.html">Sign Up</a></li>
+              <li><a href="recover.html">Recover password</a></li>
+            </ul>
+          </nav>
+
+          <div class="site-footer__col" aria-labelledby="footer-contact">
+            <h2 id="footer-contact">Contact</h2>
+            <ul>
+              <li><a href="mailto:hi@hellodoc.com">hi@hellodoc.com</a></li>
+              <li><a href="tel:+917608093320">+91 7608093320</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="site-footer__bottom">
+          <p>&copy; Hellodoc 2025. All Rights Reserved.</p>
+          <p>HelloDoc does not provide emergency care or replace advice from a qualified healthcare professional.</p>
+        </div>
       </div>
     </footer>
 

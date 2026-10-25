@@ -16,7 +16,7 @@ must never be used to apply a migration.
 
 | Class | Files | Rule |
 | --- | --- | --- |
-| **Migrations** | `003`, `005`, `006`, `008`, `009`, `010`, `011`, `012` | Apply in numeric order, exactly once per database. |
+| **Migrations** | `003`, `005`, `006`, `008`, `009`, `010`, `011`, `012`, `013` | Apply in numeric order, exactly once per database. |
 | **Test-only SQL** | `004_supabase_rls_tests.sql`, `007_security_regression.sql` | Never apply as migrations. They are rollback-only probes, and `007` inserts synthetic `auth.users` fixtures. Run only on a disposable project. |
 | **Obsolete MySQL** | `001_patient_foundation.sql`, `002_doctor_workspace.sql` | Deleted with the MySQL backend. They do not exist and must never be recreated or executed in PostgreSQL. |
 | **Verification** | `VERIFY.sql` | Read-only `SELECT`s. Safe on production. Run after any migration. |
@@ -33,8 +33,10 @@ objects (§7), not running a reverse script. `004` and `007` are tests, not roll
 scripts.
 
 - **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–012 are applied and
-  verified as of 2026-10-20; nothing is pending. The ledger only records some of
-  them (see §5).
+  verified as of 2026-10-20. **`013` is written but deliberately not applied**:
+  the walk-in feature is implemented end to end in code, and every walk-in
+  endpoint answers `503 WALKIN_UNAVAILABLE` until an operator applies `013`. The
+  ledger only records some of them (see §5).
 - **Any new project:** every file is pending until applied in the order below.
 - **Any other existing project:** a file is effectively pending wherever its
   marker in `VERIFY.sql` §8 is `false`. Treat only those files (or the individual
@@ -83,8 +85,15 @@ earlier ones — for those objects only the **last** definition is current.
    Transaction-wrapped, idempotent.
 8. **`012_doctor_consultation.sql`** — `doctor_consultation(appointment)` for the
    appointment-scoped predictor. Transaction-wrapped, idempotent.
+9. **`013_walkin_patients.sql`** — walk-in records without an account:
+   `clinic_patients` + audit, nullable account patient on `appointments` and
+   `assessments` with `clinic_patient_id`, walk-in checks and idempotency index,
+   and **replacements** for the assessment freeze trigger, insert policy,
+   `assessment_view`, `is_own_assessment` and `doctor_consultation`. Adds the
+   registration, duplicate-check, walk-in consultation and booking RPCs.
+   Transaction-wrapped, idempotent where practical. **Not applied anywhere yet.**
 
-**Authoritative definitions after all eight:** the 009 version of the signup
+**Authoritative definitions after all nine:** the 009 version of the signup
 trigger, `admin_action` and profile/resubmission RPCs; the 006 version of
 `public_doctors`, `public_slots` and `book_appointment`; the 011 version of the
 assessment trigger function, insert policy and view; plus `012`.
@@ -142,7 +151,12 @@ refresh and recovery; those are project configuration, not database migrations.
 | `assigned_patients()` | 010 | authenticated, approved doctor | `GET /api/doctor/patients` |
 | `assessment_view(uuid)` | 011 | authenticated | assessment detail + PDF |
 | `is_own_assessment(uuid,uuid)` | 011 | authenticated | assessment insert policy |
-| `doctor_consultation(uuid)` | 012 | authenticated, approved doctor | `GET /api/doctor/appointments/:id/consultation` |
+| `doctor_consultation(uuid)` | 012 (replaced by 013) | authenticated, approved doctor | `GET /api/doctor/appointments/:id/consultation` |
+| `doctor_clinic_patients()` | 013 | authenticated, approved doctor | `GET /api/doctor/walkin/patients` |
+| `doctor_clinic_patient_matches(text,text,date)` | 013 | authenticated, approved doctor | `GET /api/doctor/walkin/matches` |
+| `doctor_register_clinic_patient(text,date,text,text,uuid)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients` |
+| `doctor_start_walkin_consultation(uuid,text)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients/:id/consultation` |
+| `doctor_book_clinic_appointment(uuid,uuid,text,uuid)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients/:id/appointment` |
 
 Legacy RPCs still present but **not used by the current API**:
 `apply_as_doctor` / `internal_apply_as_doctor` and `submit_doctor_application`.

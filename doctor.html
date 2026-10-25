@@ -3,24 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HelloDoc | Doctor dashboard</title>
+    <title>HelloDoc | Doctor workspace</title>
     <link rel="icon" href="/Asset/favicon.svg" />
     <link rel="stylesheet" href="/Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css" />
     <link rel="stylesheet" href="/Styles/assessment.css" />
   </head>
-  <body>
+  <body class="dw-page">
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
         <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" /></a>
         <ul class="nav-links" id="navLinks">
           <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="#doctorVerification" class="nav-link">Verification</a></li>
-          <li><a href="#doctorAppointments" class="nav-link">Appointments</a></li>
-          <li><a href="#doctorAvailability" class="nav-link">Availability</a></li>
-          <li><a href="#doctorAnalytics" class="nav-link">Analytics</a></li>
-          <li><a href="#assessmentSection" class="nav-link">Assessment</a></li>
+          <li><a href="#doctorAppointments" class="nav-link" data-section-link="doctorAppointments">Workspace</a></li>
+          <li><a href="#assessmentSection" class="nav-link" data-section-link="assessmentSection">Clinical records</a></li>
+          <li><a href="#practiceSettings" class="nav-link" data-section-link="practiceSettings">Practice settings</a></li>
         </ul>
         <div class="navbar-actions" id="navActions">
           <button class="btn btn-outline" id="logout" type="button">Log out</button>
@@ -28,173 +26,361 @@
       </div>
     </nav>
 
-    <header class="page-head">
-      <div class="container page-head-inner">
-        <div><h1>Doctor dashboard</h1><p>Your verification status, profile and, once approved, your visits.</p></div>
+    <header class="dw-head">
+      <div class="container dw-head-inner">
+        <div class="dw-head-copy">
+          <p class="dw-eyebrow">Doctor workspace</p>
+          <h1>Appointments and clinical records</h1>
+          <p class="dw-head-sub" id="doctorIdentity">Checking your profile…</p>
+        </div>
+        <p class="dw-verify-chip" id="verificationChip" data-state="pending" hidden>
+          <span class="dw-verify-chip__dot" aria-hidden="true"></span>
+          <span id="verificationChipText">Verification pending</span>
+        </p>
       </div>
     </header>
 
-    <div class="container patient-message" id="message" role="status">Checking access…</div>
+    <div class="container dw-alert" id="message" role="status" hidden></div>
 
-    <section class="container patient-panel" id="doctorVerification" hidden aria-labelledby="verification-title">
-      <h2 id="verification-title">Verification status</h2>
-      <p id="verificationStatus" role="status" aria-live="polite"></p>
-      <p class="muted" id="verificationHint">Only an administrator can approve, reject or reopen verification. You can keep your profile up to date while a review is pending.</p>
-      <form id="resubmitForm" hidden novalidate>
-        <h3>Resubmit professional details</h3>
-        <div class="form-grp"><label for="verifySpecialty">Medical specialty</label><input id="verifySpecialty" name="specialty" maxlength="120" required /></div>
-        <div class="form-grp"><label for="verifyLicense">Registration / licence number</label><input id="verifyLicense" name="licenseNumber" maxlength="120" required /></div>
-        <div class="form-grp"><label for="verifyInstitution">Hospital or clinic</label><input id="verifyInstitution" name="institution" maxlength="200" required /></div>
-        <div class="form-grp"><label for="verifyYears">Years of experience</label><input id="verifyYears" name="yearsExperience" type="number" min="0" max="80" step="1" required /></div>
-        <div class="form-grp"><label for="verifyQualifications">Qualifications and experience</label><textarea id="verifyQualifications" name="qualifications" rows="3" maxlength="2000" required></textarea></div>
-        <div class="form-summary" id="resubmitMessage" role="alert" aria-live="assertive" hidden></div>
-        <button class="btn btn-primary" type="submit">Send for review</button>
-      </form>
-    </section>
+    <main class="container dw-main" id="workspace" hidden>
+      <div id="clinicalPanels">
+        <!-- ============ Workspace: the appointments doctors work from ============ -->
+        <section class="dw-section" id="doctorAppointments" aria-labelledby="appointmentsTitle">
+          <div class="dw-section-head">
+            <div>
+              <p class="dw-eyebrow">Workspace</p>
+              <h2 id="appointmentsTitle">Appointments</h2>
+              <p class="dw-section-sub">Every visit assigned to you. Open a consultation to record what you find.</p>
+            </div>
+            <button class="btn btn-outline dw-walkin-open" id="openWalkin" type="button" aria-haspopup="dialog">
+              <span class="dw-walkin-open__plus" aria-hidden="true">+</span> Register walk-in patient
+            </button>
+          </div>
 
-    <main class="container patient-main" id="workspace" hidden>
-      <p class="lead">This prototype is not monitored for emergencies. You can record an assessment for appointments assigned to you; patients cannot open it in this prototype, and prescribing is not available.</p>
-      <div class="patient-grid" id="clinicalPanels">
-        <section class="patient-panel" id="doctorAppointments">
-          <h2>Appointments</h2>
-          <form id="filters" class="doctor-filters">
-            <label>Date <input type="date" name="date"></label>
-            <label>Status
+          <form id="filters" class="dw-filters" aria-label="Filter appointments">
+            <label class="dw-filter">
+              <span>Date</span>
+              <input type="date" name="date">
+            </label>
+            <label class="dw-filter">
+              <span>Status</span>
               <select name="status">
                 <option value="">All statuses</option>
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
-                <option value="no_show">No-show</option>
+                <option value="no_show">No show</option>
               </select>
             </label>
-            <button class="btn btn-outline">Apply filters</button>
+            <button class="btn btn-outline" type="submit">Apply filters</button>
           </form>
-          <div id="appointments"></div>
-        </section>
-        <section class="patient-panel" id="doctorAvailability">
-          <h2>Availability</h2>
-          <p>Offer 30-minute slots. All times are saved in UTC.</p>
-          <form id="slotForm"><label>Start <input type="datetime-local" name="startsAt" required></label><button class="btn btn-primary">Add slot</button></form>
-          <div id="slots"></div>
-        </section>
-        <section class="patient-panel assessment-panel" id="assessmentSection" aria-labelledby="assessmentTitle">
-          <div class="assessment-head">
+
+          <div class="dw-visits" id="appointments" aria-live="polite"></div>
+
+          <div class="dw-activity" id="doctorAnalytics">
             <div>
-              <h2 id="assessmentTitle">Clinical assessment</h2>
-              <p class="muted">Experimental decision support for an appointment you are attending. It is not a diagnosis and never replaces your own assessment.</p>
+              <h3>Activity, last 30 days</h3>
+              <p class="dw-activity__hint">Supporting information. Appointments above stay usable if this is unavailable.</p>
             </div>
-            <p class="draft-state" id="draftState" role="status" aria-live="polite">No unsaved changes.</p>
+            <div id="analytics" class="dw-metrics"><span class="dw-state__text">Loading activity…</span></div>
+          </div>
+        </section>
+
+        <!-- ============ Clinical records: one consultation at a time ============ -->
+        <section class="dw-section dw-record" id="assessmentSection" aria-labelledby="assessmentTitle">
+          <div class="dw-section-head">
+            <div>
+              <p class="dw-eyebrow">Clinical records</p>
+              <h2 id="assessmentTitle">Assessment</h2>
+              <p class="dw-section-sub">Experimental decision support for the consultation you are attending. It is not a diagnosis and never replaces your own judgment.</p>
+            </div>
           </div>
 
           <p class="assessment-unsaved" id="draftBanner" hidden>An unsaved draft was restored. Saving the assessment replaces it.</p>
           <p class="sr-only" id="assessmentAnnounce" role="status" aria-live="polite"></p>
-          <div class="assessment-unsaved consultation-banner" id="consultationBanner" hidden>
-            <p><strong id="consultationPatient"></strong> <span id="consultationMeta"></span></p>
-            <p id="consultationReason" class="muted"></p>
+
+          <div class="dw-consult" id="consultationBanner" hidden>
+            <div class="dw-consult__copy">
+              <p class="dw-consult__label">Consultation</p>
+              <p class="dw-consult__patient"><strong id="consultationPatient"></strong> <span id="consultationMeta"></span></p>
+              <p class="dw-consult__reason" id="consultationReason"></p>
+            </div>
             <a href="#" id="consultationLink">Back to this appointment</a>
           </div>
+
           <div class="assessment-unsaved revise-banner" id="reviseBanner" hidden>
             <p><strong>Editing a saved assessment.</strong> Saving re-runs the model and stores a new revision. The original prediction and your earlier assessment stay unchanged.</p>
             <a href="#" id="reviseSourceLink">Open the original record</a>
           </div>
 
-          <form id="assessmentForm" novalidate>
-            <p class="shortcut-strip" aria-label="Keyboard shortcuts">
-              <span><kbd>/</kbd> search symptoms</span>
-              <span><kbd>↑</kbd><kbd>↓</kbd> move through matches</span>
-              <span><kbd>Enter</kbd> add highlighted</span>
-              <span><kbd>Backspace</kbd> remove last tag</span>
-              <span><kbd>Esc</kbd> close list</span>
-              <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> review</span>
-            </p>
-            <div class="assessment-context-row">
-              <div class="form-grp">
-                <label for="assessmentPatient">Patient</label>
-                <select id="assessmentPatient" name="patient" required>
-                  <option value="">Loading patients…</option>
-                </select>
-              </div>
-              <p class="assessment-context" id="assessmentContext" aria-live="polite"></p>
-            </div>
+          <div class="dw-empty" id="assessmentEmpty" hidden>
+            <h3>No consultation open</h3>
+            <p>Choose an appointment from the schedule to record patient reports, your findings and your own assessment. Records stay attached to the visit they belong to.</p>
+            <a class="btn btn-primary" href="#doctorAppointments">Go to the schedule</a>
+          </div>
 
-            <div class="assessment-symptom-grid">
-              <fieldset class="symptom-group">
-                <legend>Reported by the patient</legend>
-                <p class="symptom-hint" id="reportedHint">Search the model vocabulary. Press <kbd>/</kbd> to jump here, <kbd>Enter</kbd> to add, <kbd>Backspace</kbd> to remove the last tag.</p>
-                <div class="symptom-picker" id="reportedPicker"></div>
+          <div id="assessmentEditor">
+            <form id="assessmentForm" novalidate>
+              <div class="dw-context">
+                <div class="form-grp">
+                  <label for="assessmentPatient">Patient for this record</label>
+                  <select id="assessmentPatient" name="patient" required>
+                    <option value="">Loading patients…</option>
+                  </select>
+                </div>
+                <p class="assessment-context" id="assessmentContext" aria-live="polite"></p>
+              </div>
+
+              <fieldset class="dw-capture">
+                <legend>Information gathered</legend>
+                <p class="dw-capture__hint">
+                  Two sources, kept apart. The model reads only the symptom list; free text and your notes stay with the record.
+                </p>
+                <p class="shortcut-strip" aria-label="Keyboard shortcuts">
+                  <span><kbd>/</kbd> search symptoms</span>
+                  <span><kbd>↑</kbd><kbd>↓</kbd> move through matches</span>
+                  <span><kbd>Enter</kbd> add highlighted</span>
+                  <span><kbd>Backspace</kbd> remove last tag</span>
+                  <span><kbd>Esc</kbd> close list</span>
+                  <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> review</span>
+                </p>
+
+                <div class="assessment-symptom-grid">
+                  <fieldset class="symptom-group symptom-group--reported">
+                    <legend>Reported by the patient</legend>
+                    <p class="symptom-hint">What the patient describes, in the model's vocabulary.</p>
+                    <div class="symptom-picker" id="reportedPicker"></div>
+                  </fieldset>
+                  <fieldset class="symptom-group symptom-group--observed">
+                    <legend>Recorded by you</legend>
+                    <p class="symptom-hint">Findings you observed during the consultation, in the same vocabulary.</p>
+                    <div class="symptom-picker" id="clinicianPicker"></div>
+                  </fieldset>
+                </div>
+
+                <fieldset class="symptom-group observation-group">
+                  <legend>Clinical observations the model cannot interpret</legend>
+                  <p class="symptom-hint" id="observationHint">Stored with this record. The model cannot read free text, so nothing here is dropped or guessed.</p>
+                  <div class="observation-row">
+                    <label class="sr-only" for="observationInput">Clinical observation</label>
+                    <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
+                    <button class="btn btn-outline" type="button" id="addObservation">Add observation</button>
+                  </div>
+                  <ul class="symptom-tags" id="observationTags" aria-live="polite"></ul>
+                </fieldset>
+
+                <div class="assessment-details">
+                  <div class="form-grp">
+                    <label for="symptomDuration">Symptom duration</label>
+                    <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
+                  </div>
+                  <div class="form-grp assessment-note">
+                    <label for="clinicalNote">Clinical note</label>
+                    <textarea id="clinicalNote" rows="3" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
+                  </div>
+                </div>
               </fieldset>
-              <fieldset class="symptom-group">
-                <legend>Recorded by you</legend>
-                <p class="symptom-hint">Findings you observed during the consultation, in the same vocabulary.</p>
-                <div class="symptom-picker" id="clinicianPicker"></div>
-              </fieldset>
-            </div>
 
-            <fieldset class="observation-group">
-              <legend>Clinical observations the model cannot interpret</legend>
-              <p class="symptom-hint" id="observationHint">Free text stays out of the model. It is stored on the assessment and never dropped silently.</p>
-              <div class="observation-row">
-                <label class="sr-only" for="observationInput">Clinical observation</label>
-                <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
-                <button class="btn btn-outline" type="button" id="addObservation">Add observation</button>
-              </div>
-              <ul class="symptom-tags" id="observationTags" aria-live="polite"></ul>
-            </fieldset>
-
-            <div class="assessment-details">
-              <div class="form-grp">
-                <label for="symptomDuration">Symptom duration</label>
-                <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
-              </div>
-              <div class="form-grp assessment-note">
-                <label for="clinicalNote">Clinical note</label>
-                <textarea id="clinicalNote" rows="3" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
-              </div>
-            </div>
-
-            <div class="assessment-actions">
-              <button class="btn btn-primary" type="button" id="reviewButton">Review assessment <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
-              <button class="btn btn-outline" type="reset" id="resetDraft">Clear form</button>
               <p class="assessment-error" id="assessmentError" role="alert" hidden></p>
-            </div>
-          </form>
 
-          <section class="assessment-review" id="reviewPanel" hidden aria-labelledby="reviewTitle" tabindex="-1">
-            <h3 id="reviewTitle">Review before saving</h3>
-            <dl class="review-summary" id="reviewSummary"></dl>
-            <div class="assessment-details">
-              <div class="form-grp">
-                <label for="doctorAssessment">Your assessment (optional now, editable later)</label>
-                <textarea id="doctorAssessment" rows="3" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+              <div class="dw-actions">
+                <p class="draft-state" id="draftState" role="status" aria-live="polite">No unsaved changes.</p>
+                <div class="dw-actions__buttons">
+                  <button class="btn btn-outline" type="reset" id="resetDraft">Clear form</button>
+                  <button class="btn btn-primary" type="button" id="reviewButton">Review assessment <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
+                </div>
               </div>
-              <div class="form-grp">
-                <label for="plan">Plan (optional)</label>
-                <textarea id="plan" rows="3" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
+            </form>
+
+            <section class="assessment-review dw-review" id="reviewPanel" hidden aria-labelledby="reviewTitle" tabindex="-1">
+              <div class="dw-review__head">
+                <h3 id="reviewTitle">Review before saving</h3>
+                <p class="dw-review__lead">Saving runs the experimental model once. Its suggestion is stored next to your assessment, never above it.</p>
               </div>
-            </div>
-            <p class="assessment-error" id="reviewError" role="alert" hidden></p>
-            <div class="assessment-actions">
-              <button class="btn btn-primary" type="button" id="saveAssessment">Save assessment</button>
-              <button class="btn btn-outline" type="button" id="backToEdit">Back to edit</button>
-            </div>
-          </section>
+
+              <div class="dw-review__grid">
+                <div class="dw-review__block">
+                  <h4>Sent to the model</h4>
+                  <p class="dw-review__hint">Symptoms only, from the fixed vocabulary.</p>
+                  <dl class="review-summary" id="reviewSummary"></dl>
+                </div>
+                <div class="dw-review__block dw-review__block--clinician">
+                  <h4>Your assessment and plan</h4>
+                  <p class="dw-review__hint">Your independent impression. Stored separately from the model output and editable later.</p>
+                  <div class="form-grp">
+                    <label for="doctorAssessment">Assessment</label>
+                    <textarea id="doctorAssessment" rows="3" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+                  </div>
+                  <div class="form-grp">
+                    <label for="plan">Plan</label>
+                    <textarea id="plan" rows="3" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dw-review__stored">
+                <h4>Stored with the record, not sent to the model</h4>
+                <dl class="review-summary" id="reviewRecord"></dl>
+              </div>
+
+              <p class="assessment-error" id="reviewError" role="alert" hidden></p>
+              <div class="dw-actions dw-actions--review">
+                <button class="btn btn-outline" type="button" id="backToEdit">Back to edit</button>
+                <button class="btn btn-primary" type="button" id="saveAssessment">Save assessment</button>
+              </div>
+            </section>
+          </div>
 
           <section class="assessment-recent" aria-labelledby="recentTitle" hidden id="recentSection">
-            <h3 id="recentTitle">Recent assessments</h3>
+            <h3 id="recentTitle">Recent records</h3>
             <ul id="recentAssessments" class="assessment-recent-list"></ul>
           </section>
         </section>
-        <section class="patient-panel" id="doctorAnalytics">
-          <h2>Analytics — appointment activity</h2>
-          <div id="analytics"></div>
-        </section>
       </div>
+
+      <!-- ============ Practice settings: verification and availability ============ -->
+      <section class="dw-section" id="practiceSettings" aria-labelledby="practiceTitle">
+        <div class="dw-section-head">
+          <div>
+            <p class="dw-eyebrow">Practice settings</p>
+            <h2 id="practiceTitle">Your practice</h2>
+            <p class="dw-section-sub">Verification is decided by an administrator. Slots are what patients can book.</p>
+          </div>
+        </div>
+
+        <div class="dw-practice-grid">
+          <section class="patient-panel dw-practice-card" id="doctorVerification" hidden aria-labelledby="verification-title">
+            <div class="dw-practice-card__head">
+              <h3 id="verification-title">Professional verification</h3>
+              <p id="verificationStatus" role="status" aria-live="polite"></p>
+            </div>
+            <p class="muted" id="verificationHint">Only an administrator can approve, reject or reopen verification. You can keep your profile up to date while a review is pending.</p>
+            <form id="resubmitForm" hidden novalidate>
+              <h4>Resubmit professional details</h4>
+              <div class="dw-form-grid">
+                <div class="form-grp"><label for="verifySpecialty">Medical specialty</label><input id="verifySpecialty" name="specialty" maxlength="120" required /></div>
+                <div class="form-grp"><label for="verifyLicense">Registration or licence number</label><input id="verifyLicense" name="licenseNumber" maxlength="120" required /></div>
+                <div class="form-grp"><label for="verifyInstitution">Hospital or clinic</label><input id="verifyInstitution" name="institution" maxlength="200" required /></div>
+                <div class="form-grp"><label for="verifyYears">Years of experience</label><input id="verifyYears" name="yearsExperience" type="number" min="0" max="80" step="1" required /></div>
+                <div class="form-grp dw-form-grid__wide"><label for="verifyQualifications">Qualifications and experience</label><textarea id="verifyQualifications" name="qualifications" rows="3" maxlength="2000" required></textarea></div>
+              </div>
+              <div class="form-summary" id="resubmitMessage" role="alert" aria-live="assertive" hidden></div>
+              <button class="btn btn-primary" type="submit">Send for review</button>
+            </form>
+          </section>
+
+          <section class="patient-panel dw-practice-card" id="doctorAvailability" aria-labelledby="availabilityTitle">
+            <div class="dw-practice-card__head">
+              <h3 id="availabilityTitle">Availability</h3>
+              <p class="muted">30 minute slots, saved in UTC. Patients book from these times.</p>
+            </div>
+            <form id="slotForm" class="dw-slot-form">
+              <label class="dw-filter">
+                <span>Start</span>
+                <input type="datetime-local" name="startsAt" required>
+              </label>
+              <button class="btn btn-primary" type="submit">Add slot</button>
+            </form>
+            <div id="slots" class="dw-slot-list"></div>
+          </section>
+        </div>
+      </section>
     </main>
+
+    <!-- Walk-in registration: a clinical record for a patient with no account.
+         Native <dialog> gives focus trapping, Escape and the inert background. -->
+    <dialog class="walkin" id="walkinDialog" aria-labelledby="walkinTitle">
+      <form class="walkin-form" id="walkinForm" method="dialog" novalidate>
+        <div class="walkin-head">
+          <div>
+            <p class="dw-eyebrow">Walk-in</p>
+            <h2 id="walkinTitle">Register a walk-in patient</h2>
+            <p class="walkin-sub">Creates a clinical record only. No email address, password or patient account is needed.</p>
+          </div>
+          <button class="walkin-close" id="walkinClose" type="button" aria-label="Close walk-in registration">&times;</button>
+        </div>
+
+        <div class="walkin-body">
+          <p class="walkin-error" id="walkinError" role="alert" hidden></p>
+
+          <fieldset class="walkin-fields">
+            <legend>Patient details</legend>
+            <div class="walkin-grid">
+              <div class="walkin-field walkin-field--wide">
+                <label for="walkinName">Full name <span class="walkin-tag walkin-tag--req">Required</span></label>
+                <input id="walkinName" name="fullName" type="text" maxlength="200" autocomplete="off" autocapitalize="words" required aria-describedby="walkinNameError" />
+                <p class="walkin-field-error" id="walkinNameError" hidden></p>
+              </div>
+              <div class="walkin-field">
+                <label for="walkinDob">Date of birth <span class="walkin-tag">Optional</span></label>
+                <input id="walkinDob" name="dateOfBirth" type="date" aria-describedby="walkinDobError" />
+                <p class="walkin-field-error" id="walkinDobError" hidden></p>
+              </div>
+              <div class="walkin-field">
+                <label for="walkinPhone">Phone <span class="walkin-tag">Optional</span></label>
+                <input id="walkinPhone" name="phone" type="tel" inputmode="tel" maxlength="40" autocomplete="off" aria-describedby="walkinPhoneError" />
+                <p class="walkin-field-error" id="walkinPhoneError" hidden></p>
+              </div>
+              <div class="walkin-field walkin-field--wide">
+                <label for="walkinLanguage">Preferred language <span class="walkin-tag">Optional</span></label>
+                <input id="walkinLanguage" name="preferredLanguage" type="text" maxlength="40" list="walkinLanguages" autocomplete="off" />
+                <datalist id="walkinLanguages">
+                  <option value="English"></option><option value="Hindi"></option><option value="Marathi"></option>
+                  <option value="Kannada"></option><option value="Tamil"></option><option value="Telugu"></option>
+                </datalist>
+              </div>
+            </div>
+            <p class="walkin-hint">Only the name is required. A phone number or date of birth helps find a returning patient.</p>
+          </fieldset>
+
+          <section class="walkin-check" aria-labelledby="walkinCheckTitle">
+            <div class="walkin-check__head">
+              <div>
+                <h3 id="walkinCheckTitle">Check for an existing record</h3>
+                <p class="walkin-check__hint">Searches only patients registered under your account. Nothing is merged automatically.</p>
+              </div>
+              <button class="btn btn-outline" id="walkinCheck" type="button">Check</button>
+            </div>
+            <div class="walkin-matches" id="walkinMatches" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <div class="walkin-actions">
+          <p class="walkin-state" id="walkinState" role="status" aria-live="polite"></p>
+          <div class="walkin-actions__buttons">
+            <button class="btn btn-outline" id="walkinCancel" type="button">Cancel</button>
+            <button class="btn btn-primary" id="walkinSubmit" type="submit">Register patient</button>
+          </div>
+        </div>
+      </form>
+
+      <section class="walkin-done" id="walkinDone" hidden aria-labelledby="walkinDoneTitle">
+        <div class="walkin-done__head">
+          <p class="walkin-done__badge">Registered</p>
+          <h2 id="walkinDoneTitle">Patient record ready</h2>
+          <p class="walkin-done__summary" id="walkinDoneSummary"></p>
+        </div>
+        <p class="walkin-note">This is a clinical record. The patient has no HelloDoc account until they sign up themselves.</p>
+        <div class="walkin-next">
+          <button class="btn btn-primary" id="walkinStart" type="button">Start walk-in consultation</button>
+          <details class="walkin-book">
+            <summary>Book a scheduled visit instead</summary>
+            <div class="walkin-book__body">
+              <label class="walkin-field" for="walkinSlot">Your open slots</label>
+              <select id="walkinSlot"><option value="">Loading slots…</option></select>
+              <button class="btn btn-outline" id="walkinBook" type="button">Book appointment</button>
+            </div>
+          </details>
+          <button class="btn btn-outline" id="walkinFinish" type="button">Finish registration</button>
+        </div>
+        <p class="walkin-error" id="walkinDoneError" role="alert" hidden></p>
+      </section>
+    </dialog>
 
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js"></script>
+    <script src="/Scripts/walkin.js"></script>
     <script src="/Scripts/assessment.js"></script>
     <script src="/Scripts/nav.js"></script>
   </body>

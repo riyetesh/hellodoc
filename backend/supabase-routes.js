@@ -459,6 +459,123 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       appointmentStatus: row.appointment_status, assessmentCount: Number(row.assessment_count || 0),
     })));
   }));
+  // ---------------------------------------------------------------------------
+  // Walk-in registration: a clinical record for a patient with no account.
+  // Nothing here creates an auth user, an email address or portal access.
+  // ---------------------------------------------------------------------------
+  const walkinError = (res, error, fallback = 'Walk-in registration is unavailable right now.') => {
+    const code = error?.code;
+    if (code === '42501') return res.status(403).json({ message: 'Only an approved doctor can register walk-in patients.' });
+    if (code === 'P0002') return res.status(404).json({ message: 'That patient is not one of your records.' });
+    if (code === '23505') {
+      return res.status(409).json({
+        code: 'PATIENT_EXISTS',
+        message: error.message || 'A patient with these details is already registered.',
+      });
+    }
+    if (code === '22023') return res.status(400).json({ message: error.message || 'Check the patient details.' });
+    if (code === '23P01' || code === 'P0001') {
+      return res.status(409).json({ message: 'That time is no longer available. Choose another slot.' });
+    }
+    return res.status(503).json({ code: 'WALKIN_UNAVAILABLE', message: fallback });
+  };
+  // One compact payload for every walk-in write. Fields the clinic does not need
+  // are optional: no email, no password and no phone number are required.
+  const walkinDetails = (body) => {
+    const clean = (value) => (typeof value === 'string' ? value.trim() : '');
+    const fullName = clean(body?.fullName);
+    const rawDate = body?.dateOfBirth === undefined || body?.dateOfBirth === null ? '' : String(body.dateOfBirth).trim();
+    const phone = clean(body?.phone);
+    const preferredLanguage = clean(body?.preferredLanguage);
+    if (fullName.length < 1 || fullName.length > 200) return { error: 'Enter the patient name (up to 200 characters).' };
+    let dateOfBirth = null;
+    if (rawDate) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return { error: 'Enter the date of birth as YYYY-MM-DD.' };
+      const parsed = new Date(`${rawDate}T00:00:00Z`);
+      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== rawDate) return { error: 'Enter a valid date of birth.' };
+      if (rawDate > new Date().toISOString().slice(0, 10)) return { error: 'Date of birth cannot be in the future.' };
+      if (rawDate < '1900-01-01') return { error: 'Check the date of birth.' };
+      dateOfBirth = rawDate;
+    }
+    if (phone && (!/^[+()\-\s0-9]{6,40}$/.test(phone) || phone.length > 40)) return { error: 'Enter a valid phone number or leave it blank.' };
+    if (preferredLanguage.length > 40) return { error: 'Preferred language is too long.' };
+    return { fullName, dateOfBirth, phone: phone || null, preferredLanguage: preferredLanguage || null };
+  };
+  // This doctor's own walk-in records, for the "check existing" step. A name or
+  // phone is required: the endpoint never dumps the list.
+  router.get('/doctor/walkin/matches', ...guard('doctor', async (req, res, { db }) => {
+    const name = typeof req.query.name === 'string' ? req.query.name.trim() : '';
+    const phone = typeof req.query.phone === 'string' ? req.query.phone.trim() : '';
+    const rawDate = typeof req.query.dateOfBirth === 'string' ? req.query.dateOfBirth.trim() : '';
+    if (name.length > 200 || phone.length > 40) return res.status(400).json({ message: 'Search details are too long.' });
+    if (!name && !phone && !rawDate) return res.status(400).json({ message: 'Enter a name, phone number or date of birth to check.' });
+    if (rawDate && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return res.status(400).json({ message: 'Enter the date of birth as YYYY-MM-DD.' });
+    const result = await db.rpc('doctor_clinic_patient_matches', {
+      p_name: name || '', p_phone: phone || null, p_date_of_birth: rawDate || null,
+    });
+    if (result.error) return walkinError(res, result.error, 'Existing patients cannot be checked right now.');
+    res.json((result.data || []).map((row) => ({
+      id: row.id, fullName: row.full_name, dateOfBirth: row.date_of_birth,
+      phone: row.phone, preferredLanguage: row.preferred_language,
+      matchReason: row.match_reason, lastSeen: row.last_seen,
+    })));
+  }));
+  router.get('/doctor/walkin/patients', ...guard('doctor', async (req, res, { db }) => {
+    const result = await db.rpc('doctor_clinic_patients');
+    if (result.error) return walkinError(res, result.error, 'Walk-in records are unavailable right now.');
+    res.json((result.data || []).map((row) => ({
+      id: row.id, fullName: row.full_name, dateOfBirth: row.date_of_birth,
+      phone: row.phone, preferredLanguage: row.preferred_language, createdAt: row.created_at,
+    })));
+  }));
+  router.post('/doctor/walkin/patients', ...guard('doctor', async (req, res, { db }) => {
+    const details = walkinDetails(req.body);
+    if (details.error) return res.status(400).json({ message: details.error });
+    const key = req.body?.idempotencyKey;
+    if (!isUuid(key)) return res.status(400).json({ message: 'A registration key is required.' });
+    const result = await db.rpc('doctor_register_clinic_patient', {
+      p_full_name: details.fullName, p_date_of_birth: details.dateOfBirth,
+      p_phone: details.phone, p_preferred_language: details.preferredLanguage, p_key: key,
+    });
+    if (result.error) {
+      // The code only: a patient name or phone must never reach the logs.
+      report('walkin_register', result.error);
+      return walkinError(res, result.error);
+    }
+    res.status(result.data?.existing ? 200 : 201).json({
+      id: result.data.id, fullName: result.data.fullName, dateOfBirth: result.data.dateOfBirth,
+      phone: result.data.phone, preferredLanguage: result.data.preferredLanguage,
+      createdAt: result.data.createdAt, account: false, existing: Boolean(result.data.existing),
+    });
+  }));
+  // Opening a consultation creates a server-side walk-in appointment for this
+  // doctor and patient; the browser only names the patient it just registered.
+  router.post('/doctor/walkin/patients/:id/consultation', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid patient.' });
+    const reason = req.body?.reason === undefined ? '' : req.body.reason;
+    if (typeof reason !== 'string' || reason.length > 500) return res.status(400).json({ message: 'Reason is too long.' });
+    const result = await db.rpc('doctor_start_walkin_consultation', { p_patient: req.params.id, p_reason: reason || null });
+    if (result.error) {
+      report('walkin_consultation', result.error);
+      return walkinError(res, result.error, 'A walk-in consultation cannot be started right now.');
+    }
+    res.status(201).json(result.data);
+  }));
+  router.post('/doctor/walkin/patients/:id/appointment', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid patient.' });
+    const { slotId, idempotencyKey, reason = '' } = req.body || {};
+    if (!isUuid(slotId) || !isUuid(idempotencyKey) || typeof reason !== 'string' || reason.length > 500) {
+      return res.status(400).json({ message: 'Choose one of your open slots.' });
+    }
+    const result = await db.rpc('doctor_book_clinic_appointment', {
+      p_patient: req.params.id, p_slot: slotId, p_reason: reason, p_key: idempotencyKey,
+    });
+    if (result.error) {
+      report('walkin_booking', result.error);
+      return walkinError(res, result.error, 'The appointment could not be booked right now.');
+    }
+    res.status(201).json({ id: result.data.id, status: result.data.status, startsAt: result.data.startsAt });
+  }));
   // The consultation context for one appointment the caller attends. The patient
   // identity and appointment come from the database, never from the browser.
   router.get('/doctor/appointments/:id/consultation', ...guard('doctor', async (req, res, { db }) => {
@@ -477,6 +594,12 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return res.status(503).json({ message: 'Assessments unavailable' });
     const people = await db.rpc('assigned_patient_names');
     const names = new Map((people.data || []).map((p) => [p.id, p.full_name]));
+    // Walk-in records are not in assigned_patient_names (they have no account), so
+    // their display names come from the doctor's own clinic list. Best effort: an
+    // older database simply leaves the neutral fallback in place.
+    const clinicPeople = await db.rpc('doctor_clinic_patients');
+    const clinicRows = Array.isArray(clinicPeople.data) ? clinicPeople.data : [];
+    for (const row of clinicRows) names.set(row.id, row.full_name);
     res.json(result.data.map((row) => ({
       id: row.id, patientId: row.patient_id, patientName: names.get(row.patient_id) || 'Patient',
       predictedDisease: row.predicted_disease, appointmentId: row.appointment_id, createdAt: row.created_at,
@@ -495,7 +618,12 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       return res.status(status).json({ message: status === 404 ? 'That appointment is not assigned to you.' : status === 403 ? 'Only an approved doctor can record an assessment.' : 'The appointment could not be verified. Nothing was saved.' });
     }
     const consultation = context.data || {};
-    if (!isUuid(consultation.patientId) || !isUuid(consultation.appointmentId)) {
+    // A consultation now resolves either an account patient or a walk-in record.
+    // The server decides which column the assessment belongs to; the browser only
+    // names the appointment.
+    const clinicPatientId = isUuid(consultation.clinicPatientId) ? consultation.clinicPatientId : null;
+    const accountPatientId = clinicPatientId ? null : (isUuid(consultation.patientId) ? consultation.patientId : null);
+    if ((!accountPatientId && !clinicPatientId) || !isUuid(consultation.appointmentId)) {
       return res.status(503).json({ message: 'The appointment context is incomplete. Nothing was saved.' });
     }
     if (body.patientId !== undefined && body.patientId !== consultation.patientId) {
@@ -513,7 +641,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const assessment = await runModelAssessment(cleaned.symptoms, res);
     if (!assessment) return;
     const insert = await db.from('assessments').insert({
-      doctor_id: user.id, patient_id: consultation.patientId, appointment_id: consultation.appointmentId,
+      doctor_id: user.id, patient_id: accountPatientId, clinic_patient_id: clinicPatientId,
+      appointment_id: consultation.appointmentId,
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations: cleaned.observations,
       symptom_duration: cleaned.duration || null, clinical_note: cleaned.note || null,
       predicted_disease: assessment.output, model_version: assessment.modelVersion,
@@ -538,7 +667,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   router.post('/doctor/assessments/:id/revision', ...guard('doctor', async (req, res, { db, user }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
     const source = await db.from('assessments')
-      .select('id,patient_id,appointment_id,observations,symptom_duration,clinical_note,doctor_assessment,plan')
+      .select('id,patient_id,clinic_patient_id,appointment_id,observations,symptom_duration,clinical_note,doctor_assessment,plan')
       .eq('id', req.params.id).eq('doctor_id', user.id).single();
     if (source.error || !source.data) {
       return res.status(source.error?.code === 'PGRST116' ? 404 : 503).json({ message: 'Assessment unavailable' });
@@ -556,7 +685,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const assessment = await runModelAssessment(cleaned.symptoms, res);
     if (!assessment) return;
     const insert = await db.from('assessments').insert({
-      doctor_id: user.id, patient_id: source.data.patient_id, appointment_id: source.data.appointment_id,
+      doctor_id: user.id, patient_id: source.data.patient_id, clinic_patient_id: source.data.clinic_patient_id,
+      appointment_id: source.data.appointment_id,
       supersedes_id: source.data.id,
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations,
       symptom_duration: duration || null, clinical_note: note || null,
@@ -666,21 +796,31 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.json(result.data);
   }));
   router.get('/doctor/dashboard', ...guard('doctor', async (req, res, { db, user }) => {
-    const result = await db.from('appointments').select('id,patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).order('scheduled_start',{ascending:false}).limit(100);
+    const result = await db.from('appointments').select('id,patient_id,clinic_patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).order('scheduled_start',{ascending:false}).limit(100);
     if (result.error) return res.status(503).json({ message:'Dashboard unavailable' });
-    const ids = [...new Set(result.data.map((a) => a.patient_id))];
+    const patientOf = (a) => a.patient_id || a.clinic_patient_id;
+    const ids = [...new Set(result.data.map(patientOf).filter(Boolean))];
     const patients = ids.length ? await db.rpc('assigned_patient_names') : { data:[],error:null };
     if (patients.error) return res.status(503).json({ message:'Dashboard unavailable' });
     const names = new Map(patients.data.map((p) => [p.id,p.full_name]));
-    res.json({ appointments:result.data.map((a) => ({ id:a.id, startsAt:a.scheduled_start,status:a.status,reason:a.reason, firstName:names.get(a.patient_id) || 'Patient' })) });
+    // Walk-in records have no account, so their names are not in the accounting
+    // list above. Best effort, so an un-migrated database still shows the schedule.
+    const clinic = await db.rpc('doctor_clinic_patients');
+    const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
+    for (const row of clinicRows) names.set(row.id, row.full_name);
+    res.json({ appointments:result.data.map((a) => ({ id:a.id, startsAt:a.scheduled_start,status:a.status,reason:a.reason, walkIn:!a.patient_id, firstName:names.get(patientOf(a)) || 'Patient' })) });
   }));
   router.get('/doctor/appointments/:id', ...guard('doctor', async (req, res, { db, user }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message:'Invalid appointment' });
-    const result = await db.from('appointments').select('id,patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).eq('id',req.params.id).single();
+    const result = await db.from('appointments').select('id,patient_id,clinic_patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).eq('id',req.params.id).single();
     if (result.error) return res.status(404).json({ message:'Appointment not found' });
     const people = await db.rpc('assigned_patient_names');
     if (people.error) return res.status(503).json({message:'Patient unavailable'});
-    res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:people.data.find((p) => p.id===result.data.patient_id)?.full_name || 'Patient' } });
+    const clinic = await db.rpc('doctor_clinic_patients');
+    const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
+    const names = new Map([...(people.data || []).map((p) => [p.id, p.full_name]), ...clinicRows.map((p) => [p.id, p.full_name])]);
+    const patientId = result.data.patient_id || result.data.clinic_patient_id;
+    res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:names.get(patientId) || 'Patient', walkIn:!result.data.patient_id } });
   }));
   router.patch('/doctor/appointments/:id/status', ...guard('doctor', async (req, res, { db }) => {
     if (!isUuid(req.params.id) || !['confirmed','cancelled','completed','no_show'].includes(req.body?.status)) return res.status(400).json({ message:'Invalid status' });

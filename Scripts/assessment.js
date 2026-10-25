@@ -36,6 +36,18 @@
   const labelFor = (id) => state.vocabulary.labels[id] || humanize(id);
   const sameSet = (a, b) => a.length === b.length && a.every((item) => b.includes(item));
 
+  // One date format for the whole record: seconds are noise in a consultation,
+  // and the workspace and the report should not disagree about the same visit.
+  const formatMoment = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    }).format(date);
+  };
+
   // ---------------------------------------------------------------- status ---
   function setDraftState(text, kind) {
     const node = $('draftState');
@@ -57,6 +69,16 @@
     if (!node) return;
     node.textContent = message || '';
     node.hidden = !message;
+  }
+
+  // A clinical record belongs to a consultation. Without one the editor is
+  // replaced by an empty state that points back to the schedule, instead of a
+  // form that cannot be saved.
+  function setEditorVisible(visible) {
+    const editor = $('assessmentEditor');
+    const empty = $('assessmentEmpty');
+    if (editor) editor.hidden = !visible;
+    if (empty) empty.hidden = visible;
   }
 
   // ------------------------------------------------------------ persistence ---
@@ -335,7 +357,7 @@
     const select = $('assessmentPatient');
     select.replaceChildren(new Option('Select a patient…', ''));
     for (const patient of state.patients) {
-      const when = patient.appointmentStart ? new Date(patient.appointmentStart).toLocaleString() : 'no appointment';
+      const when = patient.appointmentStart ? formatMoment(patient.appointmentStart) : 'no appointment';
       const option = new Option(`${patient.fullName} — ${when}`, patient.patientId);
       option.dataset.appointmentId = patient.appointmentId || '';
       option.dataset.when = patient.appointmentStart || '';
@@ -370,7 +392,7 @@
     if (!option || !option.value) { context.textContent = ''; return; }
     const parts = [option.dataset.email];
     if (option.dataset.when) {
-      parts.push(`Appointment ${new Date(option.dataset.when).toLocaleString()}${option.dataset.status ? ` (${option.dataset.status})` : ''}`);
+      parts.push(`Appointment ${formatMoment(option.dataset.when)}${option.dataset.status ? ` · ${humanize(option.dataset.status)}` : ''}`);
     } else {
       parts.push('No linked appointment');
     }
@@ -386,7 +408,7 @@
     if (!banner) return;
     $('consultationPatient').textContent = data.patientName || 'Patient';
     $('consultationMeta').textContent = data.startsAt
-      ? `· appointment ${new Date(data.startsAt).toLocaleString()}${data.status ? ` (${data.status})` : ''}`
+      ? `· ${formatMoment(data.startsAt)}${data.status ? ` · ${humanize(data.status)}` : ''}`
       : '';
     $('consultationReason').textContent = data.reason
       ? `Patient's stated reason: ${data.reason}`
@@ -420,32 +442,42 @@
 
   // ----------------------------------------------------------------- review ---
   function buildReview() {
+    // Two lists on purpose: what the model actually receives (the symptom
+    // identifiers) and what is stored with the record for the people reading it.
     const summary = $('reviewSummary');
-    summary.replaceChildren();
+    const record = $('reviewRecord');
     const selected = state.patients.find((patient) => patient.patientId === state.patientId);
-    const rows = [
+    const modelRows = [
+      ['Reported by the patient', state.reported.map(labelFor).join(', ') || 'None'],
+      ['Recorded by you', state.clinician.map(labelFor).join(', ') || 'None'],
+      ['Symptoms sent to the model', String(state.reported.length + state.clinician.length)],
+    ];
+    const recordRows = [
       ['Patient', selected ? selected.fullName : 'Not selected'],
       ['Appointment', selected?.appointmentStart
-        ? `${new Date(selected.appointmentStart).toLocaleString()} (${selected.appointmentStatus || 'status unknown'})`
+        ? `${formatMoment(selected.appointmentStart)} · ${humanize(selected.appointmentStatus || 'status unknown')}`
         : 'Not linked'],
-      ['Reported by patient', state.reported.map(labelFor).join(', ') || 'None'],
-      ['Recorded by you', state.clinician.map(labelFor).join(', ') || 'None'],
-      ['Model symptoms', String(state.reported.length + state.clinician.length)],
-      ['Observations (not sent to model)', state.observations.join(' · ') || 'None'],
+      ['Observations', state.observations.join(' · ') || 'None'],
       ['Duration', state.duration || 'Not recorded'],
       ['Clinical note', state.note || 'Not recorded'],
     ];
     if (state.revisingSource) {
-      rows.push(['Recorded originally', new Date(state.revisingSource.createdAt).toLocaleString()]);
-      rows.push(['Original prediction', `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
+      recordRows.push(['Recorded originally', formatMoment(state.revisingSource.createdAt)]);
+      recordRows.push(['Original prediction', `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
     }
-    for (const [term, value] of rows) {
-      const dt = document.createElement('dt');
-      dt.textContent = term;
-      const dd = document.createElement('dd');
-      dd.textContent = value;
-      summary.append(dt, dd);
-    }
+    const fill = (target, rows) => {
+      if (!target) return;
+      target.replaceChildren();
+      for (const [term, value] of rows) {
+        const dt = document.createElement('dt');
+        dt.textContent = term;
+        const dd = document.createElement('dd');
+        dd.textContent = value;
+        target.append(dt, dd);
+      }
+    };
+    fill(summary, modelRows);
+    fill(record, recordRows);
   }
 
   function openReview() {
@@ -600,7 +632,7 @@
       const link = $('reviseSourceLink');
       if (link) {
         link.href = `/prediction.html?id=${encodeURIComponent(data.id)}`;
-        link.textContent = `Open the original record (${new Date(data.createdAt).toLocaleString()})`;
+        link.textContent = `Open the original record (${formatMoment(data.createdAt)})`;
       }
       banner.hidden = false;
     }
@@ -704,6 +736,7 @@
       // Restore the draft before populating the select so the saved patient is
       // selected rather than silently dropped on reload.
       if (appointmentId) {
+        setEditorVisible(true);
         // Patient identity and appointment come from the stored consultation. A
         // consultation already assessed reopens that record instead of creating a
         // second assessment for the same visit.
@@ -740,6 +773,7 @@
         return;
       }
       if (reviseId) {
+        setEditorVisible(true);
         // The stored record wins over any leftover draft: a revision must start
         // from what was actually saved for this consultation.
         const sourceResponse = await fetch(`/api/doctor/assessments/${encodeURIComponent(reviseId)}`, { credentials: 'same-origin' });
@@ -761,6 +795,7 @@
         return;
       }
       const restored = restoreDraft();
+      setEditorVisible(restored);
       fillPatients();
       if (restored) {
         $('symptomDuration').value = state.duration;
@@ -774,6 +809,8 @@
       renderAll();
       loadRecent();
     } catch (error) {
+      // The failure is reported inside the editor, so it must stay visible.
+      setEditorVisible(true);
       showError('assessmentError', error.message);
       $('assessmentPatient').replaceChildren(new Option('Patient list unavailable', ''));
     }
@@ -793,7 +830,7 @@
         link.href = `/prediction.html?id=${encodeURIComponent(row.id)}`;
         link.textContent = `${row.patientName} · ${row.predictedDisease}`;
         const when = document.createElement('span');
-        when.textContent = new Date(row.createdAt).toLocaleString();
+        when.textContent = formatMoment(row.createdAt);
         item.append(link, when);
         list.append(item);
       }

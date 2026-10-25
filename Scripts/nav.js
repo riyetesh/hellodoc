@@ -169,7 +169,7 @@
         showUser(name, email);
         const chip = $("#userChip");
         if (chip) chip.dataset.role = data.role;
-        if (data.role === "doctor") {
+        if (data.role === "doctor" && !/\/doctor\.html$/.test(window.location.pathname)) {
           const links = document.querySelector("#navLinks");
           if (links && !links.querySelector('a[href="doctor.html"]')) {
             const item = document.createElement('li');
