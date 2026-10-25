@@ -526,6 +526,77 @@ hr.soft {
   object-fit: contain;
 }
 
+/* Menu button: only shown once the links no longer fit on one row (see the
+   collapse breakpoint below). The logo stays a plain home link at every width. */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.nav-toggle:hover {
+  border-color: var(--border-strong);
+}
+
+.nav-toggle[aria-expanded="true"] {
+  background: var(--brand-soft);
+  border-color: var(--border-strong);
+}
+
+.nav-toggle__icon {
+  position: relative;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.nav-toggle__icon::before,
+.nav-toggle__icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.18s var(--ease), top 0.18s var(--ease),
+    bottom 0.18s var(--ease);
+}
+
+.nav-toggle__icon::before {
+  top: -6px;
+}
+
+.nav-toggle__icon::after {
+  bottom: -6px;
+}
+
+/* Open state: the bars become a close icon, so the button never looks inert. */
+.nav-toggle[aria-expanded="true"] .nav-toggle__icon {
+  background: transparent;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__icon::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__icon::after {
+  bottom: 0;
+  transform: rotate(-45deg);
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -1077,44 +1148,18 @@ hr.soft {
    Mobile responsive (shared)
    ============================================================ */
 /* The canonical navbar carries six items, so it needs more room than the old
-   five-item bar did: below 1200px it collapses into the brand-triggered menu
-   instead of squeezing labels onto two lines. Keep this value in step with the
-   matchMedia query in Scripts/nav.js. */
+   five-item bar did: below 1200px it collapses into a menu behind the menu
+   button instead of squeezing labels onto two lines. Keep this value in step
+   with the matchMedia query in Scripts/nav.js. */
 @media (max-width: 1200px) {
-  /* There is no hamburger any more: the logo/wordmark opens the menu. Its only
-     affordances are the caret below and the pressed state while the menu is open
-     (Scripts/nav.js sets aria-expanded on the brand only at this breakpoint). */
-  .navbar-brand {
-    cursor: pointer;
-    padding: 0.3rem 0.6rem;
-    margin-left: -0.6rem;
-    border-radius: var(--radius-sm);
-    transition: background 0.2s var(--ease);
+  .nav-toggle {
+    display: inline-flex;
+    margin-left: auto;
   }
 
-  .navbar-brand::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-right: 2px solid var(--muted);
-    border-bottom: 2px solid var(--muted);
-    transform: rotate(45deg) translateY(-2px);
-    transition: transform 0.2s var(--ease);
-  }
-
-  .navbar-brand[aria-expanded="true"] {
-    background: var(--brand-soft);
-  }
-
-  .navbar-brand[aria-expanded="true"]::after {
-    transform: rotate(225deg) translateY(-2px);
-  }
-
-  /* Keep the 70px row for the brand and let the bar grow downwards while the
-     menu is open: the panels become full-width flex rows instead of absolutely
-     positioned blocks. The old `top: auto` on `.navbar-actions` resolved to the
-     bar's own row, so the Log in / Sign up panel sat on top of the logo - which
-     is now the menu trigger and has to stay visible and tappable. */
+  /* Keep the 70px row for the brand and the menu button, then let the bar grow
+     downwards while the menu is open: the panels become full-width flex rows
+     instead of absolutely positioned blocks. */
   .navbar .navbar-inner {
     flex-wrap: wrap;
     height: auto;

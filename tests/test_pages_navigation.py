@@ -180,6 +180,23 @@ class TestSharedNavigation:
         for page in ALL_PAGES:
             assert "Scripts/nav.js" in _read(page), f"{page} does not load Scripts/nav.js"
 
+    def test_mobile_menu_uses_a_real_menu_button(self):
+        for page in ALL_PAGES:
+            nav = _nav(_read(page))
+            assert 'class="nav-toggle"' in nav, f"{page} has no menu button"
+            assert 'aria-controls="navLinks"' in nav, f"{page} menu button is not tied to the links"
+            assert 'aria-expanded="false"' in nav, f"{page} menu button has no collapsed state"
+            assert 'aria-label="Open navigation menu"' in nav, (
+                f"{page} menu button has no accessible name"
+            )
+            brand = re.search(r'<a\b[^>]*class="navbar-brand"[^>]*>', nav)
+            assert brand and 'aria-expanded' not in brand.group(0), (
+                f"{page} still uses the logo as the menu trigger"
+            )
+        nav_js = (REPO_ROOT / "Scripts" / "nav.js").read_text(encoding="utf-8")
+        assert "nav-toggle" in nav_js
+        assert "aria-expanded" in nav_js
+
     def test_nav_script_derives_the_highlight_from_the_url(self):
         nav_js = (REPO_ROOT / "Scripts" / "nav.js").read_text(encoding="utf-8")
         assert "initActiveLink" in nav_js

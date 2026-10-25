@@ -1,25 +1,9 @@
 /* ============================================================
-   Home hero illustration (index.html)
-   One composition: a pale brand arch, the doctor illustration and
-   two small clinical illustrations. The landing page layout lives
-   in Styles/home.css.
+   Login page and shared modal styles.
+   The landing page hero now composes its own product preview in
+   Styles/home.css, so the old decorative hero illustration that
+   lived here was removed with it.
    ============================================================ */
-/* The arch keeps the illustration tall; the visit card in Styles/home.css sits
-   just below it so nothing is layered over the clinician. */
-.home-art { position: relative; width: min(100%, 420px); height: 480px; justify-self: center; }
-.home-art-main { position: absolute; inset: 0 24px 118px; border-radius: 210px 210px 26px 26px; background: linear-gradient(180deg, #eaf1fd 0%, #dbe7fa 100%); box-shadow: inset 0 0 0 1px rgba(24, 92, 201, 0.08), 0 22px 50px rgba(23, 47, 92, 0.07); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
-.home-art .doc-bottom { width: 245px; height: 280px; object-fit: contain; }
-.home-art .med-right, .home-art .med-left { position: absolute; width: 85px; height: 100px; object-fit: contain; }
-.home-art .med-right { left: 0; top: 8px; }
-.home-art .med-left { right: 0; bottom: 132px; }
-
-@media (max-width: 760px) {
-  .home-art { height: 420px; width: min(100%, 340px); }
-  .home-art-main { inset: 0 16px 104px; }
-  .home-art .doc-bottom { height: 220px; width: 190px; }
-  .home-art .med-right, .home-art .med-left { width: 64px; height: 76px; }
-  .home-art .med-left { right: 0; bottom: 118px; }
-}
 
 /* ---- Login modal (keeps the existing overlay but uses shared controls) ---- */
 #login-modal {

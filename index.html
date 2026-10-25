@@ -11,7 +11,7 @@
     />
     <link rel="stylesheet" href="./Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
-    <link rel="stylesheet" href="./Styles/home.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/home.css?v=home3" />
 
     
     <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
@@ -23,12 +23,17 @@
          Exactly two authentication actions on every page: Login and Sign Up.
          Login opens login.html, which owns the Patient/Doctor/Admin role
          selector; no other page links to a role-specific login form.
+         The menu button is the only mobile menu trigger.
     -->
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
         <a href="index.html" class="navbar-brand">
           <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
         </a>
+
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
+          <span class="nav-toggle__icon" aria-hidden="true"></span>
+        </button>
 
         <ul class="nav-links" id="navLinks">
           <li><a href="index.html#about" class="nav-link">About</a></li>
@@ -56,55 +61,127 @@
     </nav>
 
     <main id="main">
-      <!-- ===== Hero: messaging left, visit composition right ===== -->
+      <!-- ============================================================
+           Hero: editorial copy beside a real interface preview.
+           The preview is a layout illustration, not patient data.
+           ============================================================ -->
       <section class="lp-hero" aria-labelledby="hero-title">
         <div class="container lp-hero__inner">
           <div class="lp-hero__copy">
-            <p class="lp-eyebrow">Experimental model assisted assessment. Doctor led decisions.</p>
+            <p class="lp-eyebrow">Healthcare, with the human decision at the centre.</p>
             <h1 class="lp-hero__title" id="hero-title">
-              Better healthcare starts with a clearer picture.
+              A clearer conversation between patients and doctors.
             </h1>
             <p class="lp-hero__lead">
-              Find an approved doctor, book a slot, and keep the consultation record in
-              one place. The symptom model assists the doctor who sees you. It never
-              makes the decision.
+              Find an approved doctor, arrange a visit, and bring symptoms and clinical
+              observations into one organized consultation.
             </p>
             <div class="lp-actions">
               <a class="btn btn-primary btn-lg" href="dashboard.html">Find a doctor</a>
-              <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">Explore for doctors</a>
+              <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">For doctors</a>
             </div>
             <p class="lp-hero__note">
               <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
               <span>Not for emergencies. HelloDoc is a prototype and does not replace a qualified healthcare professional.</span>
             </p>
-            <a class="lp-builder-link" href="./story.html#builder">
-              Meet the builder
-              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-            </a>
           </div>
 
-          <!-- Decorative: the same composition is described in the sections below. -->
-          <div class="lp-hero__visual" aria-hidden="true">
-            <div class="home-art">
-              <img src="./Asset/Illustrations/medicine.svg" alt="" class="med-right">
-              <div class="home-art-main">
-                <img src="./Asset/Illustrations/doctor.svg" alt="" class="doc-bottom">
+          <div class="lp-hero__visual">
+            <div class="lp-preview" data-tabs data-tab-group="preview">
+              <div class="lp-preview__bar">
+                <p class="lp-preview__label" id="preview-label">Product preview</p>
+                <div class="lp-tabs" role="tablist" aria-labelledby="preview-label">
+                  <button
+                    type="button"
+                    class="lp-tab is-active"
+                    role="tab"
+                    id="preview-tab-patient"
+                    aria-controls="preview-patient"
+                    aria-selected="true"
+                  >Patient</button>
+                  <button
+                    type="button"
+                    class="lp-tab"
+                    role="tab"
+                    id="preview-tab-doctor"
+                    aria-controls="preview-doctor"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >Doctor</button>
+                </div>
               </div>
-              <img src="./Asset/Illustrations/care.svg" alt="" class="med-left">
-              <div class="lp-art-card">
-                <p class="lp-art-card__label">Inside a visit</p>
-                <ul class="lp-art-card__list">
-                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Symptoms recorded</li>
-                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Assessment saved</li>
-                  <li><i class="fa-solid fa-check" aria-hidden="true"></i> Report available</li>
-                </ul>
+
+              <div class="lp-tabpanel is-active" role="tabpanel" id="preview-patient" aria-labelledby="preview-tab-patient" tabindex="0">
+                <div class="lp-frame">
+                  <div class="lp-frame__head">
+                    <span class="lp-frame__title">Find a doctor</span>
+                    <span class="lp-frame__meta">Approved doctors only</span>
+                  </div>
+                  <div class="lp-frame__toolbar">
+                    <span class="lp-wire lp-wire--input">
+                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                      Search by name or specialty
+                    </span>
+                    <span class="lp-wire lp-wire--chip">All specialties</span>
+                  </div>
+                  <ul class="lp-wire-list lp-preview__rows" data-preview-rows aria-hidden="true">
+                    <li>
+                      <img src="./Asset/Illustrations/doctor.svg" alt="" width="32" height="32" />
+                      <span class="lp-wire__lines"><span class="lp-bar" style="width: 58%"></span><span class="lp-bar lp-bar--soft" style="width: 38%"></span></span>
+                    </li>
+                  </ul>
+                  <p class="lp-frame__caption" data-preview-caption>Approved doctors, their specialty and published fee come from the live directory.</p>
+                </div>
+                <p class="lp-preview__note">
+                  Compare specialty, consultation fee and open times before you book, then manage the visit as a patient.
+                </p>
+              </div>
+
+              <div class="lp-tabpanel" role="tabpanel" id="preview-doctor" aria-labelledby="preview-tab-doctor" tabindex="0">
+                <div class="lp-frame">
+                  <div class="lp-frame__head">
+                    <span class="lp-frame__title">Assessment</span>
+                    <span class="lp-frame__meta">Booked appointment</span>
+                  </div>
+                  <div class="lp-frame__context">
+                    <span class="lp-frame__context-label">Consultation context</span>
+                    <span class="lp-bar lp-bar--soft" style="width: 54%"></span>
+                  </div>
+                  <div class="lp-frame__split">
+                    <div>
+                      <p class="lp-frame__heading">Patient reported</p>
+                      <span class="lp-bar" style="width: 82%"></span>
+                      <span class="lp-bar" style="width: 64%"></span>
+                    </div>
+                    <div>
+                      <p class="lp-frame__heading">Clinician observed</p>
+                      <span class="lp-bar" style="width: 74%"></span>
+                      <span class="lp-bar" style="width: 58%"></span>
+                    </div>
+                  </div>
+                  <div class="lp-frame__model">
+                    <p class="lp-frame__heading">Model assistance, experimental</p>
+                    <span class="lp-bar lp-bar--soft" style="width: 66%"></span>
+                    <p class="lp-frame__caption">Candidate conditions only. Never a diagnosis, never the decision.</p>
+                  </div>
+                  <div class="lp-frame__own">
+                    <p class="lp-frame__heading">Doctor assessment and plan</p>
+                    <span class="lp-bar" style="width: 70%"></span>
+                  </div>
+                  <p class="lp-frame__caption">Layout illustration. A real record is written only by the doctor who saw the patient.</p>
+                </div>
+                <p class="lp-preview__note">
+                  The doctor records what the patient reports, adds their own findings, and keeps the clinical decision separate from the model.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ===== About: what the product actually does ===== -->
+      <!-- ============================================================
+           About: the product statement, plus a live directory pull
+           ============================================================ -->
       <section class="lp-section" id="about" aria-labelledby="about-title">
         <div class="container">
           <header class="lp-section__head">
@@ -112,79 +189,174 @@
             <h2 class="lp-section__title" id="about-title">About HelloDoc</h2>
             <p class="lp-section__lead">
               HelloDoc is a digital front door to everyday healthcare: a directory of
-              verified doctors, a booking flow, and a consultation record your doctor
-              writes during the visit.
+              approved doctors, a booking flow, and a clinical record the doctor writes
+              during the visit.
             </p>
           </header>
 
-          <div class="lp-features">
-            <article class="lp-feature">
-              <span class="lp-feature__icon"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i></span>
-              <h3>Structured symptom capture</h3>
+          <div class="lp-about">
+            <div class="lp-about__copy">
+              <h3 class="lp-about__heading">Look before you register</h3>
               <p>
-                During a visit your doctor records what you report from a fixed symptom
-                vocabulary, so the record stays consistent. Free text observations are
-                stored for the doctor and never reach the model.
+                Search the same directory the application uses. Only doctors an
+                administrator has approved appear here, and only the details the
+                directory publishes: name, specialty, consultation fee and whether
+                they are accepting appointments.
               </p>
-            </article>
+              <p class="lp-about__hint">
+                Nothing on this page books a visit. Booking, cancellations and
+                availability live in the directory and the patient account.
+              </p>
+            </div>
 
-            <article class="lp-feature">
-              <span class="lp-feature__icon"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span>
-              <h3>Appointments with verified doctors</h3>
-              <p>
-                Compare speciality, consultation fee and open slots before you book.
-                Cancelling is in your hands if plans change, and every doctor in the
-                directory has been approved by an administrator.
-              </p>
-            </article>
+            <div class="lp-dir" data-directory>
+              <div class="lp-dir__controls">
+                <div class="lp-dir__field">
+                  <label for="dirSearch">Search approved doctors</label>
+                  <input id="dirSearch" type="search" placeholder="Name or specialty" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="lp-dir__field">
+                  <label for="dirSpecialty">Specialty</label>
+                  <select id="dirSpecialty">
+                    <option value="">All specialties</option>
+                  </select>
+                </div>
+              </div>
 
-            <article class="lp-feature">
-              <span class="lp-feature__icon"><i class="fa-solid fa-file-medical" aria-hidden="true"></i></span>
-              <h3>Doctor led assessment</h3>
-              <p>
-                The model offers candidate conditions as decision support. Your doctor
-                reviews them against their own findings, records the assessment and plan,
-                and can download the report as a PDF.
-              </p>
-            </article>
+              <p class="lp-dir__status" data-dir-status role="status">The list below comes from the live directory.</p>
+              <ul class="lp-dir__list" data-dir-list></ul>
+
+              <a class="lp-dir__link" href="dashboard.html">
+                Open the full directory
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ===== How a visit works ===== -->
+      <!-- ============================================================
+           How a visit works: four selectable stages
+           ============================================================ -->
       <section class="lp-section lp-section--tinted" aria-labelledby="steps-title">
         <div class="container">
           <header class="lp-section__head">
-            <p class="lp-eyebrow">How it works</p>
-            <h2 class="lp-section__title" id="steps-title">From a symptom to a signed assessment</h2>
+            <p class="lp-eyebrow">How a visit works</p>
+            <h2 class="lp-section__title" id="steps-title">From an open time to a signed assessment</h2>
             <p class="lp-section__lead">
-              Four steps, nothing automatic. An appointment is only booked when you
-              choose a slot, and only your doctor can record clinical findings.
+              Four stages, nothing automatic. Choose a stage to see what happens in the
+              product at that point.
             </p>
           </header>
 
-          <ol class="lp-steps">
-            <li class="lp-step">
-              <span class="lp-step__number" aria-hidden="true">1</span>
-              <h3>Create your account</h3>
-              <p>Register as a patient, or apply as a doctor and wait for an administrator to verify your credentials.</p>
-            </li>
-            <li class="lp-step">
-              <span class="lp-step__number" aria-hidden="true">2</span>
-              <h3>Choose a doctor and a slot</h3>
-              <p>The directory lists speciality, fee and open availability, so you can decide before you book.</p>
-            </li>
-            <li class="lp-step">
-              <span class="lp-step__number" aria-hidden="true">3</span>
-              <h3>Attend the visit</h3>
-              <p>Your doctor records symptoms, reviews the model guidance and writes the clinical assessment.</p>
-            </li>
-            <li class="lp-step">
-              <span class="lp-step__number" aria-hidden="true">4</span>
-              <h3>Keep the record</h3>
-              <p>The assessment, any later revision and the PDF report stay attached to that appointment.</p>
-            </li>
-          </ol>
+          <div class="lp-journey" data-tabs data-tab-group="journey">
+            <div class="lp-stages" role="tablist" aria-label="Stages of a visit">
+              <button type="button" class="lp-stage is-active" role="tab" id="stage-tab-1" aria-controls="stage-1" aria-selected="true">
+                <span class="lp-stage__number">01</span>
+                <span class="lp-stage__label">Find care</span>
+              </button>
+              <button type="button" class="lp-stage" role="tab" id="stage-tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+                <span class="lp-stage__number">02</span>
+                <span class="lp-stage__label">Choose a visit</span>
+              </button>
+              <button type="button" class="lp-stage" role="tab" id="stage-tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+                <span class="lp-stage__number">03</span>
+                <span class="lp-stage__label">Attend the consultation</span>
+              </button>
+              <button type="button" class="lp-stage" role="tab" id="stage-tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+                <span class="lp-stage__number">04</span>
+                <span class="lp-stage__label">Record the assessment</span>
+              </button>
+            </div>
+
+            <div class="lp-journey__panel is-active" role="tabpanel" id="stage-1" aria-labelledby="stage-tab-1" tabindex="0">
+              <div class="lp-journey__copy">
+                <h3>Find care</h3>
+                <p>
+                  The public directory lists doctors an administrator has approved.
+                  Each entry carries the specialty, the consultation fee and the
+                  current state of appointment availability, so the first decision is
+                  made on facts rather than a marketing page.
+                </p>
+                <a class="lp-inline-link" href="dashboard.html">Open the directory <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+              </div>
+              <div class="lp-figure" aria-hidden="true">
+                <div class="lp-frame__toolbar">
+                  <span class="lp-wire lp-wire--input"><i class="fa-solid fa-magnifying-glass"></i> Search by specialty</span>
+                </div>
+                <ul class="lp-wire-list">
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 62%"></span><span class="lp-bar lp-bar--soft" style="width: 40%"></span></span><span class="lp-wire__action">Fee</span></li>
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 52%"></span><span class="lp-bar lp-bar--soft" style="width: 46%"></span></span><span class="lp-wire__action">Fee</span></li>
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 66%"></span><span class="lp-bar lp-bar--soft" style="width: 34%"></span></span><span class="lp-wire__action">Fee</span></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="lp-journey__panel" role="tabpanel" id="stage-2" aria-labelledby="stage-tab-2" tabindex="0">
+              <div class="lp-journey__copy">
+                <h3>Choose a visit</h3>
+                <p>
+                  Open times come from the doctor's own availability. Selecting one
+                  creates a booking and an entry in the patient account, and the same
+                  entry appears in the doctor's workspace. Nothing is booked until
+                  the patient confirms.
+                </p>
+              </div>
+              <div class="lp-figure" aria-hidden="true">
+                <p class="lp-frame__heading">Open times</p>
+                <ul class="lp-wire-list">
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 46%"></span><span class="lp-bar lp-bar--soft" style="width: 28%"></span></span><span class="lp-wire__action">Book</span></li>
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 40%"></span><span class="lp-bar lp-bar--soft" style="width: 32%"></span></span><span class="lp-wire__action">Book</span></li>
+                  <li><span class="lp-wire__lines"><span class="lp-bar" style="width: 52%"></span><span class="lp-bar lp-bar--soft" style="width: 24%"></span></span><span class="lp-wire__action">Book</span></li>
+                </ul>
+                <p class="lp-frame__caption">The fee and time of each slot are shown before booking.</p>
+              </div>
+            </div>
+
+            <div class="lp-journey__panel" role="tabpanel" id="stage-3" aria-labelledby="stage-tab-3" tabindex="0">
+              <div class="lp-journey__copy">
+                <h3>Attend the consultation</h3>
+                <p>
+                  During the visit the doctor records the symptoms the patient
+                  reports and, separately, the findings they observe. Free text
+                  observations stay with the doctor and are never sent to the model.
+                </p>
+              </div>
+              <div class="lp-figure" aria-hidden="true">
+                <div class="lp-frame__split">
+                  <div>
+                    <p class="lp-frame__heading">Patient reported</p>
+                    <span class="lp-bar" style="width: 84%"></span>
+                    <span class="lp-bar" style="width: 62%"></span>
+                  </div>
+                  <div>
+                    <p class="lp-frame__heading">Clinician observed</p>
+                    <span class="lp-bar" style="width: 76%"></span>
+                    <span class="lp-bar" style="width: 54%"></span>
+                  </div>
+                </div>
+                <p class="lp-frame__caption">Two separate lists, recorded by two different people.</p>
+              </div>
+            </div>
+
+            <div class="lp-journey__panel" role="tabpanel" id="stage-4" aria-labelledby="stage-tab-4" tabindex="0">
+              <div class="lp-journey__copy">
+                <h3>Record the assessment</h3>
+                <p>
+                  The doctor reviews the experimental candidate conditions, writes
+                  their own assessment and plan, and saves the record against that
+                  appointment. A later correction is stored as a new revision, so the
+                  original model output is never rewritten.
+                </p>
+              </div>
+              <div class="lp-figure" aria-hidden="true">
+                <p class="lp-frame__heading"><i class="fa-solid fa-check"></i> Assessment saved</p>
+                <span class="lp-bar" style="width: 70%"></span>
+                <span class="lp-bar lp-bar--soft" style="width: 52%"></span>
+                <p class="lp-frame__caption">Saved state, revision history and the report stay with the appointment.</p>
+              </div>
+            </div>
+          </div>
 
           <p class="lp-callout">
             <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
@@ -197,117 +369,223 @@
         </div>
       </section>
 
-      <!-- ===== Two sides of the same record ===== -->
-      <section class="lp-section" aria-labelledby="sides-title">
+      <!-- ============================================================
+           Consultation demonstration: local only, no prediction
+           ============================================================ -->
+      <section class="lp-section" aria-labelledby="consult-title">
+        <div class="container">
+          <header class="lp-section__head">
+            <p class="lp-eyebrow">One consultation, separate sources</p>
+            <h2 class="lp-section__title" id="consult-title">Patient reported, clinician observed, model assisted</h2>
+            <p class="lp-section__lead">
+              The record keeps these apart on purpose. Select a few example symptoms:
+              they stay in the patient list, while the doctor's findings are recorded
+              separately.
+            </p>
+          </header>
+
+          <div class="lp-consult">
+            <div class="lp-consult__col">
+              <p class="lp-consult__label">Patient reported symptoms</p>
+              <p class="lp-consult__text">
+                Reported in the patient's own words during the visit, then mapped to
+                the fixed symptom vocabulary the model understands.
+              </p>
+              <div class="lp-chipset" data-symptoms>
+                <button type="button" class="lp-chip" aria-pressed="false">Itching</button>
+                <button type="button" class="lp-chip" aria-pressed="false">Skin rash</button>
+                <button type="button" class="lp-chip" aria-pressed="false">Headache</button>
+                <button type="button" class="lp-chip" aria-pressed="false">Fatigue</button>
+                <button type="button" class="lp-chip" aria-pressed="false">Joint pain</button>
+                <button type="button" class="lp-chip" aria-pressed="false">Nausea</button>
+              </div>
+              <p class="lp-consult__count" data-symptom-count role="status">No symptoms selected.</p>
+            </div>
+
+            <div class="lp-consult__col lp-consult__col--quiet">
+              <p class="lp-consult__label">Clinician observed findings</p>
+              <p class="lp-consult__text">
+                Recorded by the doctor, not the patient, and kept in their own list.
+                A free text note can be added for context.
+              </p>
+              <ul class="lp-observed">
+                <li>
+                  <span class="lp-observed__tag">Separate list</span>
+                  Findings are entered by the doctor during the consultation.
+                </li>
+                <li>
+                  <span class="lp-observed__tag">Not sent to the model</span>
+                  Free text observations stay in the clinical record.
+                </li>
+                <li>
+                  <span class="lp-observed__tag">Kept together</span>
+                  Both lists are stored against the same appointment.
+                </li>
+              </ul>
+            </div>
+
+            <div class="lp-consult__panel">
+              <p class="lp-consult__label">Experimental model assistance</p>
+              <p>
+                In a real consultation, the model receives only symptom identifiers and
+                returns candidate conditions for the doctor to weigh against their own
+                findings. It never sees a name, a note or an appointment detail, and it
+                does not decide anything.
+              </p>
+              <p class="lp-consult__quiet">
+                This demonstration never contacts the model and never shows a
+                prediction. It exists to explain the separation of responsibilities.
+              </p>
+            </div>
+          </div>
+
+          <p class="lp-demo-note">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            <span>
+              Example symptoms only. Nothing selected here is saved, stored or sent
+              anywhere, and the page cannot produce a diagnosis.
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           Story: why the product separates the two voices
+           ============================================================ -->
+      <section class="lp-story" aria-labelledby="story-title">
+        <div class="container lp-story__inner">
+          <div class="lp-story__copy">
+            <p class="lp-eyebrow lp-eyebrow--light">Why HelloDoc exists</p>
+            <h2 class="lp-story__title" id="story-title">
+              Technology should support the conversation, not replace it.
+            </h2>
+            <p>
+              HelloDoc started with a question about access: what if the first step
+              toward care were clearer for someone far from a hospital? The answer
+              here is not a chatbot that diagnoses. It is a place where a patient's
+              account of their symptoms and a clinician's own assessment meet in one
+              record, with experimental model assistance used inside that workflow
+              rather than on top of it.
+            </p>
+            <p class="lp-story__links">
+              <a href="story.html">Read the full story <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+              <a href="./story.html#builder">Meet the builder <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </p>
+          </div>
+          <blockquote class="lp-story__quote">
+            <p>
+              What if where you lived did not determine how easily you could take the
+              first step toward healthcare?
+            </p>
+            <p class="lp-story__source">The question behind the project, from <a href="story.html#origin">My Story</a>.</p>
+          </blockquote>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           Two audiences, two different compositions
+           ============================================================ -->
+      <section class="lp-section" aria-labelledby="paths-title">
         <div class="container">
           <header class="lp-section__head">
             <p class="lp-eyebrow">Two sides, one record</p>
-            <h2 class="lp-section__title" id="sides-title">Built for patients and for the clinic</h2>
+            <h2 class="lp-section__title" id="paths-title">Built for patients, and for the clinic</h2>
             <p class="lp-section__lead">
               Each side sees only what it needs. Patients manage visits; doctors manage
               consultations, availability and the clinical record.
             </p>
           </header>
 
-          <div class="lp-panels">
-            <article class="lp-panel">
-              <header class="lp-panel__head">
-                <span class="lp-panel__icon"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i></span>
-                <h3>For patients</h3>
-                <p>A plain view of who you can see, when, and what it costs.</p>
-              </header>
-              <ul class="lp-list">
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Search the doctor directory by speciality and fee</li>
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Book an open slot and cancel it yourself</li>
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> See upcoming and past appointments in one list</li>
-              </ul>
-              <p class="lp-panel__note">Clinical results are not shown to patients in this prototype.</p>
-              <a class="lp-panel__link" href="signup.html">
-                Create a patient account
-                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-              </a>
+          <div class="lp-paths">
+            <article class="lp-path">
+              <p class="lp-path__label">For patients</p>
+              <h3 class="lp-path__heading">Who you can see, when, and what it costs.</h3>
+              <ol class="lp-path__steps">
+                <li><span>01</span> Search the directory by specialty and fee.</li>
+                <li><span>02</span> Pick an open time and book it yourself.</li>
+                <li><span>03</span> See upcoming and past visits in one list, and cancel when plans change.</li>
+              </ol>
+              <p class="lp-path__note">Clinical results are not shown to patients in this prototype.</p>
+              <a class="btn btn-primary" href="dashboard.html">Find a doctor</a>
             </article>
 
-            <article class="lp-panel lp-panel--accent">
-              <header class="lp-panel__head">
-                <span class="lp-panel__icon"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i></span>
-                <h3>For doctors</h3>
-                <p>The consultation context you need, without extra paperwork.</p>
-              </header>
-              <ul class="lp-list">
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Appointments assigned to you, with status changes you record</li>
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Availability slots and 30 day appointment analytics</li>
-                <li><i class="fa-solid fa-check" aria-hidden="true"></i> Symptom vocabulary, revisions and a PDF report per assessment</li>
-              </ul>
-              <p class="lp-panel__note">Clinical tools unlock only after an administrator approves your application.</p>
-              <a class="lp-panel__link" href="signup.html?role=doctor">
-                Apply as a doctor
-                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-              </a>
+            <article class="lp-path lp-path--clinic">
+              <p class="lp-path__label">For doctors</p>
+              <h3 class="lp-path__heading">A consultation record that keeps your judgment central.</h3>
+              <ol class="lp-path__steps">
+                <li><span>01</span> Apply with your specialty, institution and license details.</li>
+                <li><span>02</span> After an administrator approves you, open appointments assigned to you and record status changes.</li>
+                <li><span>03</span> Record reported and observed symptoms, review the experimental assistance, then write and save your own assessment.</li>
+                <li><span>04</span> Revisit a saved record, add a revision and download the report as a PDF.</li>
+              </ol>
+              <p class="lp-path__note">Clinical tools unlock only after an administrator approves your application.</p>
+              <a class="btn btn-outline" href="signup.html?role=doctor">Apply as a doctor</a>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- ===== Trust and safety, limited to what the code supports ===== -->
+      <!-- ============================================================
+           Safety and privacy: short, verifiable, no certifications
+           ============================================================ -->
       <section class="lp-section lp-section--tinted" aria-labelledby="trust-title">
-        <div class="container">
-          <header class="lp-section__head">
+        <div class="container lp-trust">
+          <div class="lp-trust__head">
             <p class="lp-eyebrow">Safety and privacy</p>
             <h2 class="lp-section__title" id="trust-title">How HelloDoc guards the record</h2>
             <p class="lp-section__lead">
               These are properties of the current build, not certifications. An
               independent security and privacy review is still an open item.
             </p>
-          </header>
+          </div>
 
-          <div class="lp-trust">
-            <article class="lp-trust__item">
-              <span class="lp-trust__icon"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
-              <h3>Approved clinicians only</h3>
-              <p>
-                Doctor accounts start pending. Only an administrator can approve one, and
-                every protected request checks the role, the approval and any suspension
-                again before it answers.
-              </p>
-            </article>
-            <article class="lp-trust__item">
-              <span class="lp-trust__icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
-              <h3>Your identity stays out of the model</h3>
-              <p>
-                The model receives symptom identifiers only: no name, note or appointment
-                detail. It runs as a private service behind a server side token.
-              </p>
-            </article>
-            <article class="lp-trust__item">
-              <span class="lp-trust__icon"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
-              <h3>Records that keep their history</h3>
-              <p>
+          <dl class="lp-trust__list">
+            <div>
+              <dt>Approved clinicians only</dt>
+              <dd>
+                Doctor accounts start pending. Only an administrator can approve one,
+                and every protected request checks the role, the approval and any
+                suspension again before it answers.
+              </dd>
+            </div>
+            <div>
+              <dt>Your identity stays out of the model</dt>
+              <dd>
+                The model receives symptom identifiers only: no name, note or
+                appointment detail. It runs as a private service behind a server side
+                token.
+              </dd>
+            </div>
+            <div>
+              <dt>Records that keep their history</dt>
+              <dd>
                 A symptom list can be revised, but the original prediction is kept. The
                 model output is frozen once stored, and the full lineage stays with the
                 assessment.
-              </p>
-            </article>
-          </div>
+              </dd>
+            </div>
+          </dl>
         </div>
       </section>
 
-      <!-- ===== Final call to action ===== -->
-      <section class="lp-section" aria-labelledby="cta-title">
+      <!-- ============================================================
+           Final call to action: restrained, no repeat of the hero
+           ============================================================ -->
+      <section class="lp-final" aria-labelledby="cta-title">
         <div class="container">
-          <div class="lp-cta">
-            <div class="lp-cta__copy">
-              <h2 id="cta-title">Start with a clearer picture.</h2>
-              <p>Book a visit with an approved doctor, or apply to join as a clinician.</p>
+          <div class="lp-final__inner">
+            <div>
+              <h2 class="lp-final__title" id="cta-title">Start with a clearer picture.</h2>
+              <p>Browse the directory, or apply to join as a clinician.</p>
             </div>
-            <div class="lp-cta__actions">
-              <a class="btn btn-lg lp-btn-on-brand" href="dashboard.html">Find a doctor</a>
-              <a class="btn btn-lg lp-btn-outline-brand" href="signup.html">Create an account</a>
+            <div class="lp-final__actions">
+              <a class="btn btn-primary btn-lg" href="dashboard.html">Find a doctor</a>
+              <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">Join as a doctor</a>
             </div>
-            <p class="lp-cta__note">
-              HelloDoc is a prototype. Please do not enter real patient information.
-            </p>
           </div>
+          <p class="lp-final__note">
+            HelloDoc is a prototype. Please do not enter real patient information.
+          </p>
         </div>
       </section>
     </main>
@@ -357,13 +635,14 @@
         </div>
 
         <div class="site-footer__bottom">
-          <p>&copy; Hellodoc 2025. All Rights Reserved.</p>
+          <p>&copy; Hellodoc 2026. All Rights Reserved.</p>
           <p>HelloDoc does not provide emergency care or replace advice from a qualified healthcare professional.</p>
         </div>
       </div>
     </footer>
 
     <script src="./Scripts/appointments.js"></script>
+    <script src="./Scripts/home.js?v=home3"></script>
     <script src="./Scripts/nav.js"></script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 /* ============================================================
    HelloDoc - Shared navbar behavior
    Loaded by every page so the navbar acts the same everywhere:
-   logo-triggered mobile menu, scroll shadow, live appointments badge,
+   menu button, scroll shadow, live appointments badge,
    the logged-in user chip (fetched from the backend session), and the
    current-page highlight for the shared navbar.
    Requires app.css for markup/classes. Optionally uses
@@ -13,84 +13,59 @@
 
   const $ = (sel) => document.querySelector(sel);
 
-  // There is no hamburger button any more. Below the mobile breakpoint the
-  // logo/wordmark is the menu trigger; on wider screens it stays a plain link
-  // to the home page, so it only becomes a disclosure while that matches.
-  // Must match the nav-collapse breakpoint in Styles/app.css (1200px): the
-  // canonical navbar has seven items, so it stacks into the menu earlier.
+  // Below the collapse breakpoint the canonical navbar becomes a menu behind a
+  // conventional menu button, so the logo stays a plain home link at every
+  // width. The breakpoint must match Styles/app.css (1200px).
   const mobileNav = window.matchMedia("(max-width: 1200px)");
 
   function initMenu() {
-    const brand = $(".navbar-brand");
+    const toggle = $(".nav-toggle");
     const links = $("#navLinks");
     const actions = $("#navActions");
-    if (!brand || !links || !actions) return;
+    if (!toggle || !links || !actions) return;
 
     function isOpen() {
-      return links.classList.contains("open");
+      return toggle.getAttribute("aria-expanded") === "true";
     }
 
     function setOpen(open) {
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute(
+        "aria-label",
+        open ? "Close navigation menu" : "Open navigation menu"
+      );
       links.classList.toggle("open", open);
       actions.classList.toggle("open", open);
-      brand.setAttribute("aria-expanded", open ? "true" : "false");
-      brand.setAttribute(
-        "aria-label",
-        open
-          ? "HelloDoc, close the navigation menu"
-          : "HelloDoc, open the navigation menu"
-      );
     }
 
-    function close() {
-      setOpen(false);
-    }
+    toggle.addEventListener("click", () => setOpen(!isOpen()));
 
-    // Mobile: the brand is a disclosure button for the menu.
-    function asMenuTrigger() {
-      brand.setAttribute("aria-controls", "navLinks");
-      setOpen(false);
-    }
-
-    // Desktop: strip the disclosure attributes so the brand is just the home link.
-    // `close()` sets those same attributes, so it has to run first.
-    function asLink() {
-      close();
-      brand.removeAttribute("aria-controls");
-      brand.removeAttribute("aria-expanded");
-      brand.removeAttribute("aria-label");
-    }
-
-    brand.addEventListener("click", (event) => {
-      if (!mobileNav.matches) return;
-      event.preventDefault();
-      setOpen(!isOpen());
-    });
-
-    // With no close button, the menu has to be dismissable in the usual ways:
-    // a click outside it, Escape, or leaving the breakpoint entirely.
+    // A menu that is not a dialog still has to close in the usual ways:
+    // a click outside it, Escape (returning focus to the button), or leaving
+    // the breakpoint entirely.
     document.addEventListener("click", (event) => {
-      if (!mobileNav.matches || !isOpen()) return;
+      if (!isOpen()) return;
       const inside =
-        brand.contains(event.target) ||
+        toggle.contains(event.target) ||
         links.contains(event.target) ||
         actions.contains(event.target);
-      if (!inside) close();
+      if (!inside) setOpen(false);
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && isOpen()) {
-        close();
-        brand.focus();
+        setOpen(false);
+        toggle.focus();
       }
     });
 
+    // Above the breakpoint the links are always on screen and the button is
+    // hidden, so an open state must not survive a resize.
     function sync() {
-      if (mobileNav.matches) asMenuTrigger();
-      else asLink();
+      if (!mobileNav.matches) setOpen(false);
     }
 
-    sync();
+    setOpen(false);
     if (mobileNav.addEventListener) mobileNav.addEventListener("change", sync);
     else if (mobileNav.addListener) mobileNav.addListener(sync); // older Safari
   }

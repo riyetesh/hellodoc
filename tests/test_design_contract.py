@@ -34,14 +34,43 @@ def test_help_topics_have_unique_dialogs():
     assert 'repeat(3, minmax(0, 1fr))' in read('Styles/help.css')
 
 
-def test_home_uses_svg_illustrations_with_bounded_sizes():
+def test_home_hero_previews_the_working_product():
+    # The hero carries a labelled product preview with two selectable modes
+    # instead of the old decorative illustration collage.
     html = read('index.html')
-    for image in ['doctor.svg', 'medicine.svg', 'care.svg']:
-        assert f'Asset/Illustrations/{image}' in html
-    css = read('Styles/login.css')
-    assert '.home-art .doc-bottom { width: 245px;' in css
-    assert '.home-art .med-right, .home-art .med-left' in css
-    assert 'width: 85px;' in css
+    assert 'class="lp-preview"' in html
+    assert 'role="tablist"' in html
+    for panel, tab in [('preview-patient', 'preview-tab-patient'),
+                       ('preview-doctor', 'preview-tab-doctor')]:
+        assert f'id="{panel}"' in html
+        assert f'id="{tab}"' in html
+        assert f'aria-controls="{panel}"' in html
+    # The schematic is described as an illustration, never as live data.
+    assert 'Layout illustration' in html
+    assert 'home-art' not in html
+    assert 'home-art' not in read('Styles/login.css')
+    assert 'Scripts/home.js' in html
+
+
+def test_visit_journey_exposes_four_stages_and_links_them_to_panels():
+    html = read('index.html')
+    stages = re.findall(r'id="stage-tab-(\d)"', html)
+    assert stages == ['1', '2', '3', '4']
+    for stage in stages:
+        assert f'aria-controls="stage-{stage}"' in html
+        assert f'id="stage-{stage}"' in html
+        assert f'aria-labelledby="stage-tab-{stage}"' in html
+
+
+def test_consultation_demo_cannot_reach_the_model():
+    page = read('index.html')
+    script = read('Scripts/home.js')
+    assert 'data-symptoms' in page
+    assert 'never contacts the model' in page
+    # One network call in the whole landing script: the public directory.
+    assert script.count('fetch(') == 1
+    assert "/api/doctors" in script
+    assert '/api/doctor/predict' not in script
 
 
 def test_appointments_has_no_symptoms_link():
