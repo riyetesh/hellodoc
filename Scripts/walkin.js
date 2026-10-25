@@ -56,10 +56,31 @@
     pageError.hidden = !message;
   }
 
+  // The workspace is usable before the walk-in tables exist. When they do not,
+  // say so once, clearly, instead of failing after the doctor has typed a form.
+  let available = true;
+  function setAvailable(value) {
+    available = value;
+    $('walkinSetup').hidden = value;
+    submitButton.disabled = !value;
+    checkButton.disabled = !value;
+  }
+
+  async function probe() {
+    try {
+      await call('/doctor/walkin/patients');
+      setAvailable(true);
+    } catch (error) {
+      if (error.code === 'WALKIN_UNAVAILABLE' || error.status === 404 || error.status === 503) {
+        setAvailable(false);
+      }
+    }
+  }
+
   function setBusy(value, label) {
     busy = value;
-    submitButton.disabled = value;
-    checkButton.disabled = value;
+    submitButton.disabled = value || !available;
+    checkButton.disabled = value || !available;
     startButton.disabled = value;
     bookButton.disabled = value;
     form.setAttribute('aria-busy', value ? 'true' : 'false');
@@ -188,6 +209,7 @@
 
   async function checkExisting() {
     const current = details();
+    if (!available) return;
     if (!current.fullName && !current.phone && !current.dateOfBirth) {
       showPageError('Enter a name, phone number or date of birth before checking.');
       nameInput.focus();
@@ -213,6 +235,7 @@
   async function register(event) {
     event.preventDefault();
     if (busy || chosen) return;
+    if (!available) return;
     if (!validate()) return;
     setBusy(true, 'Registering…');
     try {
@@ -229,11 +252,15 @@
         await checkExisting();
         matchesBox.scrollIntoView({ block: 'nearest' });
       } else {
-        showPageError(error.code === 'WALKIN_UNAVAILABLE'
-          ? 'Walk-in registration is not enabled on this server yet. Your details are kept here; ask the administrator to apply the walk-in migration.'
-          : error.status === 400 || error.status === 403
+        if (error.code === 'WALKIN_UNAVAILABLE' || error.status === 404 || error.status === 503) {
+          // Not a connection problem and not something the doctor can retry.
+          setAvailable(false);
+          showPageError('Walk-in registration is not enabled on this database yet. Your details are kept in this form; nothing was saved.');
+        } else {
+          showPageError(error.status === 400 || error.status === 403
             ? error.message
             : 'The patient could not be registered. Your details are still here; retry when the connection is back.');
+        }
       }
     } finally {
       setBusy(false);
@@ -346,12 +373,14 @@
     slotSelect.disabled = false;
     bookButton.disabled = false;
     setBusy(false);
+    setAvailable(true);
   }
 
   function open() {
     reset();
     dialog.showModal();
     nameInput.focus();
+    probe();
   }
 
   function close() {

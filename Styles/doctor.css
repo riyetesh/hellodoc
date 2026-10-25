@@ -1149,6 +1149,33 @@
   line-height: 1.5;
 }
 
+.walkin-setup {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #f0c98a;
+  border-left: 3px solid #8a4b00;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: #6b3c00;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.walkin-setup strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: #5a3200;
+}
+
+.walkin-setup code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82em;
+  padding: 0 0.2rem;
+  border: 1px solid #e7c79a;
+  border-radius: 4px;
+  background: #fffaf1;
+}
+
 .walkin-fields {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);

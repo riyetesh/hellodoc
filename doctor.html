@@ -303,6 +303,13 @@
 
         <div class="walkin-body">
           <p class="walkin-error" id="walkinError" role="alert" hidden></p>
+          <p class="walkin-setup" id="walkinSetup" role="note" hidden>
+            <strong>Walk-in registration is not enabled on this database yet.</strong>
+            The application is ready, but the clinical patient tables are missing. An administrator
+            applies <code>013_walkin_patients.sql</code> from <code>backend/migrations</code> in the
+            Supabase SQL editor, or runs <code>node backend/scripts/apply-migration.js 013_walkin_patients.sql</code>.
+            Nothing was created or changed.
+          </p>
 
           <fieldset class="walkin-fields">
             <legend>Patient details</legend>
@@ -380,7 +387,7 @@
 
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js"></script>
-    <script src="/Scripts/walkin.js"></script>
+    <script src="/Scripts/walkin.js?v=walkin1"></script>
     <script src="/Scripts/assessment.js"></script>
     <script src="/Scripts/nav.js"></script>
   </body>
