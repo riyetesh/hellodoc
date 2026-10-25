@@ -33,7 +33,8 @@ if (!process.env.VERCEL) {
   app.use((req, res, next) => {
     const pathname = req.path;
     if (
-      /^\/(?:backend|tests|venv|Algo|chatbot|child_process|\.freebuff|Login-and-dashboard|Login and dashboard)(?:\/|$)/i.test(pathname) ||
+      /^\/(?:backend|tests|venv|\.venv|Algo|chatbot|dist|web)(?:\/|$)/i.test(pathname) ||
+      /\.(?:json|lock|md|txt|toml|sh|bat|log|env|py|sql)$/i.test(pathname) ||
       /(?:^|\/)\../.test(pathname)
     ) {
       return res.status(404).end();
@@ -50,15 +51,6 @@ app.all("/predict", (req, res) =>
 );
 app.use("/static", (req, res) => res.status(403).end());
 
-// Local dev convenience: route the retired new-login service pages so their
-// static HTML can still be opened from the same origin during development.
-// The new-login service itself has been removed; these pages are served as-is.
-if (!process.env.VERCEL) {
-  app.use(
-    "/accounts",
-    express.static(path.join(__dirname, "..", "Login-and-dashboard", "New-login"), { dotfiles: "ignore" })
-  );
-}
 
 const PORT = Number(process.env.PORT) || 5000;
 

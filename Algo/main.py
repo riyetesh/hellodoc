@@ -11,10 +11,7 @@ import hmac
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from flask import    redirect, url_for, flash, session
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask import redirect, url_for, flash, session
 
 
 # Disclaimer shown on both the results page and the downloadable report.

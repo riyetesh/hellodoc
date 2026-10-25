@@ -71,7 +71,7 @@ for (const relative of [...PAGES, ...REQUIRED_ASSETS]) {
 
 // These must never be part of the public deployment, even if a future change
 // widens the allowlist.
-const FORBIDDEN_TOP_LEVEL = ['backend', 'tests', 'Algo', 'node_modules', 'Waiting page', 'web'];
+const FORBIDDEN_TOP_LEVEL = ['backend', 'tests', 'Algo', 'node_modules', 'Waiting page', 'web', 'chatbot', 'child_process'];
 for (const entry of fs.readdirSync(output)) {
   if (FORBIDDEN_TOP_LEVEL.includes(entry) || entry.startsWith('.env')) {
     throw new Error(`Static build contains a private path: ${entry}`);

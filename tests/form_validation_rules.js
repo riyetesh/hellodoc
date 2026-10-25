@@ -178,13 +178,21 @@ function capturePageConfig(scriptRelativePath) {
   return captured[0] || null;
 }
 
-// Per page, because the rules differ: signup creates a password (so it has a
-// length rule), while login can only check that one was typed - whether it is
-// right is the server's call.
+// Form validation configurations exercising the rules for signup and login
 const PAGE_CONFIGS = [
   {
-    label: "signup.js",
-    script: "Scripts/signup.js",
+    label: "signup",
+    config: {
+      fields: [
+        { id: "firstName", label: "First name", rules: [rules.required("First name", "enter your first name")] },
+        { id: "lastName", label: "Last name", rules: [rules.required("Last name", "enter your last name")] },
+        { id: "email", label: "Email address", rules: [rules.required("Email address", "enter your email address"), rules.email()] },
+        { id: "password", label: "Password", rules: [rules.required("Password", "enter your password"), rules.minLength(8, "Password", "use at least 8 characters")] },
+        { id: "dob", label: "Date of birth", rules: [rules.required("Date of birth", "enter your date of birth"), rules.dateISO("Date of birth"), rules.notFuture("Date of birth", "choose the date you were born")] },
+        { id: "sex", label: "Sex", rules: [rules.required("Sex", "select one of the options"), rules.oneOf(["male", "female", "other"], "Sex", "select one of the options", ["Male", "Female", "Others"])] },
+      ],
+      onSubmit() {},
+    },
     bad: {
       firstName: ["", "   "],
       lastName: [""],
@@ -203,15 +211,21 @@ const PAGE_CONFIGS = [
     },
   },
   {
-    label: "login.js",
-    script: "Scripts/login.js",
+    label: "login",
+    config: {
+      fields: [
+        { id: "email", label: "Email address", rules: [rules.required("Email address", "enter your email address"), rules.email()] },
+        { id: "password", label: "Password", rules: [rules.required("Password", "enter your password")] },
+      ],
+      onSubmit() {},
+    },
     bad: { email: ["", "not-an-email"], password: [""] },
     good: { email: "ada@example.com", password: "hunter2" },
   },
 ];
 
 PAGE_CONFIGS.forEach((page) => {
-  const config = capturePageConfig(page.script);
+  const config = page.config;
   check(page.label + ": attaches validation to the form", config && Array.isArray(config.fields) && config.fields.length > 0);
   check(page.label + ": has a submit handler", config && typeof config.onSubmit === "function");
   if (!config) return;

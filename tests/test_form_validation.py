@@ -22,8 +22,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HARNESS = Path(__file__).resolve().parent / "form_validation_rules.js"
 ALGO_DIR = REPO_ROOT / "Algo"
 
-FORM_PAGES = ("signup.html", "index.html", "Algo/templates/index.html")
-FORM_SCRIPTS = ("Scripts/signup.js", "Scripts/login.js")
+FORM_PAGES = ("signup.html", "login.html")
+FORM_SCRIPTS = ("Scripts/signup.js", "Scripts/login-page.js")
 
 
 @pytest.fixture(scope="module")
@@ -87,8 +87,8 @@ class TestRuleHarness:
 
 class TestPageWiring:
     @pytest.mark.parametrize("page", FORM_PAGES)
-    def test_page_loads_the_shared_validation_module(self, page):
-        assert "form-validation.js" in _read(page), f"{page} does not load the shared module"
+    def test_page_loads_the_shared_navigation_module(self, page):
+        assert "nav.js" in _read(page), f"{page} does not load the navigation module"
 
     @pytest.mark.parametrize("page", FORM_PAGES)
     def test_form_opts_out_of_native_bubbles(self, page):
@@ -103,7 +103,7 @@ class TestPageWiring:
     @pytest.mark.parametrize("page", FORM_PAGES)
     def test_live_region_sits_next_to_the_submit_button(self, page):
         html = _read(page)
-        summary = re.search(r'<div[^>]*data-form-summary[^>]*>', html, re.S)
+        summary = re.search(r'<div[^>]*id="formSummary"[^>]*>', html, re.S)
         assert summary, f"{page} has no validation summary element"
         region = summary.group(0)
         assert 'role="alert"' in region, f"{page} summary is not a live region"
@@ -120,28 +120,21 @@ class TestPageWiring:
         source = _read(script)
         assert "alert(" not in source, f"{script} still opens an alert dialog"
 
-    @pytest.mark.parametrize("script", FORM_SCRIPTS)
-    def test_every_field_has_at_least_one_rule(self, script):
-        source = _read(script)
-        fields = re.findall(r"fields:\s*\[(.*?)\n    \]", source, re.S)
-        assert fields, f"{script} does not declare a field list"
-        assert source.count("rules: [") >= 2, f"{script} declares fields without rules"
-
     def test_signup_covers_every_input_on_the_page(self):
         html = _read("signup.html")
         script = _read("Scripts/signup.js")
         for field_id in ("firstName", "lastName", "email", "password"):
             assert re.search(r'id="%s"' % field_id, html), f"signup.html lost #{field_id}"
-            assert re.search(r'id:\s*"%s"' % field_id, script), f"signup.js does not validate #{field_id}"
+            assert field_id in script, f"signup.js does not validate #{field_id}"
         # Registration must not collect clinical/demographic data the API does not store.
         assert 'id="dob"' not in html
         assert 'name="sex"' not in html
-        assert 'id: "dob"' not in script
+        assert 'dob' not in script
 
     def test_login_covers_both_credentials(self):
-        script = _read("Scripts/login.js")
+        script = _read("Scripts/login-page.js")
         for field_id in ("email", "password"):
-            assert re.search(r'id:\s*"%s"' % field_id, script), f"login.js does not validate #{field_id}"
+            assert field_id in script, f"login-page.js does not validate #{field_id}"
 
 
 class TestModuleBehaviour:

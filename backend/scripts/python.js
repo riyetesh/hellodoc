@@ -24,8 +24,8 @@ const candidates = [venvPython(".venv"), venvPython(path.join("Algo", ".venv"))]
   .concat(isWindows ? ["python", "py"] : ["python3", "python"]);
 
 for (const command of candidates) {
-  const probe = spawnSync(command, ["--version"], { stdio: "ignore" });
-  if (probe.error) continue;
+  const probe = spawnSync(command, ["-m", "pytest", "--version"], { stdio: "ignore" });
+  if (probe.error || probe.status !== 0) continue;
   const run = spawnSync(command, ["-m", "pytest", ...process.argv.slice(2)], {
     cwd: root,
     stdio: "inherit",
