@@ -758,8 +758,10 @@
       if (!response.ok) {
         if (response.status === 409 && body.code === 'ASSESSMENT_EXISTS' && body.assessmentId) {
           // Another tab (or a retry) saved this appointment first. The stored
-          // record wins; open it instead of creating a duplicate.
+          // record wins; open it instead of creating a duplicate. The draft is
+          // gone, so leaving must not raise the unsaved-changes prompt.
           clearDraft();
+          state.saved = true;
           window.location.assign(`/prediction.html?id=${encodeURIComponent(body.assessmentId)}`);
           return;
         }
