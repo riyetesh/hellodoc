@@ -557,10 +557,11 @@
     facts.className = 'dw-context-facts';
     addFact(facts, 'Name', data.patient.fullName);
     addFact(facts, 'Record', data.patient.account ? 'HelloDoc account patient' : 'Walk-in clinical record — no online account');
-    addFact(facts, 'Email', data.patient.email || (data.patient.account ? 'Not shared with you' : 'No account, so no email on file'));
+    // A walk-in email is a contact detail on the clinical record; it is not
+    // proof of an account and it is not presented as one.
+    addFact(facts, 'Email', data.patient.email || (data.patient.account ? 'Not shared with you' : 'No email recorded'));
     addFact(facts, 'Date of birth', data.patient.dateOfBirth || 'Not recorded');
     addFact(facts, 'Phone', data.patient.phone || 'Not recorded');
-    addFact(facts, 'Preferred language', data.patient.preferredLanguage || 'Not recorded');
     identity.append(facts);
     body.append(identity);
 

@@ -36,36 +36,47 @@ test('the patient record is opened by an id the server resolved, not one typed b
   assert.match(routes, /patientId:patientOf\(a\)/);
 });
 
-test('the consultation is a six-stage stepper whose panels exist', () => {
-  const html = read('doctor.html');
-  const stages = [...html.matchAll(/data-step="(\d)" aria-controls="assessmentStep(\d)"/g)];
-  assert.equal(stages.length, 6);
-  for (let index = 0; index < stages.length; index += 1) {
-    const number = String(index + 1);
-    assert.equal(stages[index][1], number);
-    assert.equal(stages[index][2], number);
-    assert.ok(html.includes(`id="assessmentStep${number}"`));
-  }
-  for (const title of ['Visit context', 'Reported by the patient', 'Your findings', 'Your assessment', 'Plan and follow-up', 'Review']) {
-    assert.ok(html.includes(title), `missing stage: ${title}`);
-  }
-  // Stages are navigation, not a decorative progress bar.
-  assert.ok(html.includes('id="assessmentSteps"'));
-  assert.ok(html.includes('id="stageStatus"'));
-  assert.ok(read('Scripts/assessment.js').includes("aria-current', 'step'"));
-});
-
-test('patient-reported symptoms and clinician findings stay in separate stages and lists', () => {
+test('the consultation is three areas on one page, not a wizard', () => {
   const html = read('doctor.html');
   const script = read('Scripts/assessment.js');
-  assert.ok(html.indexOf('id="reportedPicker"') > html.indexOf('id="assessmentStep2"'));
-  assert.ok(html.indexOf('id="reportedPicker"') < html.indexOf('id="assessmentStep3"'));
-  assert.ok(html.indexOf('id="clinicianPicker"') > html.indexOf('id="assessmentStep3"'));
+  for (const [id, title] of [
+    ['areaVisit', 'Who this record is for'],
+    ['areaSymptoms', 'What was reported and what you found'],
+    ['areaDecision', 'Your assessment and plan'],
+  ]) {
+    assert.ok(html.includes(`id="${id}"`), `missing area: ${id}`);
+    assert.ok(html.includes(title), `missing area title: ${title}`);
+  }
+  // The old staged navigation is gone rather than hidden behind new markup.
+  assert.equal(html.includes('dw-stepper'), false);
+  assert.equal(html.includes('data-step='), false);
+  assert.equal(script.includes('showStep'), false);
+  assert.equal(script.includes('currentStep'), false);
+  // The review and the save live inside the same form.
+  assert.ok(html.includes('id="reviewArea"'));
+  assert.ok(html.includes('id="saveAssessment"'));
+  assert.ok(html.includes('id="saveAssessmentTop"'));
+  assert.ok(html.includes('id="sideSummary"'));
+  // The model suggestion is a separate, optional panel inside the decision area.
+  assert.ok(html.includes('id="runModel"'));
+  assert.ok(html.includes('Experimental model suggestion'));
+  assert.ok(html.includes('not a diagnosis'));
+  assert.ok(script.includes("/api/doctor/predict"));
+});
+
+test('patient-reported symptoms and clinician findings stay in separate lists', () => {
+  const html = read('doctor.html');
+  const script = read('Scripts/assessment.js');
+  assert.ok(html.indexOf('id="reportedPicker"') > html.indexOf('id="areaSymptoms"'));
+  assert.ok(html.indexOf('id="reportedPicker"') < html.indexOf('id="clinicianPicker"'));
+  assert.ok(html.includes('Reported by the patient'));
+  assert.ok(html.includes('Recorded by you'));
   assert.ok(script.includes("state.reported = state.reported.filter"));
   assert.ok(script.includes("patientReported: state.reported"));
   assert.ok(script.includes("clinicianAdded: state.clinician"));
   // Free-text observations are stored, never presented as model input.
   assert.ok(script.includes('observations: state.observations'));
+  assert.ok(script.includes('moveSymptomsToObservations'));
 });
 
 test('note scaffolds insert headings only and never clinical text', () => {
@@ -87,7 +98,7 @@ test('note scaffolds insert headings only and never clinical text', () => {
 test('the draft state never claims a save before the server confirms it', () => {
   const script = read('Scripts/assessment.js');
   assert.ok(script.includes("setDraftState('Saving assessment…', 'saving')"));
-  assert.ok(script.includes("setDraftState('Save failed — your text is kept', 'error')"));
+  assert.ok(script.includes("setDraftState('Save failed, your text is kept', 'error')"));
   assert.ok(script.includes("setDraftState('Saved', 'saved')"));
   // Local autosave is labelled as such and is separate from the server save.
   assert.ok(script.includes('draft kept ${clock()}'));

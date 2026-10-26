@@ -20,6 +20,7 @@ let assessmentViewError = null;
 let modelCalls = [];
 let modelFailure = null;
 let modelResponse = null;
+let vocabularyFailure = null;
 let updateAssessmentError = null;
 let consultationView = {
   appointmentId:'4011b5d5-db16-41f6-9c7f-1b94f766bbda', startsAt:'2026-11-12T09:00:00Z', status:'pending',
@@ -59,7 +60,10 @@ require.cache[modelPath] = {
   id:modelPath, filename:modelPath, loaded:true,
   exports:{
     validSymptoms:(list) => Array.isArray(list) && list.length > 0,
-    symptomVocabulary:async () => ({ symptoms:['itching','skin_rash','nodal_skin_eruptions'], labels:{ itching:'Itching', skin_rash:'Skin rash' } }),
+    symptomVocabulary:async () => {
+      if (vocabularyFailure) { const error = new Error('vocabulary unavailable'); error.code = vocabularyFailure; throw error; }
+      return { symptoms:['itching','skin_rash','nodal_skin_eruptions'], labels:{ itching:'Itching', skin_rash:'Skin rash' } };
+    },
     modelRequest:async (path, symptoms) => {
       modelCalls.push({path, symptoms});
       if (modelFailure) { const error = new Error('model unavailable'); error.code = modelFailure; throw error; }
@@ -89,7 +93,7 @@ const fake = () => ({
     if (name === 'doctor_consultation') return { data:consultationView, error:consultationError };
     if (name === 'assigned_patients') return { data:[{ patient_id:'44444444-4444-4444-8444-444444444444', full_name:'Synthetic Patient', email:'patient@example.invalid', appointment_id:'55555555-5555-4555-8555-555555555555', appointment_start:'2026-11-12T09:00:00Z', appointment_status:'pending', assessment_count:1 }], error:null };
     if (name === 'assigned_patient_names') return { data:[{ id:'44444444-4444-4444-8444-444444444444', full_name:'Synthetic Patient' }], error:null };
-    if (name === 'doctor_clinic_patients') return { data:[{ id:'66666666-6666-4666-8666-666666666666', full_name:'Synthetic Walk-in', date_of_birth:'1980-01-01', phone:null, preferred_language:'Hindi', created_at:'2026-10-01T00:00:00Z' }], error:null };
+    if (name === 'doctor_clinic_patients') return { data:[{ id:'66666666-6666-4666-8666-666666666666', full_name:'Synthetic Walk-in', date_of_birth:'1980-01-01', phone:null, email:'walkin@example.invalid', created_at:'2026-10-01T00:00:00Z' }], error:null };
     return {data:name === 'patient_activity' ? {upcoming:1,completed:2,cancelled:0} : name === 'public_doctors' ? directory : name === 'apply_as_doctor' ? {status:'pending'} : {id:'22222222-2222-4222-8222-222222222222',status:'pending'},error:rpcError};
   },
 });
@@ -314,8 +318,9 @@ test('a patient context is scoped to the doctor who attends them', async () => {
   assert.equal(walkin.status,200);
   const walkinBody=await walkin.json();
   assert.equal(walkinBody.patient.account,false);
-  assert.equal(walkinBody.patient.email,null);
-  assert.equal(walkinBody.patient.preferredLanguage,'Hindi');
+  // The contact email is part of the clinical record; it is not an account.
+  assert.equal(walkinBody.patient.email,'walkin@example.invalid');
+  assert.equal('preferredLanguage' in walkinBody.patient,false);
 
   // A patient outside both of this doctor's lists is missing, not empty.
   assert.equal((await asDoctor('77777777-7777-4777-8777-777777777777')).status,404);
@@ -456,6 +461,7 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.deepEqual(assessCall.symptoms, ['itching','skin_rash']);
   assert.equal(insertedAssessment.table, 'assessments');
   assert.equal(insertedAssessment.payload.predicted_disease, 'Fungal infection');
+  assert.equal(insertedAssessment.payload.model_status, 'completed');
   // The stored patient and appointment come from the RPC context, not the body.
   assert.equal(insertedAssessment.payload.patient_id, consultationView.patientId);
   assert.equal(insertedAssessment.payload.appointment_id, consultationView.appointmentId);
@@ -471,6 +477,43 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.equal(unavailable.body.code, 'MODEL_UNAVAILABLE');
   assert.equal(insertedAssessment, null);
   modelFailure=null;
+
+  // A missing vocabulary and a timeout are reported distinctly, with a message
+  // that names the clinical fallback instead of only saying "retry".
+  vocabularyFailure='MODEL_TIMEOUT'; insertedAssessment=null;
+  const timedOut = await send(body);
+  assert.equal(timedOut.status, 503);
+  assert.equal(timedOut.body.code, 'MODEL_TIMEOUT');
+  assert.equal(timedOut.body.retryable, true);
+  assert.match(timedOut.body.message, /without a model suggestion/i);
+  assert.equal(insertedAssessment, null);
+  vocabularyFailure='MODEL_AUTH';
+  const auth = await send(body);
+  assert.equal(auth.body.code, 'MODEL_AUTH');
+  assert.equal(auth.body.retryable, true);
+  assert.match(auth.body.message, /authenticate/i);
+  vocabularyFailure=null;
+
+  // The explicit clinical fallback stores no prediction and no half-result.
+  modelFailure='MODEL_TIMEOUT'; insertedAssessment=null; modelCalls=[];
+  const clinical = await send({
+    appointmentId: body.appointmentId, patientReported:[], clinicianAdded:[],
+    observations:['Patient reports a rash for three days'], clinicalNote:'No fever.',
+    doctorAssessment:'Synthetic impression', plan:'Synthetic plan', modelUnavailable:true,
+  });
+  assert.equal(clinical.status, 201);
+  assert.equal(insertedAssessment.payload.model_status, 'unavailable');
+  assert.equal(insertedAssessment.payload.predicted_disease, null);
+  assert.equal(insertedAssessment.payload.model_version, null);
+  assert.equal(insertedAssessment.payload.description, null);
+  assert.deepEqual(insertedAssessment.payload.precautions, []);
+  assert.deepEqual(insertedAssessment.payload.patient_reported, []);
+  assert.equal(modelCalls.some((call) => call.path === '/internal/assess'), false);
+  modelFailure=null;
+
+  // The fallback cannot carry model symptoms, and cannot be an empty record.
+  assert.equal((await send({...body, modelUnavailable:true})).status, 400);
+  assert.equal((await send({ appointmentId: body.appointmentId, modelUnavailable:true, patientReported:[], clinicianAdded:[], observations:[] })).status, 400);
 
   profile={...profile,role:'patient'};
 });
@@ -523,6 +566,7 @@ test('a symptom correction is appended as a revision and never rewrites the orig
   assert.equal(insertedAssessment.payload.appointment_id,'55555555-5555-4555-8555-555555555555');
   assert.equal(insertedAssessment.payload.predicted_disease,'Fungal infection');
   assert.equal(insertedAssessment.payload.model_version,'mv-test');
+  assert.equal(insertedAssessment.payload.model_status,'completed');
   // The doctor's earlier decision is carried forward, not dropped.
   assert.equal(insertedAssessment.payload.doctor_assessment,'Impression');
   assert.equal(insertedAssessment.payload.plan,'Review in 1 week.');
@@ -614,6 +658,32 @@ test('an assessment can only be read or edited by its own doctor', async () => {
 
   const badVersion = await fetch(`${origin}/api/doctor/assessments/${id}`,{ method:'PATCH',headers:{'Content-Type':'application/json',Cookie:'hd_access=valid'},body:JSON.stringify({plan:'Plan',expectedUpdatedAt:'not-a-date'}) });
   assert.equal(badVersion.status,400);
+  assessmentView=null;
+  profile={...profile,role:'patient'};
+});
+
+test('a model-free clinical record produces a report without a fabricated prediction', async () => {
+  profile={...profile,role:'doctor',suspended:false};
+  verification={...verification,verification_status:'approved'};
+  const id='88888888-8888-4888-8888-888888888888';
+  assessmentView={
+    id, doctorName:'Dr Synthetic', patientName:'Synthetic Patient', patientKind:'clinic',
+    patientEmail:'walkin@example.invalid', modelStatus:'unavailable',
+    patientReported:[], clinicianAdded:[], observations:['Rash for three days'],
+    predictedDisease:null, modelVersion:null, modelConfidence:null,
+    doctorAssessment:'Synthetic impression', plan:'Synthetic plan',
+    precautions:[], medications:[], diet:[], workout:[],
+    createdAt:'2026-10-20T09:00:00Z', updatedAt:'2026-10-20T09:00:00Z',
+  };
+  const response=await fetch(`${origin}/api/doctor/assessments/${id}/report.pdf`,{headers:{Cookie:'hd_access=valid'}});
+  assert.equal(response.status,200);
+  const pdf=Buffer.from(await response.arrayBuffer()).toString('latin1');
+  const text=[...pdf.matchAll(/\(((?:\\.|[^\\()])*)\) Tj/g)].map((match) => match[1]).join(' ');
+  assert.ok(text.includes('No condition was predicted'));
+  assert.ok(text.includes('Synthetic impression'));
+  assert.equal(text.includes('Fungal infection'),false);
+  // The dataset guidance section is not printed for a model that never ran.
+  assert.equal(text.includes('Guidance from the dataset'),false);
   assessmentView=null;
   profile={...profile,role:'patient'};
 });

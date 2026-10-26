@@ -384,7 +384,21 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.get('/doctor/symptoms', ...guard('doctor', async (req, res) => {
     try { res.json(await symptomVocabulary()); }
-    catch (error) { res.status(503).json({ code:error.code === 'MODEL_NOT_CONFIGURED' ? error.code : 'MODEL_UNAVAILABLE', message:error.code === 'MODEL_NOT_CONFIGURED' ? error.message : 'Model service is unreachable. Ask the administrator to start the private prediction service.' }); }
+    catch (error) {
+      // A missing token, an unreachable process and a rejected token are
+      // different operator problems, so they stay distinguishable here. The
+      // doctor still gets one plain sentence about what they can do.
+      const code = typeof error.code === 'string' && error.code.startsWith('MODEL_') ? error.code : 'MODEL_UNAVAILABLE';
+      const setup = code === 'MODEL_NOT_CONFIGURED' || code === 'MODEL_AUTH';
+      res.status(503).json({
+        code,
+        retryable: !setup,
+        message: setup
+          ? 'Symptom search needs the private model service, which is not configured correctly. You can still record clinical notes and save this consultation without a model suggestion.'
+          : 'The private model service cannot be reached right now. You can still record clinical notes and save this consultation without a model suggestion.',
+        detail: error.message,
+      });
+    }
   }));
   // ---------------------------------------------------------------------------
   // Clinical assessments: model output plus the doctor's own decision.
@@ -405,19 +419,41 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       || typeof plan !== 'string' || plan.length > 4000) return { error: 'Assessment details are too long' };
     const reported = cleanList(body.patientReported), added = cleanList(body.clinicianAdded), observations = cleanList(body.observations);
     if (observations.length > 20 || observations.some((item) => item.length > 200)) return { error: 'Limit clinical observations to 20 entries of 200 characters' };
+    // The model-free path is explicit: the doctor chose it because the model
+    // could not answer. It is never inferred from an empty symptom list, and it
+    // cannot carry model symptoms, because then the record would imply the model
+    // ran on input it never saw.
+    const modelUnavailable = body.modelUnavailable === true;
     const symptoms = [...reported, ...added];
-    if (!symptoms.length) return { error: 'Add at least one model symptom' };
+    if (modelUnavailable) {
+      if (symptoms.length) return { error: 'This consultation is being saved without the model, so it cannot store model symptoms. Remove them or retry the model.' };
+      const hasClinicalContent = observations.length || clinicalNote.trim() || doctorAssessment.trim() || plan.trim();
+      if (!hasClinicalContent) return { error: 'Record an observation, note, assessment or plan before saving without a model suggestion.' };
+    } else if (!symptoms.length) {
+      return { error: 'Add at least one model symptom, or save the consultation as a clinical record without the model.' };
+    }
     if (new Set(symptoms).size !== symptoms.length) return { error: 'Each symptom can only be recorded once' };
     return {
-      reported, added, observations, symptoms,
+      reported, added, observations, symptoms, modelUnavailable,
       duration: symptomDuration.trim(), note: clinicalNote.trim(),
       doctorAssessment: doctorAssessment.trim(), plan: plan.trim(),
     };
   };
+  const modelFailureMessage = (code) => ({
+    MODEL_NOT_CONFIGURED: 'Symptom search is not configured on this server. You can still save the consultation as a clinical record without a model suggestion.',
+    MODEL_AUTH: 'The backend cannot authenticate with the private model service. You can still save the consultation as a clinical record without a model suggestion.',
+    MODEL_TIMEOUT: 'The private model service timed out. Nothing was saved; retry, or save the consultation as a clinical record without a model suggestion.',
+    MODEL_INVALID_RESPONSE: 'The private model service returned an unusable response. Nothing was saved; retry, or save the consultation as a clinical record without a model suggestion.',
+    MODEL_UNREACHABLE: 'The private model service is not reachable. Nothing was saved; retry, or save the consultation as a clinical record without a model suggestion.',
+  }[code] || 'The private model service cannot answer right now. Nothing was saved; retry, or save the consultation as a clinical record without a model suggestion.');
   const runModelAssessment = async (symptoms, res) => {
     let vocabulary;
     try { vocabulary = await symptomVocabulary(); }
-    catch { res.status(503).json({ code: 'MODEL_UNAVAILABLE', message: 'The model service is unavailable. Your assessment has not been saved.' }); return null; }
+    catch (error) {
+      const code = typeof error.code === 'string' && error.code.startsWith('MODEL_') ? error.code : 'MODEL_UNAVAILABLE';
+      res.status(503).json({ code, retryable: true, message: modelFailureMessage(code) });
+      return null;
+    }
     const unsupported = symptoms.filter((item) => !vocabulary.symptoms.includes(item));
     if (unsupported.length) {
       // Never silently drop a symptom: tell the caller exactly which entries are
@@ -429,13 +465,18 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     try {
       assessment = await modelRequest('/internal/assess', symptoms);
     } catch (error) {
-      res.status(error.code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code: error.code === 'INVALID_SYMPTOMS' ? 'INVALID_SYMPTOMS' : 'MODEL_UNAVAILABLE', message: 'The model could not produce a prediction. Your assessment has not been saved; retry when the service is available.' });
+      if (error.code === 'INVALID_SYMPTOMS') {
+        res.status(422).json({ code: 'INVALID_SYMPTOMS', message: 'The model rejected these symptoms. Nothing was saved; check the selected symptoms and retry.' });
+        return null;
+      }
+      const code = typeof error.code === 'string' && error.code.startsWith('MODEL_') ? error.code : 'MODEL_UNAVAILABLE';
+      res.status(503).json({ code, retryable: true, message: modelFailureMessage(code) });
       return null;
     }
     // A malformed reply must never reach the database as a half-valid record.
     if (!assessment || typeof assessment.output !== 'string' || !assessment.output.trim()
       || typeof assessment.modelVersion !== 'string' || !assessment.modelVersion.trim()) {
-      res.status(503).json({ code: 'MODEL_INVALID_RESPONSE', message: 'The model returned an unusable result. Nothing was saved; retry or ask the administrator to check the model service.' });
+      res.status(503).json({ code: 'MODEL_INVALID_RESPONSE', retryable: true, message: 'The model returned an unusable result. Nothing was saved; retry, or save the consultation as a clinical record without a model suggestion.' });
       return null;
     }
     const textList = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item.trim()) : []);
@@ -485,7 +526,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         id, fullName: account?.full_name || walkIn?.full_name || 'Patient',
         account: Boolean(account), email: account?.email || null,
         dateOfBirth: walkIn?.date_of_birth || null, phone: walkIn?.phone || null,
-        preferredLanguage: walkIn?.preferred_language || null,
+        email: account?.email || walkIn?.email || null,
       },
       appointments: (visits.data || []).map((row) => ({
         id: row.id, startsAt: row.scheduled_start, status: row.status, reason: row.reason,
@@ -516,14 +557,28 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     }
     return res.status(503).json({ code: 'WALKIN_UNAVAILABLE', message: fallback });
   };
+  // Contact addresses are trimmed, checked, and have their domain lowercased.
+  // The local part keeps its case: changing it could change whose address it is.
+  const cleanEmail = (value) => {
+    const text = typeof value === 'string' ? value.trim() : '';
+    if (!text) return { value: null };
+    const at = text.lastIndexOf('@');
+    const local = at > 0 ? text.slice(0, at) : '';
+    const domain = at > 0 ? text.slice(at + 1).toLowerCase() : '';
+    if (!local || !domain || /\s/.test(text) || text.length > 254
+      || !/^[^@]+@[^@]+\.[^@]+$/.test(`${local}@${domain}`)) {
+      return { error: 'Enter a valid email address or leave it blank.' };
+    }
+    return { value: `${local}@${domain}` };
+  };
   // One compact payload for every walk-in write. Fields the clinic does not need
-  // are optional: no email, no password and no phone number are required.
+  // are optional: no email, no password and no phone number are required. An
+  // email here is contact information on a clinical record, never an account.
   const walkinDetails = (body) => {
     const clean = (value) => (typeof value === 'string' ? value.trim() : '');
     const fullName = clean(body?.fullName);
     const rawDate = body?.dateOfBirth === undefined || body?.dateOfBirth === null ? '' : String(body.dateOfBirth).trim();
     const phone = clean(body?.phone);
-    const preferredLanguage = clean(body?.preferredLanguage);
     if (fullName.length < 1 || fullName.length > 200) return { error: 'Enter the patient name (up to 200 characters).' };
     let dateOfBirth = null;
     if (rawDate) {
@@ -535,25 +590,29 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       dateOfBirth = rawDate;
     }
     if (phone && (!/^[+()\-\s0-9]{6,40}$/.test(phone) || phone.length > 40)) return { error: 'Enter a valid phone number or leave it blank.' };
-    if (preferredLanguage.length > 40) return { error: 'Preferred language is too long.' };
-    return { fullName, dateOfBirth, phone: phone || null, preferredLanguage: preferredLanguage || null };
+    const email = cleanEmail(body?.email);
+    if (email.error) return { error: email.error };
+    return { fullName, dateOfBirth, phone: phone || null, email: email.value };
   };
-  // This doctor's own walk-in records, for the "check existing" step. A name or
-  // phone is required: the endpoint never dumps the list.
+  // This doctor's own walk-in records, for the "check existing" step. At least
+  // one identifier is required: the endpoint never dumps the list.
   router.get('/doctor/walkin/matches', ...guard('doctor', async (req, res, { db }) => {
     const name = typeof req.query.name === 'string' ? req.query.name.trim() : '';
     const phone = typeof req.query.phone === 'string' ? req.query.phone.trim() : '';
+    const rawEmail = typeof req.query.email === 'string' ? req.query.email.trim() : '';
     const rawDate = typeof req.query.dateOfBirth === 'string' ? req.query.dateOfBirth.trim() : '';
     if (name.length > 200 || phone.length > 40) return res.status(400).json({ message: 'Search details are too long.' });
-    if (!name && !phone && !rawDate) return res.status(400).json({ message: 'Enter a name, phone number or date of birth to check.' });
+    const email = cleanEmail(rawEmail);
+    if (email.error) return res.status(400).json({ message: email.error });
+    if (!name && !phone && !email.value && !rawDate) return res.status(400).json({ message: 'Enter a name, email, phone number or date of birth to check.' });
     if (rawDate && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return res.status(400).json({ message: 'Enter the date of birth as YYYY-MM-DD.' });
     const result = await db.rpc('doctor_clinic_patient_matches', {
-      p_name: name || '', p_phone: phone || null, p_date_of_birth: rawDate || null,
+      p_name: name || '', p_phone: phone || null, p_email: email.value, p_date_of_birth: rawDate || null,
     });
     if (result.error) return walkinError(res, result.error, 'Existing patients cannot be checked right now.');
     res.json((result.data || []).map((row) => ({
       id: row.id, fullName: row.full_name, dateOfBirth: row.date_of_birth,
-      phone: row.phone, preferredLanguage: row.preferred_language,
+      phone: row.phone, email: row.email,
       matchReason: row.match_reason, lastSeen: row.last_seen,
     })));
   }));
@@ -562,7 +621,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return walkinError(res, result.error, 'Walk-in records are unavailable right now.');
     res.json((result.data || []).map((row) => ({
       id: row.id, fullName: row.full_name, dateOfBirth: row.date_of_birth,
-      phone: row.phone, preferredLanguage: row.preferred_language, createdAt: row.created_at,
+      phone: row.phone, email: row.email, createdAt: row.created_at,
     })));
   }));
   router.post('/doctor/walkin/patients', ...guard('doctor', async (req, res, { db }) => {
@@ -572,16 +631,16 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (!isUuid(key)) return res.status(400).json({ message: 'A registration key is required.' });
     const result = await db.rpc('doctor_register_clinic_patient', {
       p_full_name: details.fullName, p_date_of_birth: details.dateOfBirth,
-      p_phone: details.phone, p_preferred_language: details.preferredLanguage, p_key: key,
+      p_phone: details.phone, p_email: details.email, p_key: key,
     });
     if (result.error) {
-      // The code only: a patient name or phone must never reach the logs.
+      // The code only: a patient name, phone or email must never reach the logs.
       report('walkin_register', result.error);
       return walkinError(res, result.error);
     }
     res.status(result.data?.existing ? 200 : 201).json({
       id: result.data.id, fullName: result.data.fullName, dateOfBirth: result.data.dateOfBirth,
-      phone: result.data.phone, preferredLanguage: result.data.preferredLanguage,
+      phone: result.data.phone, email: result.data.email,
       createdAt: result.data.createdAt, account: false, existing: Boolean(result.data.existing),
     });
   }));
@@ -626,7 +685,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.get('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
     const result = await db.from('assessments')
-      .select('id,patient_id,predicted_disease,appointment_id,created_at')
+      .select('id,patient_id,clinic_patient_id,predicted_disease,model_status,appointment_id,created_at')
       .eq('doctor_id', user.id).order('created_at', { ascending: false }).limit(20);
     if (result.error) return res.status(503).json({ message: 'Assessments unavailable' });
     const people = await db.rpc('assigned_patient_names');
@@ -637,10 +696,16 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const clinicPeople = await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinicPeople.data) ? clinicPeople.data : [];
     for (const row of clinicRows) names.set(row.id, row.full_name);
-    res.json(result.data.map((row) => ({
-      id: row.id, patientId: row.patient_id, patientName: names.get(row.patient_id) || 'Patient',
-      predictedDisease: row.predicted_disease, appointmentId: row.appointment_id, createdAt: row.created_at,
-    })));
+    // A walk-in record has no account patient_id, so its name comes from the
+    // clinic id. Without this the recent list called every walk-in "Patient".
+    res.json(result.data.map((row) => {
+      const patientId = row.patient_id || row.clinic_patient_id || null;
+      return {
+        id: row.id, patientId, patientName: names.get(patientId) || 'Patient',
+        predictedDisease: row.predicted_disease, modelStatus: row.model_status || 'completed',
+        appointmentId: row.appointment_id, createdAt: row.created_at,
+      };
+    }));
   }));
   router.post('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
     const body = req.body || {};
@@ -675,19 +740,27 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     }
     const cleaned = assessmentInput(body);
     if (cleaned.error) return res.status(400).json({ message: cleaned.error });
-    const assessment = await runModelAssessment(cleaned.symptoms, res);
-    if (!assessment) return;
+    let assessment = null;
+    if (!cleaned.modelUnavailable) {
+      assessment = await runModelAssessment(cleaned.symptoms, res);
+      if (!assessment) return;
+    }
     const insert = await db.from('assessments').insert({
       doctor_id: user.id, patient_id: accountPatientId, clinic_patient_id: clinicPatientId,
       appointment_id: consultation.appointmentId,
+      model_status: assessment ? 'completed' : 'unavailable',
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations: cleaned.observations,
       symptom_duration: cleaned.duration || null, clinical_note: cleaned.note || null,
-      predicted_disease: assessment.output, model_version: assessment.modelVersion,
+      predicted_disease: assessment ? assessment.output : null,
+      model_version: assessment ? assessment.modelVersion : null,
       // Only a real numeric score is stored; the bundled SVC exposes no
       // calibrated probabilities, so this stays null for it.
-      model_confidence: assessment.confidence,
-      description: assessment.description, precautions: assessment.precautions,
-      medications: assessment.medications, diet: assessment.diet, workout: assessment.workout,
+      model_confidence: assessment ? assessment.confidence : null,
+      description: assessment ? assessment.description : null,
+      precautions: assessment ? assessment.precautions : [],
+      medications: assessment ? assessment.medications : [],
+      diet: assessment ? assessment.diet : [],
+      workout: assessment ? assessment.workout : [],
       doctor_assessment: cleaned.doctorAssessment || null, plan: cleaned.plan || null,
     }).select('id').single();
     if (insert.error) {
@@ -719,18 +792,26 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const observations = 'observations' in body ? cleaned.observations : (source.data.observations || []);
     const doctorAssessment = 'doctorAssessment' in body ? cleaned.doctorAssessment : (source.data.doctor_assessment || '');
     const plan = 'plan' in body ? cleaned.plan : (source.data.plan || '');
-    const assessment = await runModelAssessment(cleaned.symptoms, res);
-    if (!assessment) return;
+    let assessment = null;
+    if (!cleaned.modelUnavailable) {
+      assessment = await runModelAssessment(cleaned.symptoms, res);
+      if (!assessment) return;
+    }
     const insert = await db.from('assessments').insert({
       doctor_id: user.id, patient_id: source.data.patient_id, clinic_patient_id: source.data.clinic_patient_id,
       appointment_id: source.data.appointment_id,
       supersedes_id: source.data.id,
+      model_status: assessment ? 'completed' : 'unavailable',
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations,
       symptom_duration: duration || null, clinical_note: note || null,
-      predicted_disease: assessment.output, model_version: assessment.modelVersion,
-      model_confidence: typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
-      description: assessment.description || '', precautions: assessment.precautions || [],
-      medications: assessment.medications || [], diet: assessment.diet || [], workout: assessment.workout || [],
+      predicted_disease: assessment ? assessment.output : null,
+      model_version: assessment ? assessment.modelVersion : null,
+      model_confidence: assessment && typeof assessment.confidence === 'number' && Number.isFinite(assessment.confidence) ? assessment.confidence : null,
+      description: assessment ? assessment.description || '' : null,
+      precautions: assessment ? assessment.precautions || [] : [],
+      medications: assessment ? assessment.medications || [] : [],
+      diet: assessment ? assessment.diet || [] : [],
+      workout: assessment ? assessment.workout || [] : [],
       doctor_assessment: doctorAssessment || null, plan: plan || null,
     }).select('id').single();
     if (insert.error) {

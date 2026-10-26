@@ -95,8 +95,12 @@
         ? 'Linked to a consultation'
         : 'No appointment is recorded for this assessment');
       const modelSymptoms = [...(assessment.patientReported || []), ...(assessment.clinicianAdded || [])];
-      add(modelSymptoms.length > 0, `${modelSymptoms.length} model symptom${modelSymptoms.length === 1 ? '' : 's'} recorded`);
-      add(Boolean(assessment.predictedDisease), 'Experimental model output, labelled as not a diagnosis');
+      if (assessment.modelStatus === 'unavailable') {
+        add(true, 'Saved without a model suggestion; the model did not run for this consultation');
+      } else {
+        add(modelSymptoms.length > 0, `${modelSymptoms.length} model symptom${modelSymptoms.length === 1 ? '' : 's'} recorded`);
+        add(Boolean(assessment.predictedDisease), 'Experimental model output, labelled as not a diagnosis');
+      }
       const hasAssessment = Boolean((assessment.doctorAssessment || '').trim());
       add(hasAssessment, hasAssessment ? 'Your assessment is stored' : 'Your assessment is empty', !hasAssessment);
       const hasPlan = Boolean((assessment.plan || '').trim());
@@ -112,7 +116,9 @@
       addRow(preview, 'Reported symptoms', (assessment.patientReported || []).map(humanize).join(', ') || 'None');
       addRow(preview, 'Your findings', (assessment.clinicianAdded || []).map(humanize).join(', ') || 'None');
       addRow(preview, 'Observations', (assessment.observations || []).join(' · ') || 'None');
-      addRow(preview, 'Model output', assessment.predictedDisease || 'Not recorded');
+      addRow(preview, 'Model output', assessment.modelStatus === 'unavailable'
+        ? 'Not run for this consultation'
+        : (assessment.predictedDisease || 'Not recorded'));
       addRow(preview, 'Your assessment', assessment.doctorAssessment || 'Not recorded');
       addRow(preview, 'Plan', assessment.plan || 'Not recorded');
     }
@@ -145,32 +151,44 @@
     addRow(context, 'Duration', data.symptomDuration || 'Not recorded');
     addRow(context, 'Clinical note', data.clinicalNote || 'Not recorded');
 
-    $('predictedDisease').textContent = data.predictedDisease || 'No prediction';
+    const modelUnavailable = data.modelStatus === 'unavailable';
+    $('predictedDisease').textContent = modelUnavailable
+      ? 'Saved without a model suggestion'
+      : (data.predictedDisease || 'No prediction');
     const meta = $('modelMeta');
     meta.replaceChildren();
-    addRow(meta, 'Model version', data.modelVersion || '');
-    // The exact identifier set that produced this prediction.
-    const usedByModel = [...(data.patientReported || []), ...(data.clinicianAdded || [])];
-    addRow(meta, 'Symptoms used by the model', `${usedByModel.length} selected`);
+    if (modelUnavailable) {
+      addRow(meta, 'Model', 'Did not run for this consultation');
+    } else {
+      addRow(meta, 'Model version', data.modelVersion || '');
+      // The exact identifier set that produced this prediction.
+      const usedByModel = [...(data.patientReported || []), ...(data.clinicianAdded || [])];
+      addRow(meta, 'Symptoms used by the model', `${usedByModel.length} selected`);
+    }
     // Only a real numeric confidence from the model is ever shown; nothing is
     // derived from symptom counts or the predicted class position.
     const confidence = data.modelConfidence;
     const hasConfidence = typeof confidence === 'number' && Number.isFinite(confidence);
     if (hasConfidence) addRow(meta, 'Model confidence', `${(confidence * 100).toFixed(1)}%`);
     const note = $('confidenceNote');
-    if (!note) { /* older markup */ } else if (hasConfidence) {
+    if (!note) { /* older markup */ } else if (modelUnavailable) {
+      note.hidden = false;
+      note.textContent = 'The model was not available when this consultation was saved, so no prediction, ranking or confidence is recorded. Your own assessment and plan are the clinical record.';
+    } else if (hasConfidence) {
       note.hidden = true;
       note.textContent = '';
     } else {
       note.hidden = false;
       note.textContent = 'This model version does not provide a calibrated probability, so no confidence percentage is shown and alternative conditions are not ranked. Treat the prediction as one input to your own assessment.';
     }
-    $('description').textContent = data.description || 'No description is available for this condition.';
+    $('description').textContent = modelUnavailable
+      ? 'This record was saved as a clinical note while the model service was unavailable. No condition was predicted.'
+      : (data.description || 'No description is available for this condition.');
 
-    fillList($('precautions'), data.precautions, 'No precautions were available.');
-    fillList($('medications'), data.medications, 'No medication information was available.');
-    fillList($('diet'), data.diet, 'No diet guidance was available.');
-    fillList($('workout'), data.workout, 'No workout guidance was available.');
+    fillList($('precautions'), data.precautions, modelUnavailable ? 'Not applicable: the model did not run.' : 'No precautions were available.');
+    fillList($('medications'), data.medications, modelUnavailable ? 'Not applicable: the model did not run.' : 'No medication information was available.');
+    fillList($('diet'), data.diet, modelUnavailable ? 'Not applicable: the model did not run.' : 'No diet guidance was available.');
+    fillList($('workout'), data.workout, modelUnavailable ? 'Not applicable: the model did not run.' : 'No workout guidance was available.');
 
     // Navigation reuses the appointment the doctor came from, so returning to the
     // consultation is one click rather than a search through the dashboard.

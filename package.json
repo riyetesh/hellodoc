@@ -4,7 +4,7 @@
   "private": true,
   "description": "HelloDoc — test entry points for the static site, Express backend and Flask model",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "test": "npm run test:regression",

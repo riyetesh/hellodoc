@@ -56,17 +56,17 @@ const fake = () => ({
   async rpc(name, args) {
     rpcCalls.push({ name, args });
     if (name === 'assigned_patient_names') return { data: [], error: null };
-    if (name === 'doctor_clinic_patients') return { data: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', full_name: 'Synthetic Walk-in' }], error: null };
+    if (name === 'doctor_clinic_patients') return { data: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', full_name: 'Synthetic Walk-in', email: 'walkin@example.invalid' }], error: null };
     if (name === 'doctor_clinic_patient_matches') {
       return {
-        data: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', full_name: 'Synthetic Walk-in', date_of_birth: '1990-04-02', phone: '+1 555 0100', preferred_language: 'English', match_reason: 'same date of birth', last_seen: '2026-10-01T09:00:00Z' }],
+        data: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', full_name: 'Synthetic Walk-in', date_of_birth: '1990-04-02', phone: '+1 555 0100', email: 'walkin@example.invalid', match_reason: 'same date of birth', last_seen: '2026-10-01T09:00:00Z' }],
         error: rpcError,
       };
     }
     if (name === 'doctor_consultation') return { data: consultation, error: rpcError };
     if (name === 'doctor_register_clinic_patient') {
       return {
-        data: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', fullName: args.p_full_name, dateOfBirth: args.p_date_of_birth, phone: args.p_phone, preferredLanguage: args.p_preferred_language, createdAt: '2026-10-25T09:00:00Z', existing: registrationExists },
+        data: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', fullName: args.p_full_name, dateOfBirth: args.p_date_of_birth, phone: args.p_phone, email: args.p_email, createdAt: '2026-10-25T09:00:00Z', existing: registrationExists },
         error: rpcError,
       };
     }
@@ -105,7 +105,7 @@ const request = async (path, { method = 'GET', body, cookie = 'hd_access=valid' 
 };
 
 const KEY = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
-const base = { fullName: 'Synthetic Walk-in', dateOfBirth: '1990-04-02', phone: '+1 555 0100', preferredLanguage: 'English', idempotencyKey: KEY };
+const base = { fullName: 'Synthetic Walk-in', dateOfBirth: '1990-04-02', phone: '+1 555 0100', email: 'Walk-in@Example.INVALID', idempotencyKey: KEY };
 
 test('walk-in registration requires an approved doctor', async () => {
   assert.equal((await request('/api/doctor/walkin/patients', { cookie: '' })).status, 401);
@@ -125,7 +125,9 @@ test('the form is validated on the server before anything is written', async () 
     [{ ...base, dateOfBirth: '2999-01-01' }, /date of birth/i],
     [{ ...base, dateOfBirth: '02/04/1990' }, /date of birth/i],
     [{ ...base, phone: 'call me' }, /phone/i],
-    [{ ...base, preferredLanguage: 'x'.repeat(41) }, /language/i],
+    [{ ...base, email: 'not-an-address' }, /email/i],
+    [{ ...base, email: 'two words@example.invalid' }, /email/i],
+    [{ ...base, email: 'x'.repeat(250) + '@example.invalid' }, /email/i],
     [{ ...base, idempotencyKey: 'not-a-key' }, /registration key/i],
   ]) {
     const result = await request('/api/doctor/walkin/patients', { method: 'POST', body });
@@ -135,11 +137,26 @@ test('the form is validated on the server before anything is written', async () 
   // A patient with no phone, email, date of birth or password is valid.
   assert.equal((await request('/api/doctor/walkin/patients', { method: 'POST', body: { fullName: 'Synthetic Minimal', idempotencyKey: KEY } })).status, 201);
   const call = rpcCalls.filter((entry) => entry.name === 'doctor_register_clinic_patient').pop();
-  assert.deepEqual(Object.keys(call.args).sort(), ['p_date_of_birth', 'p_full_name', 'p_key', 'p_phone', 'p_preferred_language']);
+  assert.deepEqual(Object.keys(call.args).sort(), ['p_date_of_birth', 'p_email', 'p_full_name', 'p_key', 'p_phone']);
   assert.equal(call.args.p_phone, null);
   assert.equal(call.args.p_date_of_birth, null);
-  // No account fields are ever forwarded.
-  assert.ok(!('email' in call.args) && !('password' in call.args));
+  assert.equal(call.args.p_email, null);
+  // No password or auth field is ever forwarded: the contact email is not an
+  // account and the route creates nothing in Supabase Auth.
+  assert.ok(!('password' in call.args) && !('preferredLanguage' in call.args));
+});
+
+test('the contact email is optional, trimmed and normalised without creating an account', async () => {
+  const made = await request('/api/doctor/walkin/patients', { method: 'POST', body: base });
+  assert.equal(made.status, 201);
+  const call = rpcCalls.filter((entry) => entry.name === 'doctor_register_clinic_patient').pop();
+  // The domain is lowercased, the local part is left exactly as entered.
+  assert.equal(call.args.p_email, 'Walk-in@example.invalid');
+  assert.equal(made.body.email, 'Walk-in@example.invalid');
+  assert.equal(made.body.account, false);
+  // Whitespace around an address is not part of it.
+  await request('/api/doctor/walkin/patients', { method: 'POST', body: { ...base, email: '  patient@Example.INVALID  ' } });
+  assert.equal(rpcCalls.filter((entry) => entry.name === 'doctor_register_clinic_patient').pop().args.p_email, 'patient@example.invalid');
 });
 
 test('registration is idempotent and a duplicate identity is reported, never merged', async () => {
@@ -170,7 +187,15 @@ test('existing-record checks are scoped and require a term', async () => {
   const found = await request('/api/doctor/walkin/matches?name=Synthetic&dateOfBirth=1990-04-02');
   assert.equal(found.status, 200);
   const call = rpcCalls.filter((entry) => entry.name === 'doctor_clinic_patient_matches').pop();
-  assert.deepEqual(call.args, { p_name: 'Synthetic', p_phone: null, p_date_of_birth: '1990-04-02' });
+  assert.deepEqual(call.args, { p_name: 'Synthetic', p_phone: null, p_email: null, p_date_of_birth: '1990-04-02' });
+  // A match can be found from an email alone, and the API returns the reason.
+  const byEmail = await request('/api/doctor/walkin/matches?email=Walk-in@Example.INVALID');
+  assert.equal(byEmail.status, 200);
+  assert.equal(byEmail.body[0].email, 'walkin@example.invalid');
+  assert.equal(byEmail.body[0].matchReason, 'same date of birth');
+  const emailCall = rpcCalls.filter((entry) => entry.name === 'doctor_clinic_patient_matches').pop();
+  assert.deepEqual(emailCall.args, { p_name: '', p_phone: null, p_email: 'Walk-in@example.invalid', p_date_of_birth: null });
+  assert.equal((await request('/api/doctor/walkin/matches?email=bad')).status, 400);
   rpcError = { code: '42501' };
   assert.equal((await request('/api/doctor/walkin/matches?name=Synthetic')).status, 403);
   rpcError = null;
@@ -253,11 +278,32 @@ test('the workspace exposes walk-in registration as a dialog, not a permanent se
   assert.match(html, /id="walkinBook"/);
   assert.match(html, /id="walkinFinish"/);
   // The distinction between a clinical record and an account is stated in the UI.
-  assert.match(html, /No email address, password or patient account is needed/);
+  assert.match(html, /no password or patient account is created/i);
   assert.match(html, /no HelloDoc account until they sign up/);
-  // Date of birth, phone and language are optional; only the name is required.
+  assert.match(html, /does not create a HelloDoc account or portal access/);
+  // Date of birth, phone and email are optional; only the name is required.
   assert.match(html, /id="walkinDob"[^>]*type="date"/);
+  assert.match(html, /id="walkinEmail"[^>]*type="email"/);
+  assert.equal(html.includes('walkinLanguage'), false);
+  assert.equal(html.includes('Preferred language'), false);
   assert.equal((html.match(/class="walkin-tag"|walkin-tag--req/g) || []).length >= 4, true);
+  // A possible match must be confirmed before a second record is created.
+  assert.match(html, /id="walkinConfirm"/);
+  assert.match(html, /id="walkinConfirmNew"[^>]*>[^<]*Register as a new patient anyway/);
+});
+
+test('the walk-in migration adds a nullable email and never touches Supabase Auth', () => {
+  const sql = read('backend/migrations/014_walkin_email_model_optional.sql');
+  assert.match(sql, /add column if not exists email text/);
+  assert.match(sql, /clinic_patients_email_format/);
+  assert.match(sql, /clinic_patients_doctor_email/);
+  assert.match(sql, /doctor_clinic_patient_matches\(/);
+  assert.match(sql, /p_email text default null/);
+  assert.match(sql, /model_status/);
+  assert.equal(/create\s+table[^;]*auth\.users/i.test(sql), false);
+  assert.equal(/insert\s+into\s+auth\./i.test(sql), false);
+  // preferred_language is kept for historical rows, not dropped destructively.
+  assert.equal(/drop\s+column[^;]*preferred_language/i.test(sql), false);
 });
 
 test('the walk-in script never stores patient details and always uses the doctor API', () => {

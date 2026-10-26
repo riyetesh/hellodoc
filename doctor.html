@@ -7,8 +7,8 @@
     <link rel="icon" href="/Asset/favicon.svg" />
     <link rel="stylesheet" href="/Styles/app.css?v=blue2" />
     <link rel="stylesheet" href="/Styles/patient.css" />
-    <link rel="stylesheet" href="/Styles/doctor.css?v=workspace3" />
-    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace3" />
+    <link rel="stylesheet" href="/Styles/doctor.css?v=workspace4" />
+    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace4" />
   </head>
   <body class="dw-page">
     <nav class="navbar" id="navbar">
@@ -120,7 +120,7 @@
             <div>
               <p class="dw-eyebrow">Clinical records</p>
               <h2 id="assessmentTitle">Assessment</h2>
-              <p class="dw-section-sub">Experimental decision support for the consultation you are attending. It is not a diagnosis and never replaces your own judgment.</p>
+              <p class="dw-section-sub">What the patient reported, what you found, and your own decision. Model assistance is experimental and never replaces your judgment.</p>
             </div>
             <p class="draft-state" id="draftState" role="status" aria-live="polite">Not started</p>
           </div>
@@ -150,197 +150,196 @@
 
           <div id="assessmentEditor">
             <form id="assessmentForm" novalidate>
-              <ol class="dw-stepper" id="assessmentSteps" aria-label="Consultation stages">
-                <li>
-                  <button class="dw-step" type="button" data-step="1" aria-controls="assessmentStep1">
-                    <span class="dw-step__number" aria-hidden="true">1</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Visit</span><span class="dw-step__state" data-role="state">Patient context</span></span>
-                  </button>
-                </li>
-                <li>
-                  <button class="dw-step" type="button" data-step="2" aria-controls="assessmentStep2">
-                    <span class="dw-step__number" aria-hidden="true">2</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Reported</span><span class="dw-step__state" data-role="state">Patient symptoms</span></span>
-                  </button>
-                </li>
-                <li>
-                  <button class="dw-step" type="button" data-step="3" aria-controls="assessmentStep3">
-                    <span class="dw-step__number" aria-hidden="true">3</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Findings</span><span class="dw-step__state" data-role="state">Your observations</span></span>
-                  </button>
-                </li>
-                <li>
-                  <button class="dw-step" type="button" data-step="4" aria-controls="assessmentStep4">
-                    <span class="dw-step__number" aria-hidden="true">4</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Assessment</span><span class="dw-step__state" data-role="state">Your impression</span></span>
-                  </button>
-                </li>
-                <li>
-                  <button class="dw-step" type="button" data-step="5" aria-controls="assessmentStep5">
-                    <span class="dw-step__number" aria-hidden="true">5</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Plan</span><span class="dw-step__state" data-role="state">Follow-up</span></span>
-                  </button>
-                </li>
-                <li>
-                  <button class="dw-step" type="button" data-step="6" aria-controls="assessmentStep6">
-                    <span class="dw-step__number" aria-hidden="true">6</span>
-                    <span class="dw-step__text"><span class="dw-step__label">Review</span><span class="dw-step__state" data-role="state">Save record</span></span>
-                  </button>
-                </li>
-              </ol>
-              <p class="dw-stage-status" id="stageStatus" role="status" aria-live="polite"></p>
               <p class="assessment-error" id="assessmentError" role="alert" hidden></p>
 
-              <section class="dw-stage" id="assessmentStep1" aria-labelledby="stepTitle1">
-                <div class="dw-stage__head">
-                  <h3 id="stepTitle1">Visit context</h3>
-                  <p class="dw-stage__lead">The patient and appointment are resolved by the server from this visit. Nothing here is chosen from a browser-supplied identifier.</p>
-                </div>
-                <div class="dw-stage__grid">
-                  <div class="form-grp">
-                    <label for="assessmentPatient">Patient for this record</label>
-                    <select id="assessmentPatient" name="patient" required>
-                      <option value="">Loading patients…</option>
-                    </select>
-                    <p class="assessment-context" id="assessmentContext" aria-live="polite"></p>
-                  </div>
-                  <dl class="dw-visit-facts" id="stageVisit"></dl>
-                </div>
-              </section>
+              <div class="cw-layout">
+                <div class="cw-main">
+                  <!-- A. Patient and visit ------------------------------------- -->
+                  <section class="cw-area" id="areaVisit" aria-labelledby="areaVisitTitle">
+                    <div class="cw-area__head">
+                      <p class="cw-area__step">1 · Patient and visit</p>
+                      <h3 id="areaVisitTitle">Who this record is for</h3>
+                      <p class="cw-area__lead">The patient and appointment are resolved by the server from this visit. A browser-supplied patient identifier is never treated as proof of access.</p>
+                    </div>
+                    <div class="cw-area__body cw-area__grid">
+                      <div class="form-grp">
+                        <label for="assessmentPatient">Patient for this record</label>
+                        <select id="assessmentPatient" name="patient" required>
+                          <option value="">Loading patients…</option>
+                        </select>
+                        <p class="assessment-context" id="assessmentContext" aria-live="polite"></p>
+                      </div>
+                      <dl class="dw-visit-facts" id="stageVisit"></dl>
+                    </div>
+                  </section>
 
-              <section class="dw-stage" id="assessmentStep2" aria-labelledby="stepTitle2">
-                <div class="dw-stage__head">
-                  <h3 id="stepTitle2">Reported by the patient</h3>
-                  <p class="dw-stage__lead">What the patient describes, in the model's fixed vocabulary. These entries are the only part of the consultation the model reads.</p>
-                </div>
-                <p class="shortcut-strip" aria-label="Keyboard shortcuts">
-                  <span><kbd>/</kbd> search symptoms</span>
-                  <span><kbd>↑</kbd><kbd>↓</kbd> move through matches</span>
-                  <span><kbd>Enter</kbd> add highlighted</span>
-                  <span><kbd>Backspace</kbd> remove last tag</span>
-                  <span><kbd>Esc</kbd> close list</span>
-                  <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> review</span>
-                </p>
-                <p class="dw-inline-note" id="reportedHint" hidden></p>
-                <fieldset class="symptom-group symptom-group--reported">
-                  <legend>Patient-reported symptoms</legend>
-                  <p class="symptom-hint">Search by name. Matches come from the model's vocabulary; anything else belongs in your observations.</p>
-                  <div class="symptom-picker" id="reportedPicker"></div>
-                </fieldset>
-                <div class="form-grp dw-stage__narrow">
-                  <label for="symptomDuration">Symptom duration</label>
-                  <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
-                  <p class="dw-field-hint">Recorded with this consultation. It is not read by the model.</p>
-                </div>
-              </section>
+                  <!-- B. Symptoms and findings --------------------------------- -->
+                  <section class="cw-area" id="areaSymptoms" aria-labelledby="areaSymptomsTitle">
+                    <div class="cw-area__head">
+                      <p class="cw-area__step">2 · Symptoms and findings</p>
+                      <h3 id="areaSymptomsTitle">What was reported and what you found</h3>
+                      <p class="cw-area__lead">The two lists stay separate in the record, and both are the only input the model receives. Free text stays out of the model.</p>
+                    </div>
+                    <div class="cw-area__body">
+                      <p class="shortcut-strip" aria-label="Keyboard shortcuts">
+                        <span><kbd>/</kbd> search symptoms</span>
+                        <span><kbd>↑</kbd><kbd>↓</kbd> move through matches</span>
+                        <span><kbd>Enter</kbd> add highlighted</span>
+                        <span><kbd>Backspace</kbd> remove last tag</span>
+                        <span><kbd>Esc</kbd> close list</span>
+                        <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> save</span>
+                      </p>
+                      <p class="dw-inline-note" id="reportedHint" hidden></p>
 
-              <section class="dw-stage" id="assessmentStep3" aria-labelledby="stepTitle3">
-                <div class="dw-stage__head">
-                  <h3 id="stepTitle3">Your findings</h3>
-                  <p class="dw-stage__lead">What you observed, kept separate from what the patient reported. Free text is stored with the record and never sent to the model.</p>
-                </div>
-                <fieldset class="symptom-group symptom-group--observed">
-                  <legend>Findings you can record in the model's vocabulary</legend>
-                  <p class="symptom-hint">These join the patient's list when the model runs, and stay labelled as yours in the record.</p>
-                  <div class="symptom-picker" id="clinicianPicker"></div>
-                </fieldset>
+                      <div class="cw-split">
+                        <fieldset class="symptom-group symptom-group--reported">
+                          <legend>Reported by the patient</legend>
+                          <p class="symptom-hint">Search by name. Matches come from the model's vocabulary; anything else belongs in your observations.</p>
+                          <div class="symptom-picker" id="reportedPicker"></div>
+                        </fieldset>
+                        <fieldset class="symptom-group symptom-group--observed">
+                          <legend>Recorded by you</legend>
+                          <p class="symptom-hint">Your own findings in the model's vocabulary. They stay labelled as yours in the record.</p>
+                          <div class="symptom-picker" id="clinicianPicker"></div>
+                        </fieldset>
+                      </div>
 
-                <fieldset class="symptom-group observation-group">
-                  <legend>Clinical observations the model cannot interpret</legend>
-                  <p class="symptom-hint" id="observationHint">Stored with this record. The model cannot read free text, so nothing here is dropped or guessed.</p>
-                  <div class="observation-row">
-                    <label class="sr-only" for="observationInput">Clinical observation</label>
-                    <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
-                    <button class="btn btn-outline" type="button" id="addObservation">Add observation</button>
-                  </div>
-                  <ul class="symptom-tags" id="observationTags" aria-live="polite"></ul>
-                </fieldset>
+                      <div class="cw-row">
+                        <div class="form-grp">
+                          <label for="symptomDuration">Symptom duration</label>
+                          <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
+                          <p class="dw-field-hint">Recorded with this consultation. It is not read by the model.</p>
+                        </div>
+                        <div class="cw-model-state" id="modelState" data-state="unknown">
+                          <p class="cw-model-state__title" id="modelStateTitle">Checking the symptom model…</p>
+                          <p class="cw-model-state__text" id="modelStateText"></p>
+                        </div>
+                      </div>
 
-                <div class="form-grp">
-                  <label for="clinicalNote">Clinical note</label>
-                  <textarea id="clinicalNote" rows="4" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
-                  <p class="dw-field-hint">Your own words. Stored with the record, separate from the model input.</p>
-                  <details class="dw-templates">
-                    <summary>Insert a note structure</summary>
-                    <div class="dw-templates__body">
-                      <p class="dw-field-hint">Adds headings only. No clinical text is filled in for you.</p>
-                      <div class="dw-templates__buttons" role="group" aria-label="Insert a note heading">
-                        <button class="btn btn-outline" type="button" data-template="History of presenting complaint">History</button>
-                        <button class="btn btn-outline" type="button" data-template="Examination findings">Examination</button>
-                        <button class="btn btn-outline" type="button" data-template="Follow-up plan">Follow-up</button>
+                      <fieldset class="symptom-group observation-group">
+                        <legend>Clinical observations</legend>
+                        <p class="symptom-hint" id="observationHint">Anything the model cannot interpret. Stored with this record, never sent to the model, and never silently dropped.</p>
+                        <div class="observation-row">
+                          <label class="sr-only" for="observationInput">Clinical observation</label>
+                          <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
+                          <button class="btn btn-outline" type="button" id="addObservation">Add observation</button>
+                        </div>
+                        <ul class="symptom-tags" id="observationTags" aria-live="polite"></ul>
+                      </fieldset>
+
+                      <div class="form-grp">
+                        <label for="clinicalNote">Clinical note</label>
+                        <textarea id="clinicalNote" rows="4" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
+                        <p class="dw-field-hint">Your own words. Stored with the record, separate from the model input.</p>
+                        <details class="dw-templates">
+                          <summary>Insert a note structure</summary>
+                          <div class="dw-templates__body">
+                            <p class="dw-field-hint">Adds headings only. No clinical text is filled in for you.</p>
+                            <div class="dw-templates__buttons" role="group" aria-label="Insert a note heading">
+                              <button class="btn btn-outline" type="button" data-template="History of presenting complaint">History</button>
+                              <button class="btn btn-outline" type="button" data-template="Examination findings">Examination</button>
+                              <button class="btn btn-outline" type="button" data-template="Follow-up plan">Follow-up</button>
+                            </div>
+                          </div>
+                        </details>
                       </div>
                     </div>
-                  </details>
-                </div>
-              </section>
+                  </section>
 
-              <section class="dw-stage" id="assessmentStep4" aria-labelledby="stepTitle4">
-                <div class="dw-stage__head">
-                  <h3 id="stepTitle4">Your assessment</h3>
-                  <p class="dw-stage__lead">Your independent clinical impression. It is stored separately from anything the model returns and can be changed later without rewriting the prediction.</p>
-                </div>
-                <div class="form-grp">
-                  <label for="doctorAssessment">Assessment</label>
-                  <textarea id="doctorAssessment" rows="6" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
-                  <p class="dw-field-hint">Write this before you look at the model suggestion if you want an uncontaminated opinion.</p>
-                  <p class="dw-inline-note" id="assessmentHint" hidden></p>
-                </div>
-              </section>
-
-              <section class="dw-stage" id="assessmentStep5" aria-labelledby="stepTitle5">
-                <div class="dw-stage__head">
-                  <h3 id="stepTitle5">Plan and follow-up</h3>
-                  <p class="dw-stage__lead">Investigations, treatment and follow-up as you decide them. This is your record, not a prescription generated by the platform.</p>
-                </div>
-                <div class="form-grp">
-                  <label for="plan">Plan</label>
-                  <textarea id="plan" rows="6" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
-                  <p class="dw-field-hint">Dataset guidance on the saved record stays labelled as general information for clinician review.</p>
-                </div>
-              </section>
-
-              <section class="dw-stage dw-stage--review" id="assessmentStep6" aria-labelledby="reviewTitle">
-                <div class="assessment-review dw-review" id="reviewPanel" tabindex="-1">
-                  <div class="dw-review__head">
-                    <h3 id="reviewTitle">Review before saving</h3>
-                    <p class="dw-review__lead">Saving runs the experimental model once. Its suggestion is stored next to your assessment, never above it.</p>
-                    <ul class="dw-review__checks" id="reviewChecks" aria-label="Record completeness"></ul>
-                  </div>
-
-                  <div class="dw-review__grid">
-                    <div class="dw-review__block">
-                      <h4>Sent to the model</h4>
-                      <p class="dw-review__hint">Symptoms only, from the fixed vocabulary.</p>
-                      <dl class="review-summary" id="reviewSummary"></dl>
+                  <!-- C. Clinical decision and plan ------------------------- -->
+                  <section class="cw-area" id="areaDecision" aria-labelledby="areaDecisionTitle">
+                    <div class="cw-area__head">
+                      <p class="cw-area__step">3 · Clinical decision and plan</p>
+                      <h3 id="areaDecisionTitle">Your assessment and plan</h3>
+                      <p class="cw-area__lead">Your independent impression, then the optional model suggestion, then the plan you decide. The model never writes into your fields.</p>
                     </div>
-                    <div class="dw-review__block dw-review__block--clinician">
-                      <h4>Your assessment and plan</h4>
-                      <p class="dw-review__hint">Your independent impression. Stored separately from the model output and editable later.</p>
-                      <dl class="review-summary" id="reviewClinician"></dl>
-                      <button class="btn btn-outline" type="button" id="editClinician">Edit assessment or plan</button>
+                    <div class="cw-area__body">
+                      <div class="form-grp">
+                        <label for="doctorAssessment">Your assessment</label>
+                        <textarea id="doctorAssessment" rows="5" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+                        <p class="dw-field-hint">Write this before you look at the model suggestion if you want an uncontaminated opinion.</p>
+                        <p class="dw-inline-note" id="assessmentHint" hidden></p>
+                      </div>
+
+                      <section class="cw-model" aria-labelledby="modelPanelTitle">
+                        <div class="cw-model__head">
+                          <div>
+                            <h4 id="modelPanelTitle">Experimental model suggestion</h4>
+                            <p class="cw-model__note">Decision support only. It is stored beside your assessment, never above it, and it is not a diagnosis.</p>
+                          </div>
+                          <button class="btn btn-outline" type="button" id="runModel" disabled>Run model suggestion</button>
+                        </div>
+                        <p class="cw-model__status" id="modelPanelStatus" role="status" aria-live="polite"></p>
+                        <div class="cw-model__result" id="modelResult" hidden>
+                          <p class="cw-model__label">Model output</p>
+                          <p class="cw-model__output" id="modelOutput"></p>
+                          <p class="cw-model__meta" id="modelMeta"></p>
+                          <p class="cw-model__hint" id="modelHint"></p>
+                        </div>
+                        <p class="cw-model__fallback" id="modelFallback" hidden>
+                          <button class="btn btn-outline" type="button" id="saveWithoutModel">Save clinical record without the model</button>
+                          <span>Any selected model symptoms move into your observations, and no prediction is stored.</span>
+                        </p>
+                      </section>
+
+                      <div class="form-grp">
+                        <label for="plan">Plan and follow-up</label>
+                        <textarea id="plan" rows="5" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
+                        <p class="dw-field-hint">Your decision. Dataset guidance on the saved record stays labelled as general information for clinician review.</p>
+                      </div>
                     </div>
-                  </div>
+                  </section>
 
-                  <div class="dw-review__stored">
-                    <h4>Stored with the record, not sent to the model</h4>
-                    <dl class="review-summary" id="reviewRecord"></dl>
-                  </div>
+                  <!-- Review -------------------------------------------------- -->
+                  <section class="cw-area cw-area--review" id="reviewArea" aria-labelledby="reviewTitle">
+                    <div class="assessment-review dw-review" id="reviewPanel" tabindex="-1">
+                      <div class="dw-review__head">
+                        <h3 id="reviewTitle">Review before saving</h3>
+                        <p class="dw-review__lead">Saving runs the experimental model once, unless you choose to save without it. The result is stored next to your assessment, never above it.</p>
+                        <ul class="dw-review__checks" id="reviewChecks" aria-label="Record completeness"></ul>
+                      </div>
 
-                  <p class="assessment-error" id="reviewError" role="alert" hidden></p>
-                  <div class="dw-actions dw-actions--review">
-                    <button class="btn btn-outline" type="button" id="backToEdit">Back to edit</button>
-                    <button class="btn btn-primary" type="button" id="saveAssessment">Save assessment</button>
-                  </div>
+                      <div class="dw-review__grid">
+                        <div class="dw-review__block">
+                          <h4>Sent to the model</h4>
+                          <p class="dw-review__hint">Symptoms only, from the fixed vocabulary.</p>
+                          <dl class="review-summary" id="reviewSummary"></dl>
+                        </div>
+                        <div class="dw-review__block dw-review__block--clinician">
+                          <h4>Your assessment and plan</h4>
+                          <p class="dw-review__hint">Your independent impression. Stored separately from the model output and editable later.</p>
+                          <dl class="review-summary" id="reviewClinician"></dl>
+                        </div>
+                      </div>
+
+                      <div class="dw-review__stored">
+                        <h4>Stored with the record, not sent to the model</h4>
+                        <dl class="review-summary" id="reviewRecord"></dl>
+                      </div>
+
+                      <p class="assessment-error" id="reviewError" role="alert" hidden></p>
+                      <div class="dw-actions dw-actions--review">
+                        <button class="btn btn-outline" type="button" id="backToEdit">Back to the form</button>
+                        <button class="btn btn-primary" type="button" id="saveAssessment">Save assessment</button>
+                      </div>
+                    </div>
+                  </section>
                 </div>
-              </section>
 
-              <div class="dw-actions dw-actions--steps" id="stageFooter">
-                <button class="btn btn-outline" type="button" id="resetDraft">Clear form</button>
-                <div class="dw-actions__buttons">
-                  <button class="btn btn-outline" type="button" id="stepBack">Back</button>
-                  <button class="btn btn-outline" type="button" id="stepNext">Next stage</button>
-                  <button class="btn btn-primary" type="button" id="reviewButton">Review assessment <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
-                </div>
+                <!-- Persistent summary: one place to see what will be saved. -->
+                <aside class="cw-side" aria-label="Consultation summary">
+                  <div class="cw-side__card">
+                    <h3>This record</h3>
+                    <dl class="review-summary" id="sideSummary"></dl>
+                    <p class="cw-side__hint" id="sideHint"></p>
+                    <div class="cw-actions">
+                      <button class="btn btn-primary" type="button" id="saveAssessmentTop">Save assessment</button>
+                      <button class="btn btn-outline" type="button" id="reviewButton">Review record</button>
+                      <button class="btn btn-ghost" type="button" id="resetDraft">Clear form</button>
+                    </div>
+                    <p class="assessment-error" id="sideError" role="alert" hidden></p>
+                  </div>
+                </aside>
               </div>
             </form>
           </div>
@@ -423,7 +422,7 @@
           <div>
             <p class="dw-eyebrow">Walk-in</p>
             <h2 id="walkinTitle">Register a walk-in patient</h2>
-            <p class="walkin-sub">Creates a clinical record only. No email address, password or patient account is needed.</p>
+            <p class="walkin-sub">Creates a clinical record only. An email address or phone number is optional, and no password or patient account is created.</p>
           </div>
           <button class="walkin-close" id="walkinClose" type="button" aria-label="Close walk-in registration">&times;</button>
         </div>
@@ -433,8 +432,9 @@
           <p class="walkin-setup" id="walkinSetup" role="note" hidden>
             <strong>Walk-in registration is not enabled on this database yet.</strong>
             The application is ready, but the clinical patient tables are missing. An administrator
-            applies <code>013_walkin_patients.sql</code> from <code>backend/migrations</code> in the
-            Supabase SQL editor, or runs <code>node backend/scripts/apply-migration.js 013_walkin_patients.sql</code>.
+            applies <code>013_walkin_patients.sql</code> and <code>014_walkin_email_model_optional.sql</code>
+            from <code>backend/migrations</code> in the Supabase SQL editor, or runs
+            <code>node backend/scripts/apply-migration.js 014_walkin_email_model_optional.sql</code>.
             Nothing was created or changed.
           </p>
 
@@ -456,28 +456,32 @@
                 <input id="walkinPhone" name="phone" type="tel" inputmode="tel" maxlength="40" autocomplete="off" aria-describedby="walkinPhoneError" />
                 <p class="walkin-field-error" id="walkinPhoneError" hidden></p>
               </div>
+              <div class="walkin-field">
+                <label for="walkinEmail">Email address <span class="walkin-tag">Optional</span></label>
+                <input id="walkinEmail" name="email" type="email" inputmode="email" maxlength="254" autocomplete="off" spellcheck="false" aria-describedby="walkinEmailError" />
+                <p class="walkin-field-error" id="walkinEmailError" hidden></p>
+              </div>
               <div class="walkin-field walkin-field--wide">
-                <label for="walkinLanguage">Preferred language <span class="walkin-tag">Optional</span></label>
-                <input id="walkinLanguage" name="preferredLanguage" type="text" maxlength="40" list="walkinLanguages" autocomplete="off" />
-                <datalist id="walkinLanguages">
-                  <option value="English"></option><option value="Hindi"></option><option value="Marathi"></option>
-                  <option value="Kannada"></option><option value="Tamil"></option><option value="Telugu"></option>
-                </datalist>
+                <p class="walkin-note">An email here is a contact detail on the clinical record. It does not create a HelloDoc account or portal access.</p>
               </div>
             </div>
-            <p class="walkin-hint">Only the name is required. A phone number or date of birth helps find a returning patient.</p>
+            <p class="walkin-hint">Only the name is required. A phone number, email address or date of birth helps find a returning patient.</p>
           </fieldset>
 
           <section class="walkin-check" aria-labelledby="walkinCheckTitle">
             <div class="walkin-check__head">
               <div>
                 <h3 id="walkinCheckTitle">Check for an existing record</h3>
-                <p class="walkin-check__hint">Searches only patients registered under your account. Matching runs as you type; nothing is merged automatically.</p>
+                <p class="walkin-check__hint">Searches only patients registered under your account, by name, email, phone and date of birth. Matching runs as you type; nothing is merged automatically.</p>
               </div>
               <button class="btn btn-outline" id="walkinCheck" type="button">Check</button>
             </div>
             <p class="walkin-state" id="walkinMatchState" role="status" aria-live="polite"></p>
             <div class="walkin-matches" id="walkinMatches" aria-live="polite"></div>
+            <div class="walkin-confirm" id="walkinConfirm" hidden>
+              <p id="walkinConfirmText"></p>
+              <button class="btn btn-outline" id="walkinConfirmNew" type="button">Register as a new patient anyway</button>
+            </div>
           </section>
         </div>
 
@@ -514,9 +518,9 @@
     </dialog>
 
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
-    <script src="/Scripts/doctor.js?v=workspace3"></script>
-    <script src="/Scripts/walkin.js?v=workspace3"></script>
-    <script src="/Scripts/assessment.js?v=workspace3"></script>
+    <script src="/Scripts/doctor.js?v=workspace4"></script>
+    <script src="/Scripts/walkin.js?v=workspace4"></script>
+    <script src="/Scripts/assessment.js?v=workspace4"></script>
     <script src="/Scripts/nav.js"></script>
   </body>
 </html>

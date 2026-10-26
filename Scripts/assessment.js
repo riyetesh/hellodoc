@@ -1,16 +1,31 @@
-/* Clinical assessment workspace: staged consultation, symptom search, local
-   draft safety and a review that separates model input from the doctor's record. */
+/* Clinical assessment workspace.
+
+   Three areas, one scrollable record: the patient and visit, the reported
+   symptoms and the doctor's findings, then the doctor's decision and plan.
+   Model output is a separate, optional preview; saving always stores the
+   doctor's own text alongside it and never writes over it.
+
+   The model can be down. That must not stop clinical documentation: the page
+   reports which part failed, keeps every field, and offers an explicit
+   "save without the model" path that stores no prediction at all. */
 (() => {
   'use strict';
   const form = document.getElementById('assessmentForm');
   if (!form) return;
 
   const $ = (id) => document.getElementById(id);
-  const DRAFT_KEY = 'hellodoc:assessment-draft:v1';
+  const DRAFT_KEY = 'hellodoc:assessment-draft:v2';
   const MAX_OBSERVATIONS = 20;
 
   const state = {
     vocabulary: { symptoms: [], labels: {} },
+    modelAvailable: false,
+    modelError: null,
+    modelPreview: null,
+    // Set when a model call failed in this session. It is what makes the
+    // model-free save path visible, and it is never hidden again by a later
+    // successful preview.
+    modelOutage: null,
     patients: [],
     patientId: '',
     appointmentId: '',
@@ -23,37 +38,22 @@
     plan: '',
     saved: true,
     saving: false,
-    // Only a save in this session marks the review stage complete; opening an
-    // existing record is not the same as having reviewed it now.
     persistedThisSession: false,
-    // When set, saving creates a revision of this assessment instead of a new one.
     revisingId: null,
     revisingSource: null,
-    // Set when the assessment was opened from one specific appointment.
     fixedAppointmentId: null,
     consultation: null,
-    currentStep: 1,
-    lastEditStep: 1,
   };
-
-  const STEPS = [
-    { number: 1, title: 'Visit context', short: 'Patient context' },
-    { number: 2, title: 'Reported by the patient', short: 'Patient symptoms' },
-    { number: 3, title: 'Your findings', short: 'Your observations' },
-    { number: 4, title: 'Your assessment', short: 'Your impression' },
-    { number: 5, title: 'Plan and follow-up', short: 'Follow-up' },
-    { number: 6, title: 'Review and save', short: 'Save record' },
-  ];
-  const stepTitle = (number) => STEPS.find((step) => step.number === number)?.title || '';
 
   const humanize = (identifier) => {
     const text = String(identifier).replace(/_/g, ' ').replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
     return text ? text.charAt(0).toUpperCase() + text.slice(1) : String(identifier);
   };
   const labelFor = (id) => state.vocabulary.labels[id] || humanize(id);
+  const modelSymptoms = () => [...state.reported, ...state.clinician];
+  const hasClinicalText = () => Boolean(state.observations.length || state.note.trim()
+    || state.doctorAssessment.trim() || state.plan.trim());
 
-  // One date format for the whole record: seconds are noise in a consultation,
-  // and the workspace and the report should not disagree about the same visit.
   const formatMoment = (value) => {
     if (!value) return '';
     const date = new Date(value);
@@ -87,10 +87,11 @@
     node.textContent = message || '';
     node.hidden = !message;
   }
-
-  // A clinical record belongs to a consultation. Without one the editor is
-  // replaced by an empty state that points back to the schedule, instead of a
-  // form that cannot be saved.
+  function announce(message) {
+    if (!message) return;
+    const node = $('assessmentAnnounce');
+    if (node) node.textContent = message;
+  }
   function setEditorVisible(visible) {
     const editor = $('assessmentEditor');
     const empty = $('assessmentEmpty');
@@ -116,8 +117,8 @@
     try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot())); } catch { /* storage may be disabled */ }
   }
   let persistTimer = 0;
-  // Typing stays responsive by writing the local draft on a short delay; nothing
-  // is sent to the server until the doctor saves the assessment.
+  // Only this device's draft is written here, and only clinical identifiers and
+  // the doctor's own text. No patient identity, email or appointment label.
   function schedulePersist() {
     window.clearTimeout(persistTimer);
     persistTimer = window.setTimeout(() => {
@@ -137,7 +138,7 @@
     state.appointmentId = typeof draft.appointmentId === 'string' ? draft.appointmentId : '';
     state.reported = Array.isArray(draft.reported) ? draft.reported : [];
     state.clinician = Array.isArray(draft.clinician) ? draft.clinician : [];
-    state.observations = Array.isArray(draft.observations) ? draft.observations : [];
+    state.observations = Array.isArray(draft.observations) ? draft.observations.filter((item) => typeof item === 'string') : [];
     state.duration = typeof draft.duration === 'string' ? draft.duration : '';
     state.note = typeof draft.note === 'string' ? draft.note : '';
     state.doctorAssessment = typeof draft.doctorAssessment === 'string' ? draft.doctorAssessment : '';
@@ -146,24 +147,55 @@
   }
 
   // ------------------------------------------------------------- autocomplete ---
+  const normalize = (text) => String(text)
+    .toLowerCase()
+    .replace(/[_./-]+/g, ' ')
+    .replace(/[^a-z0-9 ]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   function createPicker({ mountId, listName, onAdd, onRemove }) {
     const mount = $(mountId);
     if (!mount) return null;
+    if (!state.modelAvailable || !state.vocabulary.symptoms.length) {
+      mount.replaceChildren();
+      const empty = document.createElement('p');
+      empty.className = 'symptom-unavailable';
+      empty.textContent = 'Symptom search is unavailable while the model service is down.';
+      mount.append(empty);
+      return { renderChips() {}, focus: () => $('observationInput').focus() };
+    }
     const listId = `${listName}-options`;
-    mount.innerHTML = `
-      <div class="symptom-chips" role="list" data-chips></div>
-      <div class="symptom-input-wrap">
-        <input type="text" role="combobox" autocomplete="off" spellcheck="false"
-          aria-autocomplete="list" aria-expanded="false" aria-controls="${listId}"
-          aria-label="${listName === 'reported' ? 'Search symptoms reported by the patient' : 'Search symptoms recorded by the doctor'}"
-          placeholder="Type to search symptoms…" />
-        <ul class="symptom-options" id="${listId}" role="listbox" hidden></ul>
-      </div>
-      <p class="symptom-count" aria-live="polite"></p>`;
-    const chips = mount.querySelector('[data-chips]');
-    const input = mount.querySelector('input');
-    const list = mount.querySelector('ul');
-    const count = mount.querySelector('.symptom-count');
+    mount.replaceChildren();
+    const chips = document.createElement('ul');
+    chips.className = 'symptom-chips';
+    chips.setAttribute('role', 'list');
+    chips.dataset.chips = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'symptom-input-wrap';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.setAttribute('role', 'combobox');
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-controls', listId);
+    input.setAttribute('aria-label', listName === 'reported'
+      ? 'Search symptoms reported by the patient'
+      : 'Search symptoms recorded by the doctor');
+    input.placeholder = 'Type a symptom name…';
+    const list = document.createElement('ul');
+    list.className = 'symptom-options';
+    list.id = listId;
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+    wrap.append(input, list);
+    const count = document.createElement('p');
+    count.className = 'symptom-count';
+    count.setAttribute('aria-live', 'polite');
+    mount.append(chips, wrap, count);
+
     let options = [];
     let active = -1;
 
@@ -174,28 +206,28 @@
       active = -1;
     }
 
-    function normalize(text) {
-      return String(text).toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
     function search(query) {
-      const selected = new Set([...state.reported, ...state.clinician]);
-      const needle = normalize(query);
+      const selected = new Set(modelSymptoms());
+      const tokens = normalize(query).split(' ').filter(Boolean);
       return state.vocabulary.symptoms
         .filter((id) => !selected.has(id))
-        .filter((id) => !needle || normalize(labelFor(id)).includes(needle) || normalize(id).includes(needle))
+        .filter((id) => {
+          if (!tokens.length) return true;
+          const haystack = `${normalize(labelFor(id))} ${normalize(id)}`;
+          return tokens.every((token) => haystack.includes(token));
+        })
         .slice(0, 8);
     }
 
     function renderOptions(query) {
-      const needle = normalize(query);
       options = search(query);
       active = -1;
       list.replaceChildren();
       if (!query.trim()) { close(); return; }
       if (!options.length) {
-        const selected = [...state.reported, ...state.clinician];
-        const already = selected.some((id) => normalize(labelFor(id)).includes(needle) || normalize(id).includes(needle));
+        const selected = modelSymptoms();
+        const tokens = normalize(query).split(' ').filter(Boolean);
+        const already = selected.some((id) => tokens.every((token) => normalize(labelFor(id)).includes(token)));
         const empty = document.createElement('li');
         empty.className = 'symptom-option-empty';
         empty.textContent = already
@@ -238,8 +270,7 @@
     }
 
     function choose(id) {
-      if (!id) return;
-      if (state.reported.includes(id) || state.clinician.includes(id)) return;
+      if (!id || modelSymptoms().includes(id)) return;
       onAdd(id);
       input.value = '';
       close();
@@ -263,10 +294,16 @@
         chip.append(text, remove);
         chips.append(chip);
       }
-      const total = state.reported.length + state.clinician.length;
+      if (!selected.length) {
+        const empty = document.createElement('li');
+        empty.className = 'symptom-empty';
+        empty.textContent = listName === 'reported' ? 'Nothing reported yet.' : 'Nothing added by you yet.';
+        chips.append(empty);
+      }
+      const total = modelSymptoms().length;
       count.textContent = selected.length
-        ? `${selected.length} selected · ${total} of ${state.vocabulary.symptoms.length} model symptoms in this assessment`
-        : `No symptoms selected yet · ${state.vocabulary.symptoms.length} available model symptoms`;
+        ? `${selected.length} here · ${total} model symptom${total === 1 ? '' : 's'} in this record`
+        : `None here · ${total} in this record`;
     }
 
     input.addEventListener('input', () => renderOptions(input.value));
@@ -286,7 +323,7 @@
       }
       if (event.key === 'Escape') { close(); return; }
       if (event.key === 'Enter') {
-        // Always handled here: Enter must never submit the assessment form.
+        // Never submits the form: Enter only picks the highlighted symptom.
         event.preventDefault();
         if (!list.hidden && options[active >= 0 ? active : 0]) choose(options[active >= 0 ? active : 0]);
         return;
@@ -300,9 +337,26 @@
     return { renderChips, focus: () => input.focus(), renderOptions };
   }
 
+  let reportedPicker = null;
+  let clinicianPicker = null;
+  function buildPickers() {
+    reportedPicker = createPicker({
+      mountId: 'reportedPicker', listName: 'reported',
+      onAdd: (id) => addSymptom('reported', id),
+      onRemove: (id) => removeSymptom('reported', id),
+    });
+    clinicianPicker = createPicker({
+      mountId: 'clinicianPicker', listName: 'clinician',
+      onAdd: (id) => addSymptom('clinician', id),
+      onRemove: (id) => removeSymptom('clinician', id),
+    });
+  }
+
   function addSymptom(listName, id) {
-    if (state.reported.includes(id) || state.clinician.includes(id)) return;
+    if (modelSymptoms().includes(id)) return;
     if (listName === 'reported') state.reported.push(id); else state.clinician.push(id);
+    // A preview produced from a different symptom set would be misleading.
+    state.modelPreview = null;
     markDirty();
     renderAll();
     announce(`${labelFor(id)} added.`);
@@ -312,92 +366,10 @@
     const index = list.indexOf(id);
     if (index < 0) return;
     list.splice(index, 1);
+    state.modelPreview = null;
     markDirty();
     renderAll();
     announce(`${labelFor(id)} removed.`);
-  }
-
-  const reportedPicker = createPicker({
-    mountId: 'reportedPicker', listName: 'reported',
-    onAdd: (id) => addSymptom('reported', id),
-    onRemove: (id) => removeSymptom('reported', id),
-  });
-  const clinicianPicker = createPicker({
-    mountId: 'clinicianPicker', listName: 'clinician',
-    onAdd: (id) => addSymptom('clinician', id),
-    onRemove: (id) => removeSymptom('clinician', id),
-  });
-
-  // Screen-reader announcements are separate from the save-state chip so adding
-  // a tag can never make the form look saved when it is not.
-  function announce(message) {
-    if (!message) return;
-    const node = $('assessmentAnnounce');
-    if (node) node.textContent = message;
-  }
-
-  // ----------------------------------------------------------------- stages ---
-  const stagePanels = [...document.querySelectorAll('.dw-stage')];
-  const stepButtons = [...document.querySelectorAll('.dw-step')];
-
-  function stepDone(number) {
-    if (number === 1) return Boolean(state.patientId && (state.appointmentId || state.revisingId));
-    if (number === 2) return state.reported.length > 0;
-    if (number === 3) return state.clinician.length > 0 || state.observations.length > 0 || Boolean(state.note.trim());
-    if (number === 4) return Boolean(state.doctorAssessment.trim());
-    if (number === 5) return Boolean(state.plan.trim());
-    // The review is complete only once the server has confirmed a save in this
-    // session; the page normally navigates to the saved record before this is seen.
-    return state.persistedThisSession && !state.saving;
-  }
-
-  function renderStepper() {
-    for (const button of stepButtons) {
-      const number = Number(button.dataset.step);
-      const done = stepDone(number);
-      button.dataset.state = number === state.currentStep ? 'current' : done ? 'done' : 'todo';
-      if (number === state.currentStep) button.setAttribute('aria-current', 'step');
-      else button.removeAttribute('aria-current');
-      const marker = button.querySelector('.dw-step__state');
-      if (marker) marker.textContent = number === state.currentStep ? 'Current stage' : done ? 'Complete' : STEPS[number - 1].short;
-      const status = number === state.currentStep ? ', current stage' : done ? ', complete' : ', not recorded yet';
-      button.setAttribute('aria-label', `Stage ${number}: ${stepTitle(number)}${status}`);
-    }
-    const status = $('stageStatus');
-    if (status) status.textContent = `Stage ${state.currentStep} of 6 · ${stepTitle(state.currentStep)}`;
-    const back = $('stepBack');
-    if (back) back.disabled = state.currentStep === 1;
-    const next = $('stepNext');
-    if (next) next.hidden = state.currentStep === 6;
-    const review = $('reviewButton');
-    if (review) review.hidden = state.currentStep === 6;
-    const footer = $('stageFooter');
-    if (footer) footer.hidden = state.currentStep === 6;
-  }
-
-  function showStep(number, focus = false) {
-    const target = Math.max(1, Math.min(6, number));
-    state.currentStep = target;
-    if (target !== 6) state.lastEditStep = target;
-    for (const panel of stagePanels) {
-      const panelStep = Number(panel.id.replace('assessmentStep', ''));
-      panel.hidden = panelStep !== target;
-    }
-    renderStepper();
-    if (!focus) return;
-    const heading = $(`stepTitle${target}`);
-    if (heading) {
-      heading.tabIndex = -1;
-      heading.focus({ preventScroll: true });
-      heading.scrollIntoView({ block: 'nearest' });
-    }
-  }
-
-  function goStep(number, focus = false) {
-    // The review stage validates the record before it opens; the other stages
-    // stay freely accessible so nothing the doctor typed is gated.
-    if (number === 6) { openReview(); return; }
-    showStep(number, focus);
   }
 
   // ----------------------------------------------------------- observations ---
@@ -445,15 +417,16 @@
   }
 
   // ---------------------------------------------------------------- hints ---
-  // Inline guidance is derived from what is on the form, never from a suggestion
-  // engine, and it never invents clinical content.
   function renderHints() {
     const reported = $('reportedHint');
     if (reported) {
-      const total = state.reported.length + state.clinician.length;
-      if (!total) {
+      const total = modelSymptoms().length;
+      if (!state.modelAvailable) {
         reported.hidden = false;
-        reported.textContent = 'At least one symptom is needed before the record can be reviewed and saved.';
+        reported.textContent = 'Symptom search is unavailable. Record what you need in the observations and clinical note; nothing you type here is lost.';
+      } else if (!total) {
+        reported.hidden = false;
+        reported.textContent = 'Add at least one symptom, or save this consultation as a clinical record without a model suggestion.';
       } else if (!state.reported.length) {
         reported.hidden = false;
         reported.textContent = 'Only your own findings are recorded so far. Add what the patient described if it is available.';
@@ -497,13 +470,11 @@
       renderVisitFacts();
       return;
     }
-    // A revision keeps the patient and appointment of the record it replaces;
-    // an appointment-scoped assessment keeps the patient of that visit.
+    // A revision or an appointment-scoped record keeps the patient it belongs to.
     select.disabled = Boolean(state.revisingId || state.fixedAppointmentId);
     if (state.patientId && state.patients.some((patient) => patient.patientId === state.patientId)) {
       select.value = state.patientId;
     } else if (state.patientId) {
-      // The draft referenced a patient this doctor no longer attends.
       state.patientId = '';
       state.appointmentId = '';
     }
@@ -525,10 +496,9 @@
     parts.push(count ? `${count} previous assessment${count === 1 ? '' : 's'}` : 'No previous assessments');
     context.textContent = parts.filter(Boolean).join(' · ');
     renderVisitFacts();
+    renderSideSummary();
   }
 
-  // A small, honest summary of the visit this record belongs to. Values come
-  // from the selected option or the server's consultation payload.
   function renderVisitFacts() {
     const dl = $('stageVisit');
     if (!dl) return;
@@ -538,7 +508,7 @@
       rows.push(['Patient', option.dataset.name || option.textContent.split(' — ')[0]]);
       rows.push(['Visit', option.dataset.when ? formatMoment(option.dataset.when) : 'No appointment linked']);
       if (option.dataset.status) rows.push(['Status', humanize(option.dataset.status)]);
-      rows.push(['Patient record', option.dataset.walkIn === 'true' ? 'Walk-in clinical record — no online account' : 'HelloDoc account patient']);
+      rows.push(['Patient record', option.dataset.walkIn === 'true' ? 'Walk-in clinical record, no online account' : 'HelloDoc account patient']);
       if (option.dataset.count) rows.push(['Previous assessments', option.dataset.count]);
     }
     if (state.consultation?.reason) rows.push(['Stated reason', state.consultation.reason]);
@@ -561,8 +531,6 @@
     }
   }
 
-  // Consultation context for the appointment the doctor opened. Text is set with
-  // textContent so a patient-stated reason can never inject markup.
   function renderConsultation(data) {
     state.consultation = data;
     const banner = $('consultationBanner');
@@ -600,7 +568,127 @@
     state.appointmentId = option ? (option.dataset.appointmentId || '') : '';
     markDirty();
     renderPatientContext();
-    renderStepper();
+    renderSideSummary();
+  }
+
+  // ----------------------------------------------------------------- model ---
+  function outageMessage(code) {
+    if (code === 'MODEL_NOT_CONFIGURED' || code === 'MODEL_AUTH') {
+      return 'Symptom search is not configured correctly on this server. Clinical notes, observations and your assessment still save.';
+    }
+    if (code === 'MODEL_TIMEOUT') return 'The model service did not answer in time.';
+    if (code === 'MODEL_INVALID_RESPONSE') return 'The model service returned a response this application cannot use.';
+    return 'The model service is not reachable right now.';
+  }
+
+  function noteModelOutage(code, message) {
+    state.modelOutage = { code: code || 'MODEL_UNAVAILABLE', message: message || outageMessage(code) };
+    state.modelPreview = null;
+    renderModelPanel();
+    renderReview();
+  }
+
+  function renderModelState() {
+    const box = $('modelState');
+    if (!box) return;
+    const title = $('modelStateTitle');
+    const text = $('modelStateText');
+    if (state.modelOutage || !state.modelAvailable) {
+      box.dataset.state = 'down';
+      title.textContent = 'Symptom search unavailable';
+      text.textContent = 'You can still record observations, a clinical note, an assessment and a plan. Saving that record stores no prediction.';
+    } else if (state.modelPreview) {
+      box.dataset.state = 'ready';
+      title.textContent = 'Model suggestion loaded';
+      text.textContent = 'This is a preview. Saving runs the model again and stores the result with your record.';
+    } else {
+      box.dataset.state = 'ready';
+      title.textContent = `Symptom search ready · ${state.vocabulary.symptoms.length} model symptoms`;
+      text.textContent = 'Matches come from the model vocabulary. Saving runs the model once.';
+    }
+  }
+
+  function renderModelPanel() {
+    renderModelState();
+    const status = $('modelPanelStatus');
+    const run = $('runModel');
+    const result = $('modelResult');
+    const fallback = $('modelFallback');
+    if (!status || !run || !result) return;
+    const symptoms = modelSymptoms();
+
+    if (state.modelOutage || !state.modelAvailable) {
+      status.textContent = (state.modelOutage?.message || outageMessage(state.modelError?.code))
+        + ' No prediction will be stored for this consultation unless you retry the model later.';
+      run.disabled = true;
+    } else if (!symptoms.length) {
+      status.textContent = 'Add at least one symptom to run the model. Saving the assessment runs it as well.';
+      run.disabled = true;
+    } else if (state.modelPreview) {
+      status.textContent = `Preview from model version ${state.modelPreview.modelVersion}. Saving runs the model again and stores that result.`;
+      run.disabled = state.saving;
+    } else {
+      status.textContent = `${symptoms.length} symptom${symptoms.length === 1 ? '' : 's'} will be sent to the model. Run it to preview the suggestion, or save and let the save run it.`;
+      run.disabled = state.saving;
+    }
+    run.textContent = state.modelPreview ? 'Run again' : 'Run model suggestion';
+
+    if (state.modelPreview) {
+      result.hidden = false;
+      $('modelOutput').textContent = state.modelPreview.output;
+      $('modelMeta').textContent = `Model version ${state.modelPreview.modelVersion} · experimental decision support, not a diagnosis`;
+      $('modelHint').textContent = 'Only the selected symptoms were sent. Your assessment and plan were not.';
+    } else {
+      result.hidden = true;
+      $('modelOutput').textContent = '';
+      $('modelMeta').textContent = '';
+      $('modelHint').textContent = '';
+    }
+
+    if (fallback) {
+      fallback.hidden = !state.modelOutage;
+      const button = $('saveWithoutModel');
+      if (button) button.disabled = state.saving;
+    }
+  }
+
+  async function runModelPreview() {
+    if (state.saving || !state.modelAvailable) return;
+    const symptoms = modelSymptoms();
+    if (!symptoms.length) { renderModelPanel(); return; }
+    const button = $('runModel');
+    button.disabled = true;
+    button.textContent = 'Running model…';
+    $('modelPanelStatus').textContent = 'Sending the selected symptoms to the model.';
+    try {
+      const response = await fetch('/api/doctor/predict', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptoms }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(body.message || 'The model could not produce a suggestion.');
+        error.code = body.code;
+        throw error;
+      }
+      if (typeof body.output !== 'string' || !body.output.trim() || typeof body.modelVersion !== 'string') {
+        const error = new Error('The model returned an unusable response.');
+        error.code = 'MODEL_INVALID_RESPONSE';
+        throw error;
+      }
+      state.modelPreview = { output: body.output.trim(), modelVersion: body.modelVersion.trim() };
+      showError('assessmentError', '');
+      renderModelPanel();
+      announce(`Model suggestion: ${state.modelPreview.output}. This is decision support, not a diagnosis.`);
+    } catch (error) {
+      noteModelOutage(error.code, error.message);
+      announce(error.message);
+    } finally {
+      if (!state.modelPreview) $('runModel').textContent = 'Run model suggestion';
+      renderModelPanel();
+    }
   }
 
   // ----------------------------------------------------------------- review ---
@@ -616,24 +704,58 @@
     }
   }
 
+  function jumpButton(label, targetId) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'dw-review__jump';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      const target = $(targetId);
+      if (!target) return;
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      const heading = target.querySelector('h3');
+      if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+    });
+    return button;
+  }
+
   function renderChecks() {
     const list = $('reviewChecks');
     if (!list) return;
-    const symptoms = state.reported.length + state.clinician.length;
+    const symptoms = modelSymptoms().length;
+    const withoutModel = Boolean(state.modelOutage) && symptoms === 0;
     const checks = [
-      { ok: Boolean(state.patientId), text: state.patientId ? 'Patient selected' : 'Select the patient for this record' },
       {
-        ok: Boolean(state.appointmentId || state.revisingId),
-        text: state.revisingId ? 'Revision of a saved record' : state.appointmentId ? 'Linked to this appointment' : 'Open the record from an appointment',
+        ok: Boolean(state.patientId), optional: false,
+        text: state.patientId ? 'Patient selected for this record' : 'Select the patient for this record',
+        jump: state.patientId ? null : ['Choose patient', 'areaVisit'],
       },
-      { ok: symptoms > 0, text: symptoms ? `${symptoms} symptom${symptoms === 1 ? '' : 's'} will be sent to the model` : 'Add at least one symptom for the model' },
+      {
+        ok: Boolean(state.appointmentId || state.revisingId), optional: false,
+        text: state.revisingId ? 'Revision of a saved record' : state.appointmentId ? 'Linked to this appointment' : 'Open the record from an appointment',
+        jump: state.appointmentId || state.revisingId ? null : ['Go to the schedule', 'doctorAppointments'],
+      },
+      {
+        ok: symptoms > 0 || withoutModel, optional: false,
+        text: withoutModel
+          ? 'Will be saved as a clinical record without a model suggestion'
+          : symptoms > 0 ? `${symptoms} symptom${symptoms === 1 ? '' : 's'} will be sent to the model` : 'Add at least one model symptom',
+        jump: symptoms > 0 || withoutModel ? null : ['Add symptoms', 'areaSymptoms'],
+      },
+      {
+        ok: hasClinicalText(), optional: true,
+        text: hasClinicalText() ? 'Clinical notes or observations recorded' : 'No observations, note, assessment or plan yet',
+        jump: hasClinicalText() ? null : ['Add clinical detail', 'areaSymptoms'],
+      },
       {
         ok: Boolean(state.doctorAssessment.trim()), optional: true,
-        text: state.doctorAssessment.trim() ? 'Your assessment is recorded' : 'Your assessment is not recorded — you can add it after saving',
+        text: state.doctorAssessment.trim() ? 'Your assessment is recorded' : 'Your assessment is not recorded yet',
+        jump: state.doctorAssessment.trim() ? null : ['Write assessment', 'areaDecision'],
       },
       {
         ok: Boolean(state.plan.trim()), optional: true,
-        text: state.plan.trim() ? 'Your plan is recorded' : 'Your plan is not recorded — you can add it after saving',
+        text: state.plan.trim() ? 'Your plan is recorded' : 'Your plan is not recorded yet',
+        jump: state.plan.trim() ? null : ['Write plan', 'areaDecision'],
       },
     ];
     list.replaceChildren();
@@ -648,18 +770,39 @@
       const text = document.createElement('span');
       text.textContent = check.text;
       item.append(mark, text);
+      if (check.jump) item.append(jumpButton(check.jump[0], check.jump[1]));
       list.append(item);
     }
   }
 
-  function buildReview() {
-    // Two lists on purpose: what the model actually receives (the symptom
-    // identifiers) and what is stored with the record for the people reading it.
+  function renderSideSummary() {
+    const option = $('assessmentPatient')?.selectedOptions[0];
+    const symptoms = modelSymptoms().length;
+    fillSummary($('sideSummary'), [
+      ['Patient', option && option.value ? (option.dataset.name || 'Selected') : 'Not selected'],
+      ['Visit', option?.dataset.when ? formatMoment(option.dataset.when) : 'Not linked'],
+      ['Symptoms', String(symptoms)],
+      ['Observations', String(state.observations.length)],
+      ['Model', state.modelOutage || !state.modelAvailable ? 'Unavailable, no prediction' : 'Runs when you save'],
+    ]);
+    const hint = $('sideHint');
+    if (hint) {
+      if (!state.patientId) hint.textContent = 'Open a consultation from the schedule to start a record.';
+      else if (!state.appointmentId && !state.revisingId) hint.textContent = 'Pick the appointment this record belongs to.';
+      else if (!symptoms && !hasClinicalText()) hint.textContent = 'Add symptoms or a clinical note before saving.';
+      else if (state.saved) hint.textContent = 'This record has no unsaved changes.';
+      else hint.textContent = 'Unsaved changes. Saving stores them with this visit.';
+    }
+  }
+
+  function renderReview() {
+    const symptoms = modelSymptoms().length;
     const selected = state.patients.find((patient) => patient.patientId === state.patientId);
+    const option = $('assessmentPatient')?.selectedOptions[0];
     fillSummary($('reviewSummary'), [
       ['Reported by the patient', state.reported.map(labelFor).join(', ') || 'None'],
       ['Recorded by you', state.clinician.map(labelFor).join(', ') || 'None'],
-      ['Symptoms sent to the model', String(state.reported.length + state.clinician.length)],
+      ['Sent to the model', state.modelOutage && !symptoms ? 'Nothing, saved without the model' : String(symptoms)],
     ]);
     fillSummary($('reviewClinician'), [
       ['Assessment', state.doctorAssessment.trim() || 'Not recorded'],
@@ -667,8 +810,8 @@
     ]);
     const recordRows = [
       ['Patient', selected ? selected.fullName : 'Not selected'],
-      ['Appointment', selected?.appointmentStart
-        ? `${formatMoment(selected.appointmentStart)} · ${humanize(selected.appointmentStatus || 'status unknown')}`
+      ['Appointment', option?.dataset.when
+        ? `${formatMoment(option.dataset.when)} · ${humanize(option.dataset.status || 'status unknown')}`
         : 'Not linked'],
       ['Observations', state.observations.join(' · ') || 'None'],
       ['Duration', state.duration || 'Not recorded'],
@@ -676,10 +819,13 @@
     ];
     if (state.revisingSource) {
       recordRows.push(['Recorded originally', formatMoment(state.revisingSource.createdAt)]);
-      recordRows.push(['Original prediction', `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
+      recordRows.push(['Original model result', state.revisingSource.modelStatus === 'unavailable'
+        ? 'No prediction was recorded'
+        : `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
     }
     fillSummary($('reviewRecord'), recordRows);
     renderChecks();
+    renderSideSummary();
   }
 
   function openReview() {
@@ -690,45 +836,82 @@
     }
     if (!state.patientId) {
       showError('assessmentError', 'Select the patient this assessment belongs to.');
-      showStep(1, true);
+      $('areaVisit').scrollIntoView({ block: 'start', behavior: 'smooth' });
       return;
     }
     if (!state.revisingId && !state.appointmentId) {
       showError('assessmentError', 'Open this assessment from an appointment assigned to you.');
-      showStep(1, true);
+      $('areaVisit').scrollIntoView({ block: 'start', behavior: 'smooth' });
       return;
     }
-    if (!state.reported.length && !state.clinician.length) {
-      showError('assessmentError', 'Add at least one model symptom before reviewing.');
-      showStep(2, true);
+    if (!modelSymptoms().length && !(state.modelOutage && hasClinicalText())) {
+      showError('assessmentError', 'Add at least one model symptom, or save the consultation as a clinical record without the model.');
+      $('areaSymptoms').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      reportedPicker?.focus();
       return;
     }
-    buildReview();
-    showStep(6);
-    $('reviewPanel').focus();
+    renderReview();
+    $('reviewArea').hidden = false;
+    $('reviewArea').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('reviewPanel').focus({ preventScroll: true });
     announce('Review the assessment before saving.');
   }
 
-  function closeReview() {
-    showStep(state.lastEditStep || 4, true);
+  // ------------------------------------------------------------------- save ---
+  function setSaving(value) {
+    state.saving = value;
+    for (const id of ['saveAssessment', 'saveAssessmentTop']) {
+      const button = $(id);
+      if (!button) continue;
+      button.disabled = value;
+      button.textContent = value ? 'Saving assessment…' : 'Save assessment';
+    }
+    const run = $('runModel');
+    if (run) run.disabled = value || !state.modelAvailable || !modelSymptoms().length;
+    for (const id of ['resetDraft', 'saveWithoutModel']) {
+      const button = $(id);
+      if (button) button.disabled = value;
+    }
   }
 
-  // ------------------------------------------------------------------- save ---
-  async function saveAssessment() {
-    // A second click (or a shortcut) while the request is in flight must never
-    // create a duplicate assessment or revision.
+  // The selected symptoms are real information. Moving them into observations
+  // keeps them readable in the record instead of dropping them because the model
+  // never ran on them.
+  function moveSymptomsToObservations() {
+    const moved = [];
+    for (const id of state.reported) moved.push(`Reported: ${labelFor(id)}`);
+    for (const id of state.clinician) moved.push(`Observed: ${labelFor(id)}`);
+    for (const text of moved) {
+      if (state.observations.length >= MAX_OBSERVATIONS) break;
+      if (!state.observations.includes(text)) state.observations.push(text);
+    }
+    state.reported = [];
+    state.clinician = [];
+    state.modelPreview = null;
+    renderAll();
+    return moved.length;
+  }
+
+  async function saveAssessment({ withoutModel = false } = {}) {
     if (state.saving) return;
-    if (!state.patientId) { showError('reviewError', 'Select a patient first.'); return; }
-    if (!state.revisingId && !state.appointmentId) { showError('reviewError', 'Open this assessment from an appointment assigned to you.'); return; }
-    if (!state.reported.length && !state.clinician.length) { showError('reviewError', 'Add at least one model symptom.'); return; }
+    if (withoutModel && !state.modelOutage) return;
+    showError('sideError', '');
+    if (!state.patientId) { showError('reviewError', 'Select a patient first.'); showError('sideError', 'Select a patient first.'); return; }
+    if (!state.revisingId && !state.appointmentId) {
+      const message = 'Open this assessment from an appointment assigned to you.';
+      showError('reviewError', message); showError('sideError', message); return;
+    }
+    if (!withoutModel && !modelSymptoms().length) {
+      const message = 'Add at least one model symptom, or save the record without the model.';
+      showError('reviewError', message); showError('sideError', message);
+      return;
+    }
+    if (withoutModel) moveSymptomsToObservations();
+    if (!withoutModel && !modelSymptoms().length) return;
     persist();
 
-    const button = $('saveAssessment');
-    state.saving = true;
+    setSaving(true);
     setDraftState('Saving assessment…', 'saving');
-    button.disabled = true;
-    button.textContent = 'Saving assessment…';
-    showError('reviewError', '');
 
     const shared = {
       patientReported: state.reported,
@@ -738,13 +921,13 @@
       clinicalNote: state.note,
       doctorAssessment: state.doctorAssessment,
       plan: state.plan,
+      ...(withoutModel ? { modelUnavailable: true } : {}),
     };
     const url = state.revisingId
       ? `/api/doctor/assessments/${encodeURIComponent(state.revisingId)}/revision`
       : '/api/doctor/assessments';
-    // The server derives the patient from the appointment. Only the appointment
-    // id is sent for a new record; a revision takes its identity from the stored
-    // record. A browser-supplied patient id is never trusted.
+    // The server derives the patient from the appointment; the browser never
+    // supplies a patient id as proof of access.
     const payload = state.revisingId ? shared : { appointmentId: state.appointmentId, ...shared };
 
     try {
@@ -757,9 +940,8 @@
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (response.status === 409 && body.code === 'ASSESSMENT_EXISTS' && body.assessmentId) {
-          // Another tab (or a retry) saved this appointment first. The stored
-          // record wins; open it instead of creating a duplicate. The draft is
-          // gone, so leaving must not raise the unsaved-changes prompt.
+          // Another tab or a retry saved this appointment first. The stored
+          // record wins; open it rather than creating a duplicate.
           clearDraft();
           state.saved = true;
           window.location.assign(`/prediction.html?id=${encodeURIComponent(body.assessmentId)}`);
@@ -769,17 +951,21 @@
           throw new Error('Your session expired. Your text is still here; sign in again in another tab and retry.');
         }
         if (body.code === 'UNSUPPORTED_SYMPTOMS' && Array.isArray(body.unsupported)) {
-          // Keep every entry: move unsupported ones to observations, never drop.
           for (const id of body.unsupported) {
             state.reported = state.reported.filter((item) => item !== id);
             state.clinician = state.clinician.filter((item) => item !== id);
             const text = labelFor(id);
-            if (!state.observations.includes(text)) state.observations.push(text);
+            if (!state.observations.includes(text) && state.observations.length < MAX_OBSERVATIONS) {
+              state.observations.push(text);
+            }
           }
           markDirty();
           renderAll();
-          buildReview();
-          throw new Error('Some entries are not model features. They were moved to clinical observations — review and save again.');
+          renderReview();
+          throw new Error('Some entries are not model features. They were moved to clinical observations. Review and save again.');
+        }
+        if (typeof body.code === 'string' && body.code.startsWith('MODEL_')) {
+          noteModelOutage(body.code, body.message);
         }
         throw new Error(body.message || 'The assessment could not be saved.');
       }
@@ -790,19 +976,24 @@
       announce('Assessment saved.');
       window.location.assign(`/prediction.html?id=${encodeURIComponent(body.id)}`);
     } catch (error) {
-      // The draft stays in the form and on this device; the server confirmed
-      // nothing, so the state must not claim success. Persist without replacing
-      // the failure message with the ordinary "draft kept" label.
-      setDraftState('Save failed — your text is kept', 'error');
-      showError('reviewError', error.message || 'The assessment could not be saved. Your form is preserved; please retry.');
+      setDraftState('Save failed, your text is kept', 'error');
+      showError('reviewError', error.message || 'The assessment could not be saved. Your text is preserved; please retry.');
+      showError('sideError', error.message || 'The assessment could not be saved. Your text is preserved; please retry.');
       window.clearTimeout(persistTimer);
       persist();
+      renderModelPanel();
     } finally {
-      state.saving = false;
-      button.disabled = false;
-      button.textContent = 'Save assessment';
-      renderStepper();
+      setSaving(false);
+      setDraftState(state.saved ? 'All changes saved' : 'Unsaved changes', state.saved ? 'saved' : 'dirty');
+      renderSideSummary();
     }
+  }
+
+  function saveWithoutModel() {
+    if (!state.modelOutage || state.saving) return;
+    const symptoms = modelSymptoms().length;
+    if (symptoms && !window.confirm(`Save without the model?\n\n${symptoms} selected model symptom${symptoms === 1 ? '' : 's'} will be kept as clinical observations and no prediction will be stored.`)) return;
+    saveAssessment({ withoutModel: true });
   }
 
   // ------------------------------------------------------------------ sync ---
@@ -811,20 +1002,16 @@
     clinicianPicker?.renderChips();
     renderObservations();
     renderHints();
-    renderStepper();
+    renderModelPanel();
+    renderSideSummary();
+    if ($('reviewChecks')?.childElementCount) renderChecks();
   }
 
-  // Restoring an existing assessment into the capture form lets the doctor fix a
-  // symptom list without retyping the consultation. Nothing on the stored record
-  // changes: saving re-runs the model and appends a revision.
   function applyRevisionSource(data) {
     state.revisingId = data.id;
     state.revisingSource = data;
     state.patientId = data.patientId;
     state.appointmentId = data.appointmentId || '';
-    // The patient list picks the "most relevant" appointment, which may be a
-    // different visit for the same patient. Show the visit this record belongs
-    // to so the review and PDF agree with the saved assessment.
     const match = state.patients.find((patient) => patient.patientId === data.patientId);
     if (match) {
       Object.assign(match, {
@@ -854,9 +1041,9 @@
       }
       banner.hidden = false;
     }
-    $('reviewButton').textContent = 'Review revision';
     state.saved = true;
     setDraftState('Editing a saved assessment', 'saved');
+    renderAll();
   }
 
   function syncFields() {
@@ -871,41 +1058,25 @@
     state.doctorAssessment = $('doctorAssessment').value;
     markDirty();
     renderHints();
-    renderStepper();
   });
   $('plan').addEventListener('input', () => {
     state.plan = $('plan').value;
     markDirty();
-    renderStepper();
   });
   $('assessmentPatient').addEventListener('change', syncPatient);
   $('addObservation').addEventListener('click', addObservation);
   $('observationInput').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') { event.preventDefault(); addObservation(); }
   });
+  $('runModel').addEventListener('click', runModelPreview);
+  $('saveWithoutModel').addEventListener('click', saveWithoutModel);
   $('reviewButton').addEventListener('click', openReview);
-  $('backToEdit').addEventListener('click', closeReview);
-  $('saveAssessment').addEventListener('click', saveAssessment);
-  $('editClinician').addEventListener('click', () => showStep(4, true));
-  $('stepBack').addEventListener('click', () => goStep(state.currentStep - 1, true));
-  $('stepNext').addEventListener('click', () => goStep(state.currentStep + 1, true));
-  for (const button of stepButtons) {
-    button.addEventListener('click', () => goStep(Number(button.dataset.step)));
-  }
-  // Arrow keys move through the stage list the way a tab set would.
-  $('assessmentSteps')?.addEventListener('keydown', (event) => {
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
-    const index = stepButtons.indexOf(document.activeElement);
-    if (index < 0) return;
-    event.preventDefault();
-    let target = index;
-    if (event.key === 'ArrowRight') target = (index + 1) % stepButtons.length;
-    if (event.key === 'ArrowLeft') target = (index - 1 + stepButtons.length) % stepButtons.length;
-    if (event.key === 'Home') target = 0;
-    if (event.key === 'End') target = stepButtons.length - 1;
-    stepButtons[target].focus();
-    stepButtons[target].click();
+  $('backToEdit').addEventListener('click', () => {
+    $('areaSymptoms').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    reportedPicker?.focus();
   });
+  $('saveAssessment').addEventListener('click', () => saveAssessment());
+  $('saveAssessmentTop').addEventListener('click', () => saveAssessment());
 
   // Note scaffolds insert headings only. No clinical sentence, finding, dose or
   // plan is written for the doctor.
@@ -938,6 +1109,7 @@
     state.note = '';
     state.doctorAssessment = '';
     state.plan = '';
+    state.modelPreview = null;
     if (!keepContext) {
       state.patientId = '';
       state.appointmentId = '';
@@ -950,13 +1122,13 @@
     $('plan').value = '';
     $('draftBanner').hidden = true;
     showError('assessmentError', '');
+    showError('sideError', '');
     clearDraft();
     state.saved = true;
     state.persistedThisSession = false;
     setDraftState(keepContext ? 'Form cleared · consultation still open' : 'Form cleared', 'saved');
     renderAll();
     renderPatientContext();
-    showStep(keepContext ? 2 : 1);
     announce(keepContext ? 'Form cleared. This consultation is still open.' : 'Form cleared.');
   });
 
@@ -973,20 +1145,13 @@
     const typing = ['input', 'textarea', 'select'].includes(tag) || event.target.isContentEditable;
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
-      if (state.currentStep === 6) saveAssessment(); else openReview();
+      saveAssessment();
       return;
     }
     if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
-      showStep(2);
-      reportedPicker?.focus();
-      return;
-    }
-    // Escape closes the review without discarding anything; inside a field it
-    // must keep its native meaning, so typing is never interrupted.
-    if (event.key === 'Escape' && !typing && state.currentStep === 6) {
-      event.preventDefault();
-      closeReview();
+      if (state.modelAvailable) reportedPicker?.focus();
+      else $('clinicalNote').focus();
     }
   });
 
@@ -1000,22 +1165,41 @@
         fetch('/api/doctor/symptoms', { credentials: 'same-origin' }),
         fetch('/api/doctor/patients', { credentials: 'same-origin' }),
       ]);
-      if (vocabularyResponse.status === 401 || vocabularyResponse.status === 403) {
+      if (vocabularyResponse.status === 401 || vocabularyResponse.status === 403
+        || patientResponse.status === 401 || patientResponse.status === 403) {
         throw new Error('Sign in with an approved doctor account to record assessments.');
       }
-      if (!vocabularyResponse.ok) throw new Error('The symptom model is unavailable. Retry in a moment.');
-      const vocabulary = await vocabularyResponse.json();
-      state.vocabulary = { symptoms: Array.isArray(vocabulary.symptoms) ? vocabulary.symptoms : [], labels: vocabulary.labels || {} };
-      if (!state.vocabulary.symptoms.length) throw new Error('The model reported an empty symptom vocabulary.');
+      if (vocabularyResponse.ok) {
+        const vocabulary = await vocabularyResponse.json();
+        state.vocabulary = {
+          symptoms: Array.isArray(vocabulary.symptoms) ? vocabulary.symptoms : [],
+          labels: vocabulary.labels && typeof vocabulary.labels === 'object' ? vocabulary.labels : {},
+        };
+        if (!state.vocabulary.symptoms.length) {
+          state.modelError = { code: 'MODEL_INVALID_RESPONSE', message: 'The model reported an empty symptom vocabulary.' };
+          state.modelAvailable = false;
+        } else {
+          state.modelAvailable = true;
+        }
+      } else {
+        const body = await vocabularyResponse.json().catch(() => ({}));
+        state.modelError = {
+          code: body.code || 'MODEL_UNAVAILABLE',
+          message: body.message || outageMessage(body.code),
+        };
+        state.modelAvailable = false;
+      }
+      if (!state.modelAvailable) {
+        state.modelOutage = { ...state.modelError };
+      }
+
       if (!patientResponse.ok) throw new Error('Your patient list is unavailable. Retry in a moment.');
       state.patients = await patientResponse.json();
-      // Restore the draft before populating the select so the saved patient is
-      // selected rather than silently dropped on reload.
+
+      buildPickers();
+
       if (appointmentId) {
         setEditorVisible(true);
-        // Patient identity and appointment come from the stored consultation. A
-        // consultation already assessed reopens that record instead of creating a
-        // second assessment for the same visit.
         const consultation = await loadConsultation(appointmentId);
         const existingPatient = state.patients.find((patient) => patient.patientId === consultation.patientId);
         if (existingPatient) {
@@ -1047,15 +1231,16 @@
         clearDraft();
         fillPatients();
         renderAll();
-        showStep(1);
         setDraftState('No changes yet', '');
+        $('reviewArea').hidden = true;
         loadRecent();
         return;
       }
+
       if (reviseId) {
         setEditorVisible(true);
-        // The stored record wins over any leftover draft: a revision must start
-        // from what was actually saved for this consultation.
+        // The stored record wins over any leftover draft: a revision starts from
+        // what was actually saved for this consultation.
         const sourceResponse = await fetch(`/api/doctor/assessments/${encodeURIComponent(reviseId)}`, { credentials: 'same-origin' });
         if (!sourceResponse.ok) throw new Error('That assessment is not available to your account.');
         applyRevisionSource(await sourceResponse.json());
@@ -1063,18 +1248,17 @@
         fillPatients();
         if (state.appointmentId) loadConsultation(state.appointmentId).catch(() => { /* context is optional here */ });
         if (state.revisingSource && state.revisingSource.latestRevisionId) {
-          // A record can only be replaced once; sending this form would be rejected.
           setDraftState('A newer revision already exists', 'dirty');
           showError('assessmentError', 'This assessment has already been revised. Open the newer revision before changing symptoms again.');
-          const review = $('reviewButton');
-          review.disabled = true;
-          review.textContent = 'Newer revision exists';
+          $('saveAssessment').disabled = true;
+          $('saveAssessmentTop').disabled = true;
         }
         renderAll();
-        showStep(2);
+        $('reviewArea').hidden = true;
         loadRecent();
         return;
       }
+
       const restored = restoreDraft();
       setEditorVisible(restored);
       fillPatients();
@@ -1090,15 +1274,15 @@
         markSaved();
       }
       renderAll();
-      showStep(1);
+      $('reviewArea').hidden = true;
       loadRecent();
     } catch (error) {
       // The failure is reported inside the editor, so it must stay visible.
       setEditorVisible(true);
+      if (!reportedPicker) buildPickers();
       showError('assessmentError', error.message);
       $('assessmentPatient').replaceChildren(new Option('Patient list unavailable', ''));
-      renderStepper();
-      showStep(1);
+      renderAll();
     }
   }
 
@@ -1114,7 +1298,10 @@
         const item = document.createElement('li');
         const link = document.createElement('a');
         link.href = `/prediction.html?id=${encodeURIComponent(row.id)}`;
-        link.textContent = `${row.patientName} · ${row.predictedDisease}`;
+        const model = row.modelStatus === 'unavailable'
+          ? 'no model suggestion'
+          : (row.predictedDisease || 'model result unavailable');
+        link.textContent = `${row.patientName || 'Patient'} · ${model}`;
         const when = document.createElement('span');
         when.textContent = formatMoment(row.createdAt);
         item.append(link, when);
@@ -1125,5 +1312,5 @@
   }
 
   load();
-  window.HelloDocAssessment = { openReview, saveAssessment };
+  window.HelloDocAssessment = { openReview, saveAssessment, saveWithoutModel };
 })();

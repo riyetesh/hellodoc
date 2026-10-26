@@ -94,13 +94,13 @@ live Supabase project or a deployment.
 
 ## Local setup
 
-1. Install Node 20+ and, for the model, Python 3.11+.
+1. Install Node 22+ (`@supabase/supabase-js` 2.118 requires it) and, for the model, Python 3.12.
 2. Install dependencies:
    ```bash
    npm ci --prefix backend
    npm ci --prefix chatbot        # optional
-   python -m venv .venv
-   .venv/Scripts/pip install -r requirements.txt   # POSIX: .venv/bin/pip
+   python -m venv Algo/.venv
+   Algo/.venv/Scripts/pip install -r Algo/requirements.txt   # POSIX: Algo/.venv/bin/pip
    ```
 3. Create an ignored `backend/.env` from [backend/.env.example](backend/.env.example)
    and set:
@@ -112,9 +112,11 @@ live Supabase project or a deployment.
    `PREDICTION_INTERNAL_TOKEN`) are optional locally: the backend can start Flask
    on 5001 and generate a shared per-run token. Only set `FLASK_ORIGIN` and
    `PREDICTION_INTERNAL_TOKEN` together for an external model service, and keep
-   that service private.
+   that service private. The local autostart needs `Algo/.venv` (or `python` on
+   `PATH`) with `Algo/requirements.txt` installed; without it the symptom picker
+   is unavailable but clinical records can still be saved.
 4. Apply the database migrations **before** using private pages:
-   `003 → 005 → 006 → 008 → 009 → 010 → 011 → 012`. Follow
+   `003 → 005 → 006 → 008 → 009 → 010 → 011 → 012 → 013 → 014`. Follow
    [backend/migrations/README.md](backend/migrations/README.md) — it contains the
    clean-install sequence, the safe procedure for an existing project, the object
    inventory and the recovery steps. Never apply a migration through the web app,
@@ -191,12 +193,22 @@ never read by browser code or returned by `/api`.
   `PATCH /api/patient/appointments/:id/cancel`.
 - **Doctor:** `GET /api/doctor/overview`, `/dashboard`, `/appointments/:id`,
   `/appointments/:id/consultation`, `/availability`, `/analytics`,
-  `/symptoms`, `/patients`, `/assessments`, `/assessments/:id`,
+  `/symptoms`, `/patients`, `/patients/:id/context`, `/assessments`, `/assessments/:id`,
   `/assessments/:id/report.pdf`; `POST /api/doctor/availability`,
-  `/assessments`, `/assessments/:id/revision`, and the legacy single label helper
-  `/predict` (not used by the interface);
+  `/assessments`, `/assessments/:id/revision`, `/predict` (optional suggestion
+  preview, no stored result), and the walk-in endpoints
+  `GET /api/doctor/walkin/patients`, `/walkin/matches`,
+  `POST /api/doctor/walkin/patients`, `/walkin/patients/:id/consultation`,
+  `/walkin/patients/:id/appointment`;
   `PATCH /api/doctor/appointments/:id/status`,
   `/assessments/:id` (doctor assessment/plan only).
+
+A walk-in email is a nullable contact detail on a clinical record. It never
+creates an Auth user and is never treated as verified ownership. An assessment is
+stored with `modelStatus: "completed"` after the model runs, or
+`modelStatus: "unavailable"` when the doctor explicitly saves the consultation
+without a prediction; the second state has no predicted disease, version,
+confidence or guidance at all.
 - **Admin:** `GET /api/admin/overview`, `/api/admin/:kind`;
   `POST /api/admin/actions`.
 
@@ -215,7 +227,7 @@ tests load the bundled model locally.
 ### Setup
 
 ```bash
-npm ci --prefix backend                          # Node 20+ dependencies (Express, Supabase JS)
+npm ci --prefix backend                          # Node 22+ dependencies (Express, Supabase JS)
 python -m venv Algo/.venv                         # Python 3.12 for the model and pytest
 Algo/.venv/Scripts/pip install -r requirements-dev.txt   # Windows
 # POSIX: Algo/.venv/bin/pip install -r requirements-dev.txt
@@ -363,17 +375,23 @@ cannot spawn Python. `tests/deployment_config.test.js` enforces the two-service
 configuration so a model service cannot be assumed silently. Until `FLASK_ORIGIN`
 and `PREDICTION_INTERNAL_TOKEN` point at a separately deployed private model
 (allowed origin only; never a public rewrite), `GET /api/doctor/symptoms`,
-assessment creation/revision and `/api/doctor/predict` return
-`503 MODEL_NOT_CONFIGURED`/`MODEL_UNAVAILABLE` and save nothing. Local
-development is unaffected.
+assessment creation/revision and `/api/doctor/predict` fail with a specific
+`MODEL_*` code. The workspace no longer loses the consultation in that state:
+symptom search is reported as unavailable, notes and observations stay usable,
+and the doctor can explicitly save with `modelUnavailable: true`. That stores
+`modelStatus: "unavailable"` with no predicted disease, version, confidence or
+guidance. Local development is unaffected. The model artifact and vocabulary are
+verified: Flask loads all 132 symptoms and returns a prediction with no
+calibrated confidence.
 
 ### Verification status
 
 | Area | Status |
 | --- | --- |
 | Static build from the working tree | **Locally verified** (2026-10-20): build completes, required pages/assets present, no private paths or secret markers. |
-| Node suite (routes, guards, PDF, build, deployment config, interface copy) | **Locally verified** (2026-10-20): 68 tests, 64 passed, 4 skipped (live), 0 failed. |
-| Python suites | **Locally verified** (2026-10-20): maintained subset 52 passed; full suite 65 passed / 13 pre-existing failures in the retired `test_form_validation.py`. |
+| Node suite (routes, guards, PDF, build, deployment config, interface copy, walk-in, consultation) | **Locally verified** (2026-10-26, Node 22.20): 90 tests, 86 passed, 4 skipped (live and walk-in database cases that need migration 014), 0 failed. Node 20 cannot run this suite because `@supabase/supabase-js` 2.118 requires Node 22. |
+| Python suites | **Locally verified** (2026-10-26, Python 3.12): maintained subset 50 passed, 5 skipped. `svc.pkl` unpickles with a scikit-learn version warning (built with 1.5.1, installed 1.6.1). |
+| Private model service | **Locally verified** (2026-10-26): Flask started on a loopback port with the internal token, returned 132 labelled symptoms, and assessed `itching` + `skin_rash` as `Fungal infection` with `confidence: null`. Wrong token, unknown symptom, unreachable service and missing token produced `MODEL_AUTH`, `INVALID_SYMPTOMS`, `MODEL_UNREACHABLE` and `MODEL_NOT_CONFIGURED` respectively. |
 | CI workflow | **Configured, not verified from this checkout.** [.github/workflows/tests.yml](.github/workflows/tests.yml) runs the Node suite and a static-build job, plus the maintained Python subset. Treat it as verified only after a green run is visible in Actions. |
 | Vercel production deployment | **Not verified.** No deployment or environment change was made from this workspace; routing, the Services framework setting, environment variables and the live model gap were not exercised on Vercel. |
 

@@ -566,65 +566,6 @@
   box-shadow: var(--shadow-xs);
 }
 
-.dw-context {
-  display: grid;
-  grid-template-columns: minmax(15rem, 24rem) minmax(0, 1fr);
-  gap: 0.75rem 1.5rem;
-  align-items: end;
-  margin-bottom: 1.25rem;
-}
-
-.dw-context select {
-  width: 100%;
-}
-
-.dw-context .assessment-context {
-  padding-bottom: 0.6rem;
-  margin: 0;
-}
-
-.dw-capture {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.1rem 1.2rem;
-  margin: 0 0 1rem;
-  min-width: 0;
-}
-
-.dw-capture > legend {
-  padding: 0 0.4rem;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.dw-capture__hint {
-  margin: 0 0 0.85rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-  line-height: 1.55;
-  max-width: 70ch;
-}
-
-.dw-capture .shortcut-strip {
-  margin-bottom: 0.9rem;
-  background: var(--surface-2);
-  border-style: solid;
-  border-color: var(--border);
-}
-
-.dw-capture .assessment-symptom-grid {
-  margin-bottom: 1rem;
-}
-
-.dw-capture .symptom-group {
-  margin-bottom: 1rem;
-}
-
-.dw-capture .symptom-group:last-child {
-  margin-bottom: 0;
-}
-
 /* The two sources of information get a stable visual identity. */
 .symptom-group--reported {
   border-color: #c9d9f7;
@@ -654,12 +595,8 @@
   background: var(--teal);
 }
 
-.dw-capture .observation-group {
+.observation-group {
   border-style: dashed;
-}
-
-.dw-capture .assessment-details {
-  margin-bottom: 0;
 }
 
 /* Action bar: state and the one primary action, kept together. */
@@ -691,10 +628,6 @@
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-left: auto;
-}
-
-.dw-actions .draft-state {
-  margin: 0;
 }
 
 /* ---- Review: model input and clinician judgment side by side ---- */
@@ -982,14 +915,9 @@
     flex-direction: column;
   }
 
-  .dw-context,
   .dw-review__grid,
   .dw-form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .dw-context .assessment-context {
-    padding-bottom: 0;
   }
 
   .dw-actions {
@@ -1010,14 +938,6 @@
   }
 }
 
-/* Keyboard shortcuts are useless on a touch phone and push the symptom pickers
-   below the fold, so the phone layout drops the strip. */
-@media (max-width: 640px) {
-  .dw-capture .shortcut-strip {
-    display: none;
-  }
-}
-
 @media (max-width: 480px) {
   .dw-head {
     padding-block: 1.35rem 1.15rem;
@@ -1029,10 +949,6 @@
 
   #assessmentForm {
     padding: 0.9rem;
-  }
-
-  .dw-capture {
-    padding: 0.85rem 0.9rem 1rem;
   }
 
   .dw-actions__buttons {
@@ -1327,6 +1243,27 @@
   border-radius: var(--radius-sm);
   font-size: 0.84rem;
   color: var(--text-soft);
+}
+
+/* Shown only when the check found a possible record: registering a second one
+   is an explicit choice, never a side effect of pressing Enter. */
+.walkin-confirm {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: start;
+  margin-top: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #f0c98a;
+  border-left: 3px solid #8a4b00;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+}
+
+.walkin-confirm p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #5a3200;
 }
 
 .walkin-actions {
@@ -1922,144 +1859,6 @@
   }
 }
 
-/* ============================================================
-   Consultation stepper
-   ============================================================ */
-.dw-stepper {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.35rem;
-  margin: 0 0 0.85rem;
-  padding: 0 0 0.9rem;
-  list-style: none;
-  border-bottom: 1px solid var(--border);
-}
-
-.dw-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.5rem 0.55rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-soft);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
-}
-
-.dw-step:hover {
-  background: var(--surface-2);
-}
-
-.dw-step__number {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 50%;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--text-soft);
-}
-
-.dw-step__text {
-  display: grid;
-  gap: 0.05rem;
-  min-width: 0;
-}
-
-.dw-step__label {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.dw-step__state {
-  font-size: 0.71rem;
-  color: var(--muted);
-  line-height: 1.4;
-}
-
-.dw-step[data-state="current"] {
-  background: var(--brand-soft);
-  border-color: #c9d9f7;
-}
-
-.dw-step[data-state="current"] .dw-step__number {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-}
-
-.dw-step[data-state="current"] .dw-step__state {
-  color: var(--brand-700);
-  font-weight: 600;
-}
-
-.dw-step[data-state="done"] .dw-step__number {
-  background: var(--success-soft);
-  border-color: #b9e2cc;
-  color: #1f6b45;
-}
-
-.dw-step[data-state="done"] .dw-step__state {
-  color: #1f6b45;
-}
-
-.dw-stage-status {
-  margin: 0 0 0.75rem;
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.dw-stage {
-  padding: 0.25rem 0 0.5rem;
-}
-
-.dw-stage__head h3 {
-  margin: 0;
-  font-size: 1.08rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text);
-}
-
-.dw-stage__head h3:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-.dw-stage__lead {
-  margin: 0.4rem 0 1rem;
-  max-width: 72ch;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.dw-stage__grid {
-  display: grid;
-  grid-template-columns: minmax(15rem, 24rem) minmax(0, 1fr);
-  gap: 1rem 1.5rem;
-  align-items: start;
-}
-
-.dw-stage__narrow {
-  max-width: 24rem;
-  margin-top: 0.35rem;
-}
-
 .dw-visit-facts {
   display: grid;
   gap: 0.45rem;
@@ -2143,14 +1942,6 @@
   font-size: 0.8rem;
 }
 
-.dw-actions--steps {
-  margin-top: 1.25rem;
-}
-
-.dw-actions--steps #resetDraft {
-  color: var(--muted);
-}
-
 .dw-section-head > .draft-state {
   align-self: flex-start;
   margin: 0.2rem 0 0;
@@ -2218,15 +2009,6 @@
   border-color: #f2c6c2;
 }
 
-/* ============================================================
-   Stepper and drawer responsive behaviour
-   ============================================================ */
-@media (max-width: 1100px) {
-  .dw-stepper {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 760px) {
   .dw-schedule__bar {
     flex-direction: column;
@@ -2240,18 +2022,6 @@
   .dw-chip {
     flex: 1 1 auto;
     text-align: center;
-  }
-
-  .dw-stepper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dw-step__state {
-    display: none;
-  }
-
-  .dw-stage__grid {
-    grid-template-columns: 1fr;
   }
 
   .dw-head-actions {
@@ -2278,23 +2048,6 @@
   }
 }
 
-@media (max-width: 480px) {
-  .dw-step {
-    padding: 0.4rem;
-    gap: 0.35rem;
-  }
-
-  .dw-step__number {
-    width: 1.4rem;
-    height: 1.4rem;
-    font-size: 0.7rem;
-  }
-
-  .dw-step__label {
-    font-size: 0.78rem;
-  }
-}
-
 /* Print: the report page owns printing, but nothing here should break it. */
 @media print {
   .dw-head,
@@ -2304,10 +2057,329 @@
   .dw-actions,
   .dw-schedule__bar,
   .dw-schedule__meta,
-  .dw-stepper,
   .visit-row__toggle,
   .dw-drawer,
   .dw-drawer-scrim {
     display: none !important;
+  }
+}
+
+/* ============================================================
+   Consultation workspace: three areas, one scrollable record.
+
+   The patient and visit, the symptoms and findings, and the clinical
+   decision each get one area. The model suggestion stays inside the
+   decision area, visually separate from the doctor's own fields. The
+   summary beside the form is the only persistent panel: it repeats what
+   will be saved rather than adding another workflow step.
+   ============================================================ */
+#assessmentForm {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cw-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17.5rem;
+  gap: 1rem;
+  align-items: start;
+}
+
+.cw-main {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.cw-area {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.cw-area__head {
+  padding: 0.9rem 1.1rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--surface-2);
+}
+
+.cw-area__step {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-700);
+}
+
+.cw-area__head h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.cw-area__head h3:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.cw-area__lead {
+  margin: 0.3rem 0 0;
+  max-width: 74ch;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.cw-area__body {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.cw-area__grid {
+  grid-template-columns: minmax(14rem, 21rem) minmax(0, 1fr);
+  align-items: start;
+}
+
+.cw-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.cw-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.cw-side {
+  position: sticky;
+  top: 1rem;
+  min-width: 0;
+}
+
+.cw-side__card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.cw-side__card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cw-side .review-summary {
+  grid-template-columns: minmax(5rem, 6.5rem) minmax(0, 1fr);
+  gap: 0.3rem 0.6rem;
+  margin: 0;
+  font-size: 0.81rem;
+}
+
+.cw-side__hint {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cw-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cw-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.cw-actions #resetDraft {
+  color: var(--muted);
+}
+
+/* The model panel is deliberately inside the clinical area, but visually
+   separated from the doctor's own assessment and plan. */
+.cw-model {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid #2b7a78;
+  border-radius: var(--radius-sm);
+  background: #fbfdfd;
+}
+
+.cw-model__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  flex-wrap: wrap;
+}
+
+.cw-model__head h4 {
+  margin: 0;
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cw-model__note {
+  margin: 0.25rem 0 0;
+  max-width: 58ch;
+  font-size: 0.79rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cw-model__status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.cw-model__result {
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.cw-model__label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.cw-model__output {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cw-model__meta,
+.cw-model__hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cw-model__fallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cw-model-state {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.cw-model-state__title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.cw-model-state__text {
+  margin: 0.2rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.cw-model-state[data-state="down"] {
+  border-color: #f0c98a;
+  background: var(--warning-soft);
+}
+
+.cw-model-state[data-state="down"] .cw-model-state__title {
+  color: #5a3200;
+}
+
+/* Review sits at the end of the same form; the jump buttons take the doctor
+   back to the exact area that needs attention. */
+.cw-area--review .dw-review {
+  margin: 0;
+  padding: 1rem 1.1rem;
+}
+
+.dw-review__jump {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.symptom-unavailable {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+@media (max-width: 1180px) {
+  .cw-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cw-side {
+    position: static;
+    order: -1;
+  }
+
+  .cw-actions {
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .cw-area__grid,
+  .cw-split,
+  .cw-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cw-area__body {
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  .cw-model__head .btn {
+    width: 100%;
   }
 }

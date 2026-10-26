@@ -248,29 +248,37 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
   doc.keyValue('Duration', assessment.symptomDuration || '');
   doc.keyValue('Clinical note', assessment.clinicalNote || '');
 
+  const modelUnavailable = assessment.modelStatus === 'unavailable';
   doc.heading('Model output');
-  doc.keyValue('Predicted condition', assessment.predictedDisease || '');
-  doc.keyValue('Model version', assessment.modelVersion || '');
-  const modelSymptoms = [...(assessment.patientReported || []), ...(assessment.clinicianAdded || [])];
-  doc.keyValue('Symptoms used by the model', String(modelSymptoms.length));
-  // A confidence value is printed only when the model actually supplied one.
-  if (typeof assessment.modelConfidence === 'number' && Number.isFinite(assessment.modelConfidence)) {
-    doc.keyValue('Model confidence', `${(assessment.modelConfidence * 100).toFixed(1)}%`);
+  if (modelUnavailable) {
+    // The record was saved while the service was down. Printing a blank
+    // "predicted condition" would look like a missing result instead of an
+    // explicit decision not to run the model.
+    doc.paragraph('The experimental model was not available when this consultation was saved. No condition was predicted and no model guidance is recorded. The clinical note and the doctor\'s assessment below are the record of this consultation.', { gray: 0.2 });
   } else {
-    doc.paragraph('This model version does not provide a calibrated probability, so no confidence percentage is reported.', { size: 9, gray: 0.35 });
-  }
-  doc.paragraph(assessment.description || 'No description is available for this condition.', { gray: 0.2 });
+    doc.keyValue('Predicted condition', assessment.predictedDisease || '');
+    doc.keyValue('Model version', assessment.modelVersion || '');
+    const modelSymptoms = [...(assessment.patientReported || []), ...(assessment.clinicianAdded || [])];
+    doc.keyValue('Symptoms used by the model', String(modelSymptoms.length));
+    // A confidence value is printed only when the model actually supplied one.
+    if (typeof assessment.modelConfidence === 'number' && Number.isFinite(assessment.modelConfidence)) {
+      doc.keyValue('Model confidence', `${(assessment.modelConfidence * 100).toFixed(1)}%`);
+    } else {
+      doc.paragraph('This model version does not provide a calibrated probability, so no confidence percentage is reported.', { size: 9, gray: 0.35 });
+    }
+    doc.paragraph(assessment.description || 'No description is available for this condition.', { gray: 0.2 });
 
-  doc.heading('Guidance from the dataset');
-  doc.paragraph('General dataset-associated guidance requiring clinician review. It is not a prescription, dose or individually validated treatment plan.', { size: 9, gray: 0.4 });
-  doc.subheading('Precautions');
-  doc.bullets(assessment.precautions, 'No precautions were available.');
-  doc.subheading('Medication information');
-  doc.bullets(assessment.medications, 'No medication information was available.');
-  doc.subheading('Diet');
-  doc.bullets(assessment.diet, 'No diet guidance was available.');
-  doc.subheading('Workout');
-  doc.bullets(assessment.workout, 'No workout guidance was available.');
+    doc.heading('Guidance from the dataset');
+    doc.paragraph('General dataset-associated guidance requiring clinician review. It is not a prescription, dose or individually validated treatment plan.', { size: 9, gray: 0.4 });
+    doc.subheading('Precautions');
+    doc.bullets(assessment.precautions, 'No precautions were available.');
+    doc.subheading('Medication information');
+    doc.bullets(assessment.medications, 'No medication information was available.');
+    doc.subheading('Diet');
+    doc.bullets(assessment.diet, 'No diet guidance was available.');
+    doc.subheading('Workout');
+    doc.bullets(assessment.workout, 'No workout guidance was available.');
+  }
 
   doc.heading("Doctor's assessment and plan");
   doc.keyValue('Assessment', assessment.doctorAssessment || 'Not recorded.');

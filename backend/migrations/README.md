@@ -16,7 +16,7 @@ must never be used to apply a migration.
 
 | Class | Files | Rule |
 | --- | --- | --- |
-| **Migrations** | `003`, `005`, `006`, `008`, `009`, `010`, `011`, `012`, `013` | Apply in numeric order, exactly once per database. |
+| **Migrations** | `003`, `005`, `006`, `008`, `009`, `010`, `011`, `012`, `013`, `014` | Apply in numeric order, exactly once per database. |
 | **Test-only SQL** | `004_supabase_rls_tests.sql`, `007_security_regression.sql` | Never apply as migrations. They are rollback-only probes, and `007` inserts synthetic `auth.users` fixtures. Run only on a disposable project. |
 | **Obsolete MySQL** | `001_patient_foundation.sql`, `002_doctor_workspace.sql` | Deleted with the MySQL backend. They do not exist and must never be recreated or executed in PostgreSQL. |
 | **Verification** | `VERIFY.sql` | Read-only `SELECT`s. Safe on production. Run after any migration. |
@@ -32,7 +32,7 @@ restore from backup (or Supabase PITR) plus targeted repair of the missing
 objects (§7), not running a reverse script. `004` and `007` are tests, not rollback
 scripts.
 
-- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–013 are applied and verified as of 2026-10-26. Migration 013 created the walk-in clinical tables, doctor-scoped RPCs and RLS policies; existing appointment and assessment rows were preserved. The walk-in UI/API still needs an authenticated end-to-end smoke test. The ledger only records some earlier migrations (see §5).
+- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–013 are applied and verified as of 2026-10-26. **014 is pending** and must be applied before the email-aware walk-in form or the model-free clinical save can work there. Migration 013 created the walk-in clinical tables, doctor-scoped RPCs and RLS policies; existing appointment and assessment rows were preserved. The walk-in UI/API still needs an authenticated end-to-end smoke test. The ledger only records some earlier migrations (see §5).
 - **Any new project:** every file is pending until applied in the order below.
 - **Any other existing project:** a file is effectively pending wherever its
   marker in `VERIFY.sql` §8 is `false`. Treat only those files (or the individual
@@ -87,12 +87,22 @@ earlier ones — for those objects only the **last** definition is current.
    and **replacements** for the assessment freeze trigger, insert policy,
    `assessment_view`, `is_own_assessment` and `doctor_consultation`. Adds the
    registration, duplicate-check, walk-in consultation and booking RPCs.
-   Transaction-wrapped, idempotent where practical. **Not applied anywhere yet.**
+   Transaction-wrapped, idempotent where practical.
+10. **`014_walkin_email_model_optional.sql`** — adds a nullable contact `email`
+    to `clinic_patients` (never an Auth account), email-aware matching and
+    registration, and **replacements** for `doctor_clinic_patients`,
+    `doctor_clinic_patient_matches`, `doctor_register_clinic_patient`,
+    `doctor_consultation`, `assessment_view` and the freeze trigger. Adds
+    `assessments.model_status` so a consultation can be saved while the model is
+    unreachable, with no predicted disease, version or guidance. The old
+    `preferred_language` column is kept for historical rows and is no longer part
+    of the API. Transaction-wrapped, idempotent where practical.
 
-**Authoritative definitions after all nine:** the 009 version of the signup
+**Authoritative definitions after all ten:** the 009 version of the signup
 trigger, `admin_action` and profile/resubmission RPCs; the 006 version of
 `public_doctors`, `public_slots` and `book_appointment`; the 011 version of the
-assessment trigger function, insert policy and view; plus `012`.
+assessment insert policy; and the 014 versions of the assessment freeze trigger,
+`assessment_view`, `doctor_consultation` and every walk-in RPC.
 
 > `010` alone is **not** a valid assessment schema. Its insert policy compares
 > unqualified columns (so the patient/appointment match is ineffective) and its
@@ -122,7 +132,9 @@ refresh and recovery; those are project configuration, not database migrations.
 | `public.appointment_status_history` | 003 | — | written by status RPCs |
 | `public.admin_audit_logs` | 005 | — | admin audit list |
 | `private.admin_bootstrap` | 005 | — | first-admin one-time lock |
-| `public.assessments` | 010 | `supersedes_id` + indexes (011) | clinical predictor, PDF report |
+| `public.assessments` | 010 | `supersedes_id` + indexes (011); `model_status`, nullable prediction (014) | clinical predictor, PDF report |
+| `public.clinic_patients` | 013 | `email` + email index (014); `preferred_language` retained, no longer written | walk-in registration and consultation |
+| `public.clinic_patient_audit` | 013 | — | walk-in registration/booking audit |
 
 ### RPCs called by the application or its operator script
 
@@ -145,12 +157,12 @@ refresh and recovery; those are project configuration, not database migrations.
 | `resubmit_doctor_application(text,text,text,text,integer)` | 009 | authenticated | `POST /api/doctor/application/resubmit` |
 | `is_approved_doctor(uuid)` | 010 | authenticated | policy + assessment RPCs |
 | `assigned_patients()` | 010 | authenticated, approved doctor | `GET /api/doctor/patients` |
-| `assessment_view(uuid)` | 011 | authenticated | assessment detail + PDF |
+| `assessment_view(uuid)` | 014 | authenticated | assessment detail + PDF |
 | `is_own_assessment(uuid,uuid)` | 011 | authenticated | assessment insert policy |
-| `doctor_consultation(uuid)` | 012 (replaced by 013) | authenticated, approved doctor | `GET /api/doctor/appointments/:id/consultation` |
-| `doctor_clinic_patients()` | 013 | authenticated, approved doctor | `GET /api/doctor/walkin/patients` |
-| `doctor_clinic_patient_matches(text,text,date)` | 013 | authenticated, approved doctor | `GET /api/doctor/walkin/matches` |
-| `doctor_register_clinic_patient(text,date,text,text,uuid)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients` |
+| `doctor_consultation(uuid)` | 014 | authenticated, approved doctor | `GET /api/doctor/appointments/:id/consultation` |
+| `doctor_clinic_patients()` | 014 | authenticated, approved doctor | `GET /api/doctor/walkin/patients` |
+| `doctor_clinic_patient_matches(text,text,text,date)` | 014 | authenticated, approved doctor | `GET /api/doctor/walkin/matches` |
+| `doctor_register_clinic_patient(text,date,text,text,uuid)` | 014 (name, DOB, phone, **email**, key) | authenticated, approved doctor | `POST /api/doctor/walkin/patients` |
 | `doctor_start_walkin_consultation(uuid,text)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients/:id/consultation` |
 | `doctor_book_clinic_appointment(uuid,uuid,text,uuid)` | 013 | authenticated, approved doctor | `POST /api/doctor/walkin/patients/:id/appointment` |
 
@@ -267,7 +279,9 @@ Verified read-only on 2026-10-20 against `fsqtjdavnfjnwsbswqel`:
 
 - Objects match the file set **through 013** (11 public tables, 40 public
   functions, 19 policies, 2 triggers, 24 columns on `assessments`, revision index
-  present).
+  present). **014 is not reflected in these counts until it is applied**; it adds
+  one column to `clinic_patients`, one to `assessments`, replaces eight functions
+  and changes two function result shapes.
 - The migration ledger records `003`, `005`, `006`, `doctor_applicant_role`
   (008 under a non-standard name), two `010` entries, and `013_walkin_patients`.
   **`009`, `011` and `012` remain absent from the ledger even though their objects

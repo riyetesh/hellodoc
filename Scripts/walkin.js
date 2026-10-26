@@ -23,7 +23,9 @@
   const nameInput = $('walkinName');
   const dobInput = $('walkinDob');
   const phoneInput = $('walkinPhone');
-  const languageInput = $('walkinLanguage');
+  const emailInput = $('walkinEmail');
+  const confirmBox = $('walkinConfirm');
+  const confirmButton = $('walkinConfirmNew');
   const submitButton = $('walkinSubmit');
   const checkButton = $('walkinCheck');
   const matchesBox = $('walkinMatches');
@@ -45,8 +47,20 @@
   // results for what is currently typed.
   let checkToken = 0;
   let checkTimer = 0;
-  let chosen = null; // { id, fullName, dateOfBirth, phone, preferredLanguage, existing }
+  let chosen = null; // { id, fullName, dateOfBirth, phone, email, existing }
+  // A doctor may still register a new patient when the search finds someone
+  // similar, but only after saying so explicitly. It never happens silently.
+  let confirmedNew = false;
   let slotsLoaded = false;
+
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const normalizeEmail = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    const at = text.lastIndexOf('@');
+    if (at <= 0) return text;
+    return `${text.slice(0, at)}@${text.slice(at + 1).toLowerCase()}`;
+  };
 
   const today = new Date().toISOString().slice(0, 10);
   dobInput.max = today;
@@ -93,7 +107,7 @@
   }
 
   function clearFieldErrors() {
-    for (const input of [nameInput, dobInput, phoneInput]) {
+    for (const input of [nameInput, dobInput, phoneInput, emailInput]) {
       input.removeAttribute('aria-invalid');
       const error = $(`${input.id}Error`);
       if (error) setError(error, '');
@@ -128,6 +142,12 @@
       phoneInput.setAttribute('aria-invalid', 'true');
       valid = false;
     }
+    const email = normalizeEmail(emailInput.value);
+    if (email && (!EMAIL.test(email) || email.length > 254)) {
+      setError($('walkinEmailError'), 'Enter a valid email address or leave it blank.');
+      emailInput.setAttribute('aria-invalid', 'true');
+      valid = false;
+    }
     if (!valid) {
       const firstInvalid = form.querySelector('[aria-invalid="true"]');
       if (firstInvalid) firstInvalid.focus();
@@ -140,7 +160,7 @@
       fullName: nameInput.value.trim(),
       dateOfBirth: dobInput.value || null,
       phone: phoneInput.value.trim() || null,
-      preferredLanguage: languageInput.value.trim() || null,
+      email: normalizeEmail(emailInput.value) || null,
     };
   }
 
@@ -164,7 +184,23 @@
   const formatMoment = (value) => (value ? new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) : '');
 
   // ------------------------------------------------------------- matching ---
+  function showConfirm(count) {
+    if (!confirmBox) return;
+    $('walkinConfirmText').textContent = count === 1
+      ? 'One possible existing record is shown above. Select it if this is the same person, or confirm that this is a different patient before a second record is created.'
+      : `${count} possible existing records are shown above. Select the right one if this patient has been seen before, or confirm that this is a different patient before a second record is created.`;
+    confirmBox.hidden = false;
+    confirmButton.focus();
+  }
+
+  function hideConfirm() {
+    if (!confirmBox) return;
+    confirmBox.hidden = true;
+    confirmedNew = false;
+  }
+
   function renderMatches(rows) {
+    hideConfirm();
     matches = rows;
     matchesBox.replaceChildren();
     if (!rows.length) {
@@ -190,7 +226,7 @@
       const facts = [
         row.dateOfBirth ? `Born ${formatDate(row.dateOfBirth)}` : 'No date of birth recorded',
         row.phone || 'No phone recorded',
-        row.preferredLanguage || null,
+        row.email || 'No email recorded',
         row.lastSeen ? `Last visit ${formatMoment(row.lastSeen)}` : null,
       ].filter(Boolean);
       meta.textContent = facts.join(' · ');
@@ -198,7 +234,9 @@
       if (row.matchReason) {
         const reason = document.createElement('span');
         reason.className = 'walkin-match__reason';
-        reason.textContent = row.matchReason;
+        // The database says which identifier matched. A single weak match (for
+        // example a similar name) is a prompt to check, not a merge.
+        reason.textContent = `Matched on ${row.matchReason}`;
         copy.append(reason);
       }
       const use = document.createElement('button');
@@ -206,7 +244,10 @@
       use.className = 'btn btn-outline';
       use.textContent = 'Use this record';
       use.setAttribute('aria-label', `Use the existing record for ${row.fullName}`);
-      use.addEventListener('click', () => showDone({ ...row, existing: true }));
+      use.addEventListener('click', () => {
+        hideConfirm();
+        showDone({ ...row, existing: true });
+      });
       card.append(copy, use);
       matchesBox.append(card);
     }
@@ -215,9 +256,9 @@
   async function checkExisting({ quiet = false } = {}) {
     const current = details();
     if (!available || busy) return;
-    if (!current.fullName && !current.phone && !current.dateOfBirth) {
+    if (!current.fullName && !current.phone && !current.email && !current.dateOfBirth) {
       if (!quiet) {
-        showPageError('Enter a name, phone number or date of birth before checking.');
+        showPageError('Enter a name, email, phone number or date of birth before checking.');
         nameInput.focus();
       }
       return;
@@ -230,6 +271,7 @@
       const query = new URLSearchParams();
       if (current.fullName) query.set('name', current.fullName);
       if (current.phone) query.set('phone', current.phone);
+      if (current.email) query.set('email', current.email);
       if (current.dateOfBirth) query.set('dateOfBirth', current.dateOfBirth);
       const rows = await call(`/doctor/walkin/matches?${query}`);
       // A newer keystroke already started another check; its answer is the one
@@ -254,7 +296,8 @@
     window.clearTimeout(checkTimer);
     if (!available || busy || form.hidden) return;
     const current = details();
-    const enough = current.fullName.trim().length >= 2 || current.phone.trim().length >= 6 || Boolean(current.dateOfBirth);
+    const enough = current.fullName.trim().length >= 2 || current.phone.trim().length >= 6
+      || (current.email && EMAIL.test(current.email)) || Boolean(current.dateOfBirth);
     if (!enough) {
       if (matchState) matchState.textContent = '';
       return;
@@ -268,6 +311,12 @@
     if (busy || chosen) return;
     if (!available) return;
     if (!validate()) return;
+    // Possible existing records are not merged and not ignored: the doctor has to
+    // choose one of them, or confirm this really is a different person.
+    if (matches.length && !confirmedNew) {
+      showConfirm(matches.length);
+      return;
+    }
     setBusy(true, 'Registering…');
     try {
       const patient = await call('/doctor/walkin/patients', {
@@ -281,6 +330,7 @@
         // birth. Show it as a choice instead of forcing a duplicate or a merge.
         showPageError('A patient with this name and date of birth is already registered. Check the matches below.');
         await checkExisting();
+        showConfirm(Math.max(1, matches.length));
         matchesBox.scrollIntoView({ block: 'nearest' });
       } else {
         if (error.code === 'WALKIN_UNAVAILABLE' || error.status === 404 || error.status === 503) {
@@ -306,7 +356,7 @@
       patient.existing ? 'Existing record' : 'New record',
       patient.dateOfBirth ? `Born ${formatDate(patient.dateOfBirth)}` : null,
       patient.phone || null,
-      patient.preferredLanguage || null,
+      patient.email || null,
     ].filter(Boolean);
     $('walkinDoneSummary').textContent = `${patient.fullName} — ${facts.join(' · ')}`;
     $('walkinDoneTitle').textContent = patient.existing ? 'Existing patient selected' : 'Patient registered';
@@ -396,6 +446,7 @@
     clearFieldErrors();
     setError(doneError, '');
     matchesBox.replaceChildren();
+    hideConfirm();
     if (matchState) matchState.textContent = '';
     window.clearTimeout(checkTimer);
     checkToken += 1;
@@ -435,8 +486,16 @@
 
   form.addEventListener('submit', register);
   checkButton.addEventListener('click', () => checkExisting());
-  for (const input of [nameInput, phoneInput]) input.addEventListener('input', scheduleCheck);
-  dobInput.addEventListener('change', scheduleCheck);
+  confirmButton.addEventListener('click', () => {
+    window.clearTimeout(checkTimer);
+    confirmedNew = true;
+    confirmBox.hidden = true;
+    form.requestSubmit();
+  });
+  for (const input of [nameInput, phoneInput, emailInput]) {
+    input.addEventListener('input', () => { hideConfirm(); scheduleCheck(); });
+  }
+  dobInput.addEventListener('change', () => { hideConfirm(); scheduleCheck(); });
   startButton.addEventListener('click', startConsultation);
   bookButton.addEventListener('click', bookAppointment);
 
