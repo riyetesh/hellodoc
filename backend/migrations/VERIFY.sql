@@ -10,12 +10,12 @@
 -- Never put the connection string in a committed file, a browser variable or
 -- application code.
 --
--- Expected state (verified 2026-10-20 on the connected dev project):
---   9 public tables, RLS enabled on all of them
---   35 public functions
---   17 public policies
+-- Expected state (verified 2026-10-26 on the connected dev project):
+--   11 public tables, RLS enabled on all of them
+--   40 public functions
+--   19 public policies
 --   2 non-internal triggers (auth.users signup + assessments freeze)
---   23 columns on public.assessments, including supersedes_id
+--   24 columns on public.assessments, including supersedes_id and clinic_patient_id
 --   assessments_single_revision (partial unique index) present
 --
 -- A mismatch is a finding, not something to "fix" by rerunning a whole
@@ -129,6 +129,23 @@ with checks as (
   union all
   select '012 consultation RPC exists',
          to_regprocedure('public.doctor_consultation(uuid)') is not null
+  union all
+  select '013 walk-in tables and RLS exist',
+         to_regclass('public.clinic_patients') is not null
+         and to_regclass('public.clinic_patient_audit') is not null
+         and coalesce((select relrowsecurity from pg_class where oid = 'public.clinic_patients'::regclass), false)
+         and coalesce((select relrowsecurity from pg_class where oid = 'public.clinic_patient_audit'::regclass), false)
+  union all
+  select '013 walk-in RPCs exist',
+         to_regprocedure('public.doctor_clinic_patients()') is not null
+         and to_regprocedure('public.doctor_clinic_patient_matches(text,text,date)') is not null
+         and to_regprocedure('public.doctor_register_clinic_patient(text,date,text,text,uuid)') is not null
+         and to_regprocedure('public.doctor_start_walkin_consultation(uuid,text)') is not null
+         and to_regprocedure('public.doctor_book_clinic_appointment(uuid,uuid,text,uuid)') is not null
+  union all
+  select '013 patient source constraints exist',
+         exists (select 1 from pg_constraint where conrelid = 'public.appointments'::regclass and conname = 'appointments_patient_source')
+         and exists (select 1 from pg_constraint where conrelid = 'public.assessments'::regclass and conname = 'assessments_patient_source')
 ) select check_name, present from checks order by check_name;
 
 -- 9. Privilege and RLS spot checks ----------------------------------------------

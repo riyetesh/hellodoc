@@ -32,11 +32,7 @@ restore from backup (or Supabase PITR) plus targeted repair of the missing
 objects (§7), not running a reverse script. `004` and `007` are tests, not rollback
 scripts.
 
-- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–012 are applied and
-  verified as of 2026-10-20. **`013` is written but deliberately not applied**:
-  the walk-in feature is implemented end to end in code, and every walk-in
-  endpoint answers `503 WALKIN_UNAVAILABLE` until an operator applies `013`. The
-  ledger only records some of them (see §5).
+- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–013 are applied and verified as of 2026-10-26. Migration 013 created the walk-in clinical tables, doctor-scoped RPCs and RLS policies; existing appointment and assessment rows were preserved. The walk-in UI/API still needs an authenticated end-to-end smoke test. The ledger only records some earlier migrations (see §5).
 - **Any new project:** every file is pending until applied in the order below.
 - **Any other existing project:** a file is effectively pending wherever its
   marker in `VERIFY.sql` §8 is `false`. Treat only those files (or the individual
@@ -269,13 +265,13 @@ Never run `004` or `007` as part of a clean install.
 
 Verified read-only on 2026-10-20 against `fsqtjdavnfjnwsbswqel`:
 
-- Objects match the file set **through 012** (9 public tables, 35 public
-  functions, 17 policies, 2 triggers, 23 columns on `assessments`, revision index
+- Objects match the file set **through 013** (11 public tables, 40 public
+  functions, 19 policies, 2 triggers, 24 columns on `assessments`, revision index
   present).
-- The migration ledger records only `003`, `005`, `006`, `doctor_applicant_role`
-  (008 under a non-standard name) and two `010` entries. **`009`, `011` and `012`
-  are absent from the ledger even though their objects exist**, because they were
-  applied as individual statements.
+- The migration ledger records `003`, `005`, `006`, `doctor_applicant_role`
+  (008 under a non-standard name), two `010` entries, and `013_walkin_patients`.
+  **`009`, `011` and `012` remain absent from the ledger even though their objects
+  exist**, because they were applied as individual statements.
 - One administrator exists and `private.admin_bootstrap` is consumed; earlier
   notes claiming "no administrator provisioned" are historical.
 - `public.assessments` carries Supabase default table grants for `anon`
@@ -300,12 +296,12 @@ so it is also safe to paste into the Supabase SQL editor.
 
 | Check | Expected |
 | --- | --- |
-| Public tables | 9: `admin_audit_logs`, `appointment_status_history`, `appointments`, `assessments`, `doctor_applications`, `doctor_availability`, `doctor_profiles`, `patient_profiles`, `profiles` |
+| Public tables | 11: the nine original tables plus `clinic_patients` and `clinic_patient_audit` |
 | RLS | enabled on all 9 |
-| Public functions | 35 |
-| Public policies | 17 (`active_account` contributes 6) |
+| Public functions | 40 |
+| Public policies | 19 (`active_account` contributes 6; walk-in tables add 2) |
 | Non-internal triggers | 2 |
-| `assessments` columns | 23, including `supersedes_id` |
+| `assessments` columns | 24, including `supersedes_id` and `clinic_patient_id` |
 | `assessments` indexes | 6, including `assessments_single_revision` and `assessments_supersedes` |
 | Role check | `patient`, `doctor`, `admin` only (009) |
 | Per-migration markers | all `true` |
@@ -326,6 +322,7 @@ wrong:
 - 011: `supersedes_id` column; `assessments_single_revision`; insert policy
   mentions `is_own_assessment`; `assessment_view` mentions `latestRevisionId`.
 - 012: `doctor_consultation(uuid)` exists.
+- 013: `clinic_patients` and `clinic_patient_audit` exist with RLS enabled; all five walk-in RPC signatures exist; appointment and assessment patient-source constraints are present.
 
 ### 6.4 RLS and authorization invariants
 
