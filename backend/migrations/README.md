@@ -32,11 +32,7 @@ restore from backup (or Supabase PITR) plus targeted repair of the missing
 objects (§7), not running a reverse script. `004` and `007` are tests, not rollback
 scripts.
 
-- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–012 are applied and
-  verified as of 2026-10-20. **`013` is written but deliberately not applied**:
-  the walk-in feature is implemented end to end in code, and every walk-in
-  endpoint answers `503 WALKIN_UNAVAILABLE` until an operator applies `013`. The
-  ledger only records some of them (see §5).
+- **Connected dev project (`fsqtjdavnfjnwsbswqel`):** 003–013 are applied and verified as of 2026-10-26. Migration 013 created the walk-in clinical tables, doctor-scoped RPCs and RLS policies; existing appointment and assessment rows were preserved. The walk-in UI/API still needs an authenticated end-to-end smoke test. The ledger only records some earlier migrations (see §5).
 - **Any new project:** every file is pending until applied in the order below.
 - **Any other existing project:** a file is effectively pending wherever its
   marker in `VERIFY.sql` §8 is `false`. Treat only those files (or the individual
