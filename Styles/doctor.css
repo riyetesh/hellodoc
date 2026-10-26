@@ -1445,13 +1445,869 @@
   }
 }
 
+/* ============================================================
+   Workspace schedule: search, day timeline, expandable visits
+   ============================================================ */
+.dw-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.dw-head-actions .btn {
+  min-height: 40px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.dw-schedule {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.dw-schedule__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.dw-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.dw-search label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.dw-search input {
+  min-height: 42px;
+}
+
+.dw-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.dw-chip {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  min-height: 36px;
+  cursor: pointer;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+
+.dw-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.dw-chip.is-active,
+.dw-chip[aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.dw-schedule .dw-filters {
+  margin-bottom: 0;
+  padding: 0.65rem 0.75rem;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.dw-schedule__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.dw-day {
+  display: grid;
+}
+
+.dw-day__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.dw-day:first-child .dw-day__head {
+  border-top: 0;
+}
+
+.dw-day__label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.dw-day[data-today="true"] .dw-day__label {
+  color: var(--brand);
+}
+
+.dw-day__date {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.dw-day__count {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.visit-row {
+  padding: 1rem 1.25rem;
+}
+
+.visit-row__when {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.visit-row__time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.visit-row__marker {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.visit-row__tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.visit-row__toggle {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  min-height: 32px;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.visit-row__toggle:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.visit-row__toggle[aria-expanded="true"] {
+  background: var(--brand-soft);
+  border-color: #c9d9f7;
+  color: var(--brand-700);
+}
+
+.visit-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.visit-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+}
+
+.visit-detail__facts div {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.visit-detail__facts dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.visit-detail__facts dd {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.visit-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.visit-detail__actions .btn {
+  min-height: 36px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.visit-detail__link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-strong);
+}
+
+.visit-detail__link:hover {
+  text-decoration-color: var(--brand);
+}
+
+.visit-detail__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--border);
+}
+
+.visit-detail__status > span {
+  margin-right: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.visit-detail__status .btn {
+  min-height: 32px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+/* ============================================================
+   Patient context drawer
+   ============================================================ */
+/* Above the sticky navbar (z-index 1000): the panel is opened deliberately and
+   its header must not sit behind the site header. */
+.dw-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(16, 30, 50, 0.34);
+}
+
+.dw-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1200;
+  width: min(28rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dw-drawer {
+    animation: dw-drawer-in 0.18s var(--ease);
+  }
+
+  @keyframes dw-drawer-in {
+    from { transform: translateX(1.5rem); opacity: 0.4; }
+    to { transform: none; opacity: 1; }
+  }
+}
+
+.dw-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.dw-drawer__head h2 {
+  margin: 0.3rem 0 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.dw-drawer__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dw-drawer__body {
+  display: grid;
+  gap: 1.35rem;
+  padding: 1.15rem 1.25rem 2rem;
+  overflow-y: auto;
+}
+
+.dw-context-block h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.dw-context-hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.dw-context-facts {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.dw-context-facts div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.dw-context-facts dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.dw-context-facts dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dw-context-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dw-context-list li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.dw-context-list li:first-child {
+  border-top: 0;
+}
+
+.dw-context-list a {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-strong);
+}
+
+.dw-context-list a:hover {
+  text-decoration-color: var(--brand);
+}
+
+.dw-context-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.dw-context-current {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-700);
+}
+
+.dw-context-reason {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dw-context-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.dw-context-note {
+  margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  body.dw-drawer-open {
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
+   Consultation stepper
+   ============================================================ */
+.dw-stepper {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0 0 0.85rem;
+  padding: 0 0 0.9rem;
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.dw-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+
+.dw-step:hover {
+  background: var(--surface-2);
+}
+
+.dw-step__number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.dw-step__text {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.dw-step__label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dw-step__state {
+  font-size: 0.71rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.dw-step[data-state="current"] {
+  background: var(--brand-soft);
+  border-color: #c9d9f7;
+}
+
+.dw-step[data-state="current"] .dw-step__number {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.dw-step[data-state="current"] .dw-step__state {
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+.dw-step[data-state="done"] .dw-step__number {
+  background: var(--success-soft);
+  border-color: #b9e2cc;
+  color: #1f6b45;
+}
+
+.dw-step[data-state="done"] .dw-step__state {
+  color: #1f6b45;
+}
+
+.dw-stage-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dw-stage {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.dw-stage__head h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.dw-stage__head h3:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.dw-stage__lead {
+  margin: 0.4rem 0 1rem;
+  max-width: 72ch;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.dw-stage__grid {
+  display: grid;
+  grid-template-columns: minmax(15rem, 24rem) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.dw-stage__narrow {
+  max-width: 24rem;
+  margin-top: 0.35rem;
+}
+
+.dw-visit-facts {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.dw-visit-facts div {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  font-size: 0.84rem;
+}
+
+.dw-visit-facts dt {
+  color: var(--muted);
+  font-size: 0.77rem;
+}
+
+.dw-visit-facts dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dw-inline-note {
+  margin: 0.55rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.dw-field-hint {
+  margin: 0.15rem 0 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.dw-templates {
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.dw-templates > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.dw-templates__body {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.dw-templates__body .dw-field-hint {
+  margin: 0;
+}
+
+.dw-templates__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dw-templates__buttons .btn {
+  min-height: 34px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.dw-actions--steps {
+  margin-top: 1.25rem;
+}
+
+.dw-actions--steps #resetDraft {
+  color: var(--muted);
+}
+
+.dw-section-head > .draft-state {
+  align-self: flex-start;
+  margin: 0.2rem 0 0;
+}
+
+.draft-state[data-state="saving"] {
+  color: var(--brand-700);
+  background: var(--brand-soft);
+  border-color: #c9d9f7;
+}
+
+.draft-state[data-state="error"] {
+  color: #9b2c24;
+  background: var(--danger-soft);
+  border-color: #f2c6c2;
+}
+
+/* ---- Review completeness ---- */
+.dw-review__checks {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dw-review__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.dw-review__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.dw-review__check[data-state="done"] .dw-review__mark {
+  color: #1f6b45;
+  background: var(--success-soft);
+  border-color: #b9e2cc;
+}
+
+.dw-review__check[data-state="optional"] .dw-review__mark {
+  color: #8a4b00;
+  background: var(--warning-soft);
+  border-color: #f0c98a;
+}
+
+.dw-review__check[data-state="missing"] .dw-review__mark {
+  color: #9b2c24;
+  background: var(--danger-soft);
+  border-color: #f2c6c2;
+}
+
+/* ============================================================
+   Stepper and drawer responsive behaviour
+   ============================================================ */
+@media (max-width: 1100px) {
+  .dw-stepper {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dw-schedule__bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dw-ranges {
+    width: 100%;
+  }
+
+  .dw-chip {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .dw-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dw-step__state {
+    display: none;
+  }
+
+  .dw-stage__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dw-head-actions {
+    width: 100%;
+  }
+
+  .dw-head-actions .btn {
+    flex: 1 1 12rem;
+  }
+
+  .dw-drawer {
+    width: 100vw;
+    border-left: 0;
+  }
+
+  .dw-day__head {
+    padding-inline: 1rem;
+  }
+
+  .dw-context-facts div,
+  .dw-visit-facts div {
+    grid-template-columns: 1fr;
+    gap: 0.05rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dw-step {
+    padding: 0.4rem;
+    gap: 0.35rem;
+  }
+
+  .dw-step__number {
+    width: 1.4rem;
+    height: 1.4rem;
+    font-size: 0.7rem;
+  }
+
+  .dw-step__label {
+    font-size: 0.78rem;
+  }
+}
+
 /* Print: the report page owns printing, but nothing here should break it. */
 @media print {
   .dw-head,
   .dw-alert,
   .dw-filters,
   .dw-activity,
-  .dw-actions {
+  .dw-actions,
+  .dw-schedule__bar,
+  .dw-schedule__meta,
+  .dw-stepper,
+  .visit-row__toggle,
+  .dw-drawer,
+  .dw-drawer-scrim {
     display: none !important;
   }
 }

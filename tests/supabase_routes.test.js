@@ -88,6 +88,8 @@ const fake = () => ({
     if (name === 'assessment_view') return { data:assessmentView, error:assessmentViewError };
     if (name === 'doctor_consultation') return { data:consultationView, error:consultationError };
     if (name === 'assigned_patients') return { data:[{ patient_id:'44444444-4444-4444-8444-444444444444', full_name:'Synthetic Patient', email:'patient@example.invalid', appointment_id:'55555555-5555-4555-8555-555555555555', appointment_start:'2026-11-12T09:00:00Z', appointment_status:'pending', assessment_count:1 }], error:null };
+    if (name === 'assigned_patient_names') return { data:[{ id:'44444444-4444-4444-8444-444444444444', full_name:'Synthetic Patient' }], error:null };
+    if (name === 'doctor_clinic_patients') return { data:[{ id:'66666666-6666-4666-8666-666666666666', full_name:'Synthetic Walk-in', date_of_birth:'1980-01-01', phone:null, preferred_language:'Hindi', created_at:'2026-10-01T00:00:00Z' }], error:null };
     return {data:name === 'patient_activity' ? {upcoming:1,completed:2,cancelled:0} : name === 'public_doctors' ? directory : name === 'apply_as_doctor' ? {status:'pending'} : {id:'22222222-2222-4222-8222-222222222222',status:'pending'},error:rpcError};
   },
 });
@@ -282,6 +284,45 @@ test('the doctor dashboard omits task and draft collections it cannot fill', asy
   assert.equal(response.status,200);
   const data=await response.json();
   assert.deepEqual(Object.keys(data),['appointments']);
+  profile={...profile,role:'patient'};
+});
+
+test('a patient context is scoped to the doctor who attends them', async () => {
+  profile={...profile,role:'doctor',suspended:false};
+  verification={...verification,verification_status:'approved'};
+  const accountPatient='44444444-4444-4444-8444-444444444444';
+  const clinicPatient='66666666-6666-4666-8666-666666666666';
+  const anonymous=() => fetch(`${origin}/api/doctor/patients/${accountPatient}/context`);
+  const asDoctor=(id=accountPatient) => fetch(`${origin}/api/doctor/patients/${id}/context`,{headers:{Cookie:'hd_access=valid'}});
+
+  assert.equal((await anonymous()).status,401);
+  profile={...profile,role:'patient'};
+  assert.equal((await asDoctor()).status,403);
+  profile={...profile,role:'doctor'};
+
+  const own=await asDoctor();
+  assert.equal(own.status,200);
+  const ownBody=await own.json();
+  assert.equal(ownBody.patient.account,true);
+  assert.equal(ownBody.patient.fullName,'Synthetic Patient');
+  assert.equal(ownBody.patient.email,'patient@example.invalid');
+  assert.deepEqual(ownBody.appointments,[]);
+  assert.deepEqual(ownBody.assessments,[]);
+
+  // A walk-in record has no account and therefore no email on file.
+  const walkin=await asDoctor(clinicPatient);
+  assert.equal(walkin.status,200);
+  const walkinBody=await walkin.json();
+  assert.equal(walkinBody.patient.account,false);
+  assert.equal(walkinBody.patient.email,null);
+  assert.equal(walkinBody.patient.preferredLanguage,'Hindi');
+
+  // A patient outside both of this doctor's lists is missing, not empty.
+  assert.equal((await asDoctor('77777777-7777-4777-8777-777777777777')).status,404);
+  // Approval is re-checked on the route itself, not only in the workspace UI.
+  verification={...verification,verification_status:'pending'};
+  assert.equal((await asDoctor()).status,403);
+  verification={...verification,verification_status:'approved'};
   profile={...profile,role:'patient'};
 });
 

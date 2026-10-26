@@ -1,4 +1,5 @@
-/* Clinical assessment workspace: symptom autocomplete, draft safety, review. */
+/* Clinical assessment workspace: staged consultation, symptom search, local
+   draft safety and a review that separates model input from the doctor's record. */
 (() => {
   'use strict';
   const form = document.getElementById('assessmentForm');
@@ -22,19 +23,34 @@
     plan: '',
     saved: true,
     saving: false,
+    // Only a save in this session marks the review stage complete; opening an
+    // existing record is not the same as having reviewed it now.
+    persistedThisSession: false,
     // When set, saving creates a revision of this assessment instead of a new one.
     revisingId: null,
     revisingSource: null,
     // Set when the assessment was opened from one specific appointment.
     fixedAppointmentId: null,
+    consultation: null,
+    currentStep: 1,
+    lastEditStep: 1,
   };
+
+  const STEPS = [
+    { number: 1, title: 'Visit context', short: 'Patient context' },
+    { number: 2, title: 'Reported by the patient', short: 'Patient symptoms' },
+    { number: 3, title: 'Your findings', short: 'Your observations' },
+    { number: 4, title: 'Your assessment', short: 'Your impression' },
+    { number: 5, title: 'Plan and follow-up', short: 'Follow-up' },
+    { number: 6, title: 'Review and save', short: 'Save record' },
+  ];
+  const stepTitle = (number) => STEPS.find((step) => step.number === number)?.title || '';
 
   const humanize = (identifier) => {
     const text = String(identifier).replace(/_/g, ' ').replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
     return text ? text.charAt(0).toUpperCase() + text.slice(1) : String(identifier);
   };
   const labelFor = (id) => state.vocabulary.labels[id] || humanize(id);
-  const sameSet = (a, b) => a.length === b.length && a.every((item) => b.includes(item));
 
   // One date format for the whole record: seconds are noise in a consultation,
   // and the workspace and the report should not disagree about the same visit.
@@ -47,6 +63,7 @@
       hour: 'numeric', minute: '2-digit',
     }).format(date);
   };
+  const clock = () => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
 
   // ---------------------------------------------------------------- status ---
   function setDraftState(text, kind) {
@@ -58,7 +75,7 @@
   function markDirty() {
     state.saved = false;
     setDraftState('Unsaved changes', 'dirty');
-    persist();
+    schedulePersist();
   }
   function markSaved() {
     state.saved = true;
@@ -98,7 +115,18 @@
   function persist() {
     try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot())); } catch { /* storage may be disabled */ }
   }
+  let persistTimer = 0;
+  // Typing stays responsive by writing the local draft on a short delay; nothing
+  // is sent to the server until the doctor saves the assessment.
+  function schedulePersist() {
+    window.clearTimeout(persistTimer);
+    persistTimer = window.setTimeout(() => {
+      persist();
+      setDraftState(`Unsaved changes · draft kept ${clock()}`, 'dirty');
+    }, 400);
+  }
   function clearDraft() {
+    window.clearTimeout(persistTimer);
     try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
   }
   function restoreDraft() {
@@ -308,6 +336,70 @@
     if (node) node.textContent = message;
   }
 
+  // ----------------------------------------------------------------- stages ---
+  const stagePanels = [...document.querySelectorAll('.dw-stage')];
+  const stepButtons = [...document.querySelectorAll('.dw-step')];
+
+  function stepDone(number) {
+    if (number === 1) return Boolean(state.patientId && (state.appointmentId || state.revisingId));
+    if (number === 2) return state.reported.length > 0;
+    if (number === 3) return state.clinician.length > 0 || state.observations.length > 0 || Boolean(state.note.trim());
+    if (number === 4) return Boolean(state.doctorAssessment.trim());
+    if (number === 5) return Boolean(state.plan.trim());
+    // The review is complete only once the server has confirmed a save in this
+    // session; the page normally navigates to the saved record before this is seen.
+    return state.persistedThisSession && !state.saving;
+  }
+
+  function renderStepper() {
+    for (const button of stepButtons) {
+      const number = Number(button.dataset.step);
+      const done = stepDone(number);
+      button.dataset.state = number === state.currentStep ? 'current' : done ? 'done' : 'todo';
+      if (number === state.currentStep) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+      const marker = button.querySelector('.dw-step__state');
+      if (marker) marker.textContent = number === state.currentStep ? 'Current stage' : done ? 'Complete' : STEPS[number - 1].short;
+      const status = number === state.currentStep ? ', current stage' : done ? ', complete' : ', not recorded yet';
+      button.setAttribute('aria-label', `Stage ${number}: ${stepTitle(number)}${status}`);
+    }
+    const status = $('stageStatus');
+    if (status) status.textContent = `Stage ${state.currentStep} of 6 · ${stepTitle(state.currentStep)}`;
+    const back = $('stepBack');
+    if (back) back.disabled = state.currentStep === 1;
+    const next = $('stepNext');
+    if (next) next.hidden = state.currentStep === 6;
+    const review = $('reviewButton');
+    if (review) review.hidden = state.currentStep === 6;
+    const footer = $('stageFooter');
+    if (footer) footer.hidden = state.currentStep === 6;
+  }
+
+  function showStep(number, focus = false) {
+    const target = Math.max(1, Math.min(6, number));
+    state.currentStep = target;
+    if (target !== 6) state.lastEditStep = target;
+    for (const panel of stagePanels) {
+      const panelStep = Number(panel.id.replace('assessmentStep', ''));
+      panel.hidden = panelStep !== target;
+    }
+    renderStepper();
+    if (!focus) return;
+    const heading = $(`stepTitle${target}`);
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+      heading.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function goStep(number, focus = false) {
+    // The review stage validates the record before it opens; the other stages
+    // stay freely accessible so nothing the doctor typed is gated.
+    if (number === 6) { openReview(); return; }
+    showStep(number, focus);
+  }
+
   // ----------------------------------------------------------- observations ---
   function renderObservations() {
     const list = $('observationTags');
@@ -325,7 +417,7 @@
       remove.addEventListener('click', () => {
         state.observations.splice(index, 1);
         markDirty();
-        renderObservations();
+        renderAll();
       });
       chip.append(span, remove);
       list.append(chip);
@@ -348,8 +440,38 @@
     state.observations.push(value);
     input.value = '';
     markDirty();
-    renderObservations();
+    renderAll();
     announce('Observation added.');
+  }
+
+  // ---------------------------------------------------------------- hints ---
+  // Inline guidance is derived from what is on the form, never from a suggestion
+  // engine, and it never invents clinical content.
+  function renderHints() {
+    const reported = $('reportedHint');
+    if (reported) {
+      const total = state.reported.length + state.clinician.length;
+      if (!total) {
+        reported.hidden = false;
+        reported.textContent = 'At least one symptom is needed before the record can be reviewed and saved.';
+      } else if (!state.reported.length) {
+        reported.hidden = false;
+        reported.textContent = 'Only your own findings are recorded so far. Add what the patient described if it is available.';
+      } else {
+        reported.hidden = true;
+        reported.textContent = '';
+      }
+    }
+    const assessment = $('assessmentHint');
+    if (assessment) {
+      if (!state.doctorAssessment.trim()) {
+        assessment.hidden = false;
+        assessment.textContent = 'Not recorded yet. You can save without it, but the record is read for your impression.';
+      } else {
+        assessment.hidden = true;
+        assessment.textContent = '';
+      }
+    }
   }
 
   // ------------------------------------------------------------- patients ---
@@ -364,12 +486,15 @@
       option.dataset.status = patient.appointmentStatus || '';
       option.dataset.email = patient.email || '';
       option.dataset.count = String(patient.assessmentCount || 0);
+      option.dataset.walkIn = patient.walkIn ? 'true' : 'false';
+      option.dataset.name = patient.fullName || 'Patient';
       select.append(option);
     }
     if (!state.patients.length) {
       select.replaceChildren(new Option('No patients with appointments yet', ''));
       const context = $('assessmentContext');
       context.textContent = 'Assessments can be recorded once a patient has booked an appointment with you.';
+      renderVisitFacts();
       return;
     }
     // A revision keeps the patient and appointment of the record it replaces;
@@ -389,7 +514,7 @@
     const select = $('assessmentPatient');
     const option = select.selectedOptions[0];
     const context = $('assessmentContext');
-    if (!option || !option.value) { context.textContent = ''; return; }
+    if (!option || !option.value) { context.textContent = ''; renderVisitFacts(); return; }
     const parts = [option.dataset.email];
     if (option.dataset.when) {
       parts.push(`Appointment ${formatMoment(option.dataset.when)}${option.dataset.status ? ` · ${humanize(option.dataset.status)}` : ''}`);
@@ -399,11 +524,47 @@
     const count = Number(option.dataset.count || 0);
     parts.push(count ? `${count} previous assessment${count === 1 ? '' : 's'}` : 'No previous assessments');
     context.textContent = parts.filter(Boolean).join(' · ');
+    renderVisitFacts();
+  }
+
+  // A small, honest summary of the visit this record belongs to. Values come
+  // from the selected option or the server's consultation payload.
+  function renderVisitFacts() {
+    const dl = $('stageVisit');
+    if (!dl) return;
+    const option = $('assessmentPatient').selectedOptions[0];
+    const rows = [];
+    if (option && option.value) {
+      rows.push(['Patient', option.dataset.name || option.textContent.split(' — ')[0]]);
+      rows.push(['Visit', option.dataset.when ? formatMoment(option.dataset.when) : 'No appointment linked']);
+      if (option.dataset.status) rows.push(['Status', humanize(option.dataset.status)]);
+      rows.push(['Patient record', option.dataset.walkIn === 'true' ? 'Walk-in clinical record — no online account' : 'HelloDoc account patient']);
+      if (option.dataset.count) rows.push(['Previous assessments', option.dataset.count]);
+    }
+    if (state.consultation?.reason) rows.push(['Stated reason', state.consultation.reason]);
+    dl.replaceChildren();
+    if (!rows.length) {
+      const empty = document.createElement('div');
+      empty.className = 'dw-context-empty';
+      empty.textContent = 'Choose a patient to see the visit this record will be attached to.';
+      dl.append(empty);
+      return;
+    }
+    for (const [term, value] of rows) {
+      const group = document.createElement('div');
+      const dt = document.createElement('dt');
+      dt.textContent = term;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      group.append(dt, dd);
+      dl.append(group);
+    }
   }
 
   // Consultation context for the appointment the doctor opened. Text is set with
   // textContent so a patient-stated reason can never inject markup.
   function renderConsultation(data) {
+    state.consultation = data;
     const banner = $('consultationBanner');
     if (!banner) return;
     $('consultationPatient').textContent = data.patientName || 'Patient';
@@ -418,6 +579,7 @@
       link.href = `/doctor.html?appointment=${encodeURIComponent(data.appointmentId)}#appointment-${encodeURIComponent(data.appointmentId)}`;
     }
     banner.hidden = false;
+    renderVisitFacts();
   }
 
   async function loadConsultation(appointmentId) {
@@ -438,20 +600,71 @@
     state.appointmentId = option ? (option.dataset.appointmentId || '') : '';
     markDirty();
     renderPatientContext();
+    renderStepper();
   }
 
   // ----------------------------------------------------------------- review ---
+  function fillSummary(target, rows) {
+    if (!target) return;
+    target.replaceChildren();
+    for (const [term, value] of rows) {
+      const dt = document.createElement('dt');
+      dt.textContent = term;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      target.append(dt, dd);
+    }
+  }
+
+  function renderChecks() {
+    const list = $('reviewChecks');
+    if (!list) return;
+    const symptoms = state.reported.length + state.clinician.length;
+    const checks = [
+      { ok: Boolean(state.patientId), text: state.patientId ? 'Patient selected' : 'Select the patient for this record' },
+      {
+        ok: Boolean(state.appointmentId || state.revisingId),
+        text: state.revisingId ? 'Revision of a saved record' : state.appointmentId ? 'Linked to this appointment' : 'Open the record from an appointment',
+      },
+      { ok: symptoms > 0, text: symptoms ? `${symptoms} symptom${symptoms === 1 ? '' : 's'} will be sent to the model` : 'Add at least one symptom for the model' },
+      {
+        ok: Boolean(state.doctorAssessment.trim()), optional: true,
+        text: state.doctorAssessment.trim() ? 'Your assessment is recorded' : 'Your assessment is not recorded — you can add it after saving',
+      },
+      {
+        ok: Boolean(state.plan.trim()), optional: true,
+        text: state.plan.trim() ? 'Your plan is recorded' : 'Your plan is not recorded — you can add it after saving',
+      },
+    ];
+    list.replaceChildren();
+    for (const check of checks) {
+      const item = document.createElement('li');
+      item.className = 'dw-review__check';
+      item.dataset.state = check.ok ? 'done' : check.optional ? 'optional' : 'missing';
+      const mark = document.createElement('span');
+      mark.className = 'dw-review__mark';
+      mark.setAttribute('aria-hidden', 'true');
+      mark.textContent = check.ok ? '\u2713' : check.optional ? '!' : '\u2715';
+      const text = document.createElement('span');
+      text.textContent = check.text;
+      item.append(mark, text);
+      list.append(item);
+    }
+  }
+
   function buildReview() {
     // Two lists on purpose: what the model actually receives (the symptom
     // identifiers) and what is stored with the record for the people reading it.
-    const summary = $('reviewSummary');
-    const record = $('reviewRecord');
     const selected = state.patients.find((patient) => patient.patientId === state.patientId);
-    const modelRows = [
+    fillSummary($('reviewSummary'), [
       ['Reported by the patient', state.reported.map(labelFor).join(', ') || 'None'],
       ['Recorded by you', state.clinician.map(labelFor).join(', ') || 'None'],
       ['Symptoms sent to the model', String(state.reported.length + state.clinician.length)],
-    ];
+    ]);
+    fillSummary($('reviewClinician'), [
+      ['Assessment', state.doctorAssessment.trim() || 'Not recorded'],
+      ['Plan', state.plan.trim() || 'Not recorded'],
+    ]);
     const recordRows = [
       ['Patient', selected ? selected.fullName : 'Not selected'],
       ['Appointment', selected?.appointmentStart
@@ -465,19 +678,8 @@
       recordRows.push(['Recorded originally', formatMoment(state.revisingSource.createdAt)]);
       recordRows.push(['Original prediction', `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
     }
-    const fill = (target, rows) => {
-      if (!target) return;
-      target.replaceChildren();
-      for (const [term, value] of rows) {
-        const dt = document.createElement('dt');
-        dt.textContent = term;
-        const dd = document.createElement('dd');
-        dd.textContent = value;
-        target.append(dt, dd);
-      }
-    };
-    fill(summary, modelRows);
-    fill(record, recordRows);
+    fillSummary($('reviewRecord'), recordRows);
+    renderChecks();
   }
 
   function openReview() {
@@ -486,26 +688,29 @@
       showError('assessmentError', 'This assessment has already been revised. Open the newer revision before changing symptoms again.');
       return;
     }
-    if (!state.patientId) { showError('assessmentError', 'Select the patient this assessment belongs to.'); return; }
+    if (!state.patientId) {
+      showError('assessmentError', 'Select the patient this assessment belongs to.');
+      showStep(1, true);
+      return;
+    }
     if (!state.revisingId && !state.appointmentId) {
       showError('assessmentError', 'Open this assessment from an appointment assigned to you.');
+      showStep(1, true);
       return;
     }
     if (!state.reported.length && !state.clinician.length) {
       showError('assessmentError', 'Add at least one model symptom before reviewing.');
+      showStep(2, true);
       return;
     }
-    $('doctorAssessment').value = state.doctorAssessment;
-    $('plan').value = state.plan;
     buildReview();
-    $('reviewPanel').hidden = false;
+    showStep(6);
     $('reviewPanel').focus();
     announce('Review the assessment before saving.');
   }
 
   function closeReview() {
-    $('reviewPanel').hidden = true;
-    form.querySelector('#reviewButton').focus();
+    showStep(state.lastEditStep || 4, true);
   }
 
   // ------------------------------------------------------------------- save ---
@@ -516,12 +721,11 @@
     if (!state.patientId) { showError('reviewError', 'Select a patient first.'); return; }
     if (!state.revisingId && !state.appointmentId) { showError('reviewError', 'Open this assessment from an appointment assigned to you.'); return; }
     if (!state.reported.length && !state.clinician.length) { showError('reviewError', 'Add at least one model symptom.'); return; }
-    state.doctorAssessment = $('doctorAssessment').value;
-    state.plan = $('plan').value;
     persist();
 
     const button = $('saveAssessment');
     state.saving = true;
+    setDraftState('Saving assessment…', 'saving');
     button.disabled = true;
     button.textContent = 'Saving assessment…';
     showError('reviewError', '');
@@ -578,14 +782,24 @@
         throw new Error(body.message || 'The assessment could not be saved.');
       }
       clearDraft();
+      state.persistedThisSession = true;
       markSaved();
+      setDraftState('Saved', 'saved');
+      announce('Assessment saved.');
       window.location.assign(`/prediction.html?id=${encodeURIComponent(body.id)}`);
     } catch (error) {
+      // The draft stays in the form and on this device; the server confirmed
+      // nothing, so the state must not claim success. Persist without replacing
+      // the failure message with the ordinary "draft kept" label.
+      setDraftState('Save failed — your text is kept', 'error');
       showError('reviewError', error.message || 'The assessment could not be saved. Your form is preserved; please retry.');
+      window.clearTimeout(persistTimer);
+      persist();
     } finally {
       state.saving = false;
       button.disabled = false;
       button.textContent = 'Save assessment';
+      renderStepper();
     }
   }
 
@@ -594,6 +808,8 @@
     reportedPicker?.renderChips();
     clinicianPicker?.renderChips();
     renderObservations();
+    renderHints();
+    renderStepper();
   }
 
   // Restoring an existing assessment into the capture form lets the doctor fix a
@@ -652,10 +868,13 @@
   $('doctorAssessment').addEventListener('input', () => {
     state.doctorAssessment = $('doctorAssessment').value;
     markDirty();
+    renderHints();
+    renderStepper();
   });
   $('plan').addEventListener('input', () => {
     state.plan = $('plan').value;
     markDirty();
+    renderStepper();
   });
   $('assessmentPatient').addEventListener('change', syncPatient);
   $('addObservation').addEventListener('click', addObservation);
@@ -665,24 +884,78 @@
   $('reviewButton').addEventListener('click', openReview);
   $('backToEdit').addEventListener('click', closeReview);
   $('saveAssessment').addEventListener('click', saveAssessment);
+  $('editClinician').addEventListener('click', () => showStep(4, true));
+  $('stepBack').addEventListener('click', () => goStep(state.currentStep - 1, true));
+  $('stepNext').addEventListener('click', () => goStep(state.currentStep + 1, true));
+  for (const button of stepButtons) {
+    button.addEventListener('click', () => goStep(Number(button.dataset.step)));
+  }
+  // Arrow keys move through the stage list the way a tab set would.
+  $('assessmentSteps')?.addEventListener('keydown', (event) => {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+    const index = stepButtons.indexOf(document.activeElement);
+    if (index < 0) return;
+    event.preventDefault();
+    let target = index;
+    if (event.key === 'ArrowRight') target = (index + 1) % stepButtons.length;
+    if (event.key === 'ArrowLeft') target = (index - 1 + stepButtons.length) % stepButtons.length;
+    if (event.key === 'Home') target = 0;
+    if (event.key === 'End') target = stepButtons.length - 1;
+    stepButtons[target].focus();
+    stepButtons[target].click();
+  });
+
+  // Note scaffolds insert headings only. No clinical sentence, finding, dose or
+  // plan is written for the doctor.
+  for (const button of document.querySelectorAll('[data-template]')) {
+    button.addEventListener('click', () => {
+      const area = $('clinicalNote');
+      const heading = button.dataset.template;
+      const start = area.selectionStart ?? area.value.length;
+      const end = area.selectionEnd ?? start;
+      const before = area.value.slice(0, start);
+      const separator = before && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+      const block = `${heading}:\n\n`;
+      area.value = `${before}${separator}${block}${area.value.slice(end)}`;
+      const position = before.length + separator.length + block.length;
+      area.focus();
+      area.setSelectionRange(position, position);
+      syncFields();
+      markDirty();
+      announce(`${heading} heading inserted.`);
+    });
+  }
+
   $('resetDraft').addEventListener('click', () => {
-    if (!window.confirm('Clear this draft? Recorded symptoms and notes will be lost.')) return;
-    state.patientId = ''; state.appointmentId = '';
-    state.reported = []; state.clinician = []; state.observations = [];
-    state.duration = ''; state.note = ''; state.doctorAssessment = ''; state.plan = '';
-    $('assessmentPatient').value = '';
+    if (!window.confirm('Clear this form? Symptoms, observations and notes will be lost.')) return;
+    const keepContext = Boolean(state.fixedAppointmentId || state.revisingId);
+    state.reported = [];
+    state.clinician = [];
+    state.observations = [];
+    state.duration = '';
+    state.note = '';
+    state.doctorAssessment = '';
+    state.plan = '';
+    if (!keepContext) {
+      state.patientId = '';
+      state.appointmentId = '';
+      $('assessmentPatient').value = '';
+    }
     $('symptomDuration').value = '';
     $('clinicalNote').value = '';
     $('observationInput').value = '';
     $('doctorAssessment').value = '';
     $('plan').value = '';
-    $('reviewPanel').hidden = true;
     $('draftBanner').hidden = true;
     showError('assessmentError', '');
     clearDraft();
-    markSaved();
+    state.saved = true;
+    state.persistedThisSession = false;
+    setDraftState(keepContext ? 'Form cleared · consultation still open' : 'Form cleared', 'saved');
     renderAll();
     renderPatientContext();
+    showStep(keepContext ? 2 : 1);
+    announce(keepContext ? 'Form cleared. This consultation is still open.' : 'Form cleared.');
   });
 
   // Unsaved work must survive an accidental navigation, including the back
@@ -698,17 +971,18 @@
     const typing = ['input', 'textarea', 'select'].includes(tag) || event.target.isContentEditable;
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
-      if (!$('reviewPanel').hidden) saveAssessment(); else openReview();
+      if (state.currentStep === 6) saveAssessment(); else openReview();
       return;
     }
     if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
+      showStep(2);
       reportedPicker?.focus();
       return;
     }
     // Escape closes the review without discarding anything; inside a field it
     // must keep its native meaning, so typing is never interrupted.
-    if (event.key === 'Escape' && !typing && !$('reviewPanel').hidden) {
+    if (event.key === 'Escape' && !typing && state.currentStep === 6) {
       event.preventDefault();
       closeReview();
     }
@@ -748,6 +1022,7 @@
             appointmentStart: consultation.startsAt,
             appointmentStatus: consultation.status,
             email: consultation.patientEmail || existingPatient.email,
+            walkIn: Boolean(consultation.clinicPatientId) || existingPatient.walkIn,
           });
         } else {
           state.patients.push({
@@ -755,6 +1030,7 @@
             email: consultation.patientEmail || '', appointmentId: consultation.appointmentId,
             appointmentStart: consultation.startsAt, appointmentStatus: consultation.status,
             assessmentCount: consultation.previousAssessmentId ? 1 : 0,
+            walkIn: Boolean(consultation.clinicPatientId),
           });
         }
         if (consultation.previousAssessmentId) {
@@ -769,6 +1045,8 @@
         clearDraft();
         fillPatients();
         renderAll();
+        showStep(1);
+        setDraftState('No changes yet', '');
         loadRecent();
         return;
       }
@@ -791,6 +1069,7 @@
           review.textContent = 'Newer revision exists';
         }
         renderAll();
+        showStep(2);
         loadRecent();
         return;
       }
@@ -800,6 +1079,8 @@
       if (restored) {
         $('symptomDuration').value = state.duration;
         $('clinicalNote').value = state.note;
+        $('doctorAssessment').value = state.doctorAssessment;
+        $('plan').value = state.plan;
         $('draftBanner').hidden = false;
         state.saved = false;
         setDraftState('Unsaved changes (draft restored)', 'dirty');
@@ -807,12 +1088,15 @@
         markSaved();
       }
       renderAll();
+      showStep(1);
       loadRecent();
     } catch (error) {
       // The failure is reported inside the editor, so it must stay visible.
       setEditorVisible(true);
       showError('assessmentError', error.message);
       $('assessmentPatient').replaceChildren(new Option('Patient list unavailable', ''));
+      renderStepper();
+      showStep(1);
     }
   }
 

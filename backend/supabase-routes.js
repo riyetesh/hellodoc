@@ -459,6 +459,43 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       appointmentStatus: row.appointment_status, assessmentCount: Number(row.assessment_count || 0),
     })));
   }));
+  // One patient's context for the doctor who attends them: identity, the visits
+  // they share and the records already saved. Access is decided by the doctor's
+  // own patient lists, so a browser-supplied id can never widen the scope.
+  router.get('/doctor/patients/:id/context', ...guard('doctor', async (req, res, { db, user }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid patient' });
+    const id = req.params.id;
+    const [people, clinic] = await Promise.all([db.rpc('assigned_patients'), db.rpc('doctor_clinic_patients')]);
+    if (people.error) return res.status(503).json({ message: 'Patient record unavailable' });
+    const account = (people.data || []).find((row) => row.patient_id === id) || null;
+    const walkIn = (Array.isArray(clinic.data) ? clinic.data : []).find((row) => row.id === id) || null;
+    if (!account && !walkIn) return res.status(404).json({ message: 'That patient is not one of your records.' });
+    // The two patient kinds live in different columns, and only one of them can
+    // be set on an assessment, so the query filters by the column that applies.
+    const column = account ? 'patient_id' : 'clinic_patient_id';
+    const [visits, records] = await Promise.all([
+      db.from('appointments').select('id,scheduled_start,status,reason')
+        .eq('doctor_id', user.id).eq(column, id).order('scheduled_start', { ascending: false }).limit(20),
+      db.from('assessments').select('id,appointment_id,created_at,predicted_disease,supersedes_id')
+        .eq('doctor_id', user.id).eq(column, id).order('created_at', { ascending: false }).limit(20),
+    ]);
+    if (visits.error || records.error) return res.status(503).json({ message: 'Patient record unavailable' });
+    res.json({
+      patient: {
+        id, fullName: account?.full_name || walkIn?.full_name || 'Patient',
+        account: Boolean(account), email: account?.email || null,
+        dateOfBirth: walkIn?.date_of_birth || null, phone: walkIn?.phone || null,
+        preferredLanguage: walkIn?.preferred_language || null,
+      },
+      appointments: (visits.data || []).map((row) => ({
+        id: row.id, startsAt: row.scheduled_start, status: row.status, reason: row.reason,
+      })),
+      assessments: (records.data || []).map((row) => ({
+        id: row.id, appointmentId: row.appointment_id, createdAt: row.created_at,
+        predictedDisease: row.predicted_disease, supersedesId: row.supersedes_id,
+      })),
+    });
+  }));
   // ---------------------------------------------------------------------------
   // Walk-in registration: a clinical record for a patient with no account.
   // Nothing here creates an auth user, an email address or portal access.
@@ -808,7 +845,9 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const clinic = await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
     for (const row of clinicRows) names.set(row.id, row.full_name);
-    res.json({ appointments:result.data.map((a) => ({ id:a.id, startsAt:a.scheduled_start,status:a.status,reason:a.reason, walkIn:!a.patient_id, firstName:names.get(patientOf(a)) || 'Patient' })) });
+    // patientId is the value the workspace uses to open that patient's context;
+    // it is always one the server itself resolved for this doctor.
+    res.json({ appointments:result.data.map((a) => ({ id:a.id, patientId:patientOf(a) || null, startsAt:a.scheduled_start,status:a.status,reason:a.reason, walkIn:!a.patient_id, firstName:names.get(patientOf(a)) || 'Patient' })) });
   }));
   router.get('/doctor/appointments/:id', ...guard('doctor', async (req, res, { db, user }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message:'Invalid appointment' });

@@ -58,6 +58,66 @@
     node.dataset.state = state || '';
   }
 
+  // The report preview is built from what is saved, not from what is typed, so
+  // it never promises content the PDF will not contain.
+  function renderReport() {
+    if (!assessment) return;
+    const stateNode = $('reportState');
+    if (stateNode) {
+      stateNode.textContent = dirty ? 'Unsaved changes — save before generating' : 'Ready to generate';
+      stateNode.dataset.state = dirty ? 'dirty' : 'saved';
+    }
+
+    const checks = $('reportChecks');
+    if (checks) {
+      checks.replaceChildren();
+      const add = (ok, text, jump) => {
+        const item = document.createElement('li');
+        item.className = 'dw-report__check';
+        item.dataset.state = ok ? 'done' : 'missing';
+        const mark = document.createElement('span');
+        mark.className = 'dw-report__mark';
+        mark.setAttribute('aria-hidden', 'true');
+        mark.textContent = ok ? '\u2713' : '!';
+        const copy = document.createElement('span');
+        copy.textContent = text;
+        item.append(mark, copy);
+        if (!ok && jump) {
+          const link = document.createElement('a');
+          link.href = '#doctorPanel';
+          link.textContent = 'Add it';
+          item.append(link);
+        }
+        checks.append(item);
+      };
+      add(true, `Patient: ${assessment.patientName || 'Patient'}`);
+      add(Boolean(assessment.appointmentStart), assessment.appointmentStart
+        ? 'Linked to a consultation'
+        : 'No appointment is recorded for this assessment');
+      const modelSymptoms = [...(assessment.patientReported || []), ...(assessment.clinicianAdded || [])];
+      add(modelSymptoms.length > 0, `${modelSymptoms.length} model symptom${modelSymptoms.length === 1 ? '' : 's'} recorded`);
+      add(Boolean(assessment.predictedDisease), 'Experimental model output, labelled as not a diagnosis');
+      const hasAssessment = Boolean((assessment.doctorAssessment || '').trim());
+      add(hasAssessment, hasAssessment ? 'Your assessment is stored' : 'Your assessment is empty', !hasAssessment);
+      const hasPlan = Boolean((assessment.plan || '').trim());
+      add(hasPlan, hasPlan ? 'Your plan is stored' : 'Your plan is empty', !hasPlan);
+    }
+
+    const preview = $('reportPreview');
+    if (preview) {
+      preview.replaceChildren();
+      addRow(preview, 'Patient', assessment.patientName || 'Patient');
+      addRow(preview, 'Appointment', assessment.appointmentStart ? dateText(assessment.appointmentStart) : 'Not linked');
+      addRow(preview, 'Recorded', dateText(assessment.createdAt));
+      addRow(preview, 'Reported symptoms', (assessment.patientReported || []).map(humanize).join(', ') || 'None');
+      addRow(preview, 'Your findings', (assessment.clinicianAdded || []).map(humanize).join(', ') || 'None');
+      addRow(preview, 'Observations', (assessment.observations || []).join(' · ') || 'None');
+      addRow(preview, 'Model output', assessment.predictedDisease || 'Not recorded');
+      addRow(preview, 'Your assessment', assessment.doctorAssessment || 'Not recorded');
+      addRow(preview, 'Plan', assessment.plan || 'Not recorded');
+    }
+  }
+
   function render(data) {
     assessment = data;
     $('pageTitle').textContent = data.predictedDisease
@@ -161,6 +221,7 @@
     $('plan').value = data.plan || '';
     dirty = false;
     setClinicalState('All changes saved', 'saved');
+    renderReport();
     $('report').hidden = false;
     hide($('message'));
   }
@@ -188,6 +249,7 @@
   function markDirty() {
     dirty = true;
     setClinicalState('Unsaved changes', 'dirty');
+    renderReport();
   }
   $('doctorAssessment').addEventListener('input', markDirty);
   $('plan').addEventListener('input', markDirty);
@@ -199,6 +261,7 @@
     const button = $('saveClinical');
     button.disabled = true;
     button.textContent = 'Saving…';
+    setClinicalState('Saving…', 'saving');
     hide($('clinicalError'));
     try {
       const response = await fetch(`/api/doctor/assessments/${encodeURIComponent(id)}`, {
@@ -223,9 +286,13 @@
       if (body.updatedAt) assessment.updatedAt = body.updatedAt;
       dirty = false;
       setClinicalState('All changes saved', 'saved');
+      renderReport();
       return true;
     } catch (error) {
+      // Nothing was confirmed by the server, so the state must not claim it was.
+      setClinicalState('Save failed — your text is kept', 'error');
       show($('clinicalError'), error.message);
+      renderReport();
       return false;
     } finally {
       saving = false;
@@ -241,6 +308,7 @@
     $('plan').value = assessment.plan || '';
     dirty = false;
     setClinicalState('All changes saved', 'saved');
+    renderReport();
   }
 
   $('saveClinical').addEventListener('click', saveClinical);
@@ -261,6 +329,7 @@
     button.disabled = true;
     retry.hidden = true;
     button.textContent = 'Generating report…';
+    $('reportPanel')?.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch(`/api/doctor/assessments/${encodeURIComponent(id)}/report.pdf`, { credentials: 'same-origin' });
       if (!response.ok) {
@@ -281,12 +350,19 @@
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
+      const stateNode = $('reportState');
+      if (stateNode) {
+        stateNode.textContent = 'Report generated';
+        stateNode.dataset.state = 'saved';
+      }
     } catch (error) {
       show($('reportError'), `${error.message} Nothing was downloaded.`);
       retry.hidden = false;
+      renderReport();
     } finally {
       button.disabled = false;
       button.textContent = 'Download PDF report';
+      $('reportPanel')?.removeAttribute('aria-busy');
     }
   }
 

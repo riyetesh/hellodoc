@@ -27,6 +27,7 @@
   const submitButton = $('walkinSubmit');
   const checkButton = $('walkinCheck');
   const matchesBox = $('walkinMatches');
+  const matchState = $('walkinMatchState');
   const pageError = $('walkinError');
   const stateLine = $('walkinState');
   const doneError = $('walkinDoneError');
@@ -40,6 +41,10 @@
   let key = crypto.randomUUID();
   let busy = false;
   let matches = [];
+  // One in-flight check wins; a slower earlier response never replaces the
+  // results for what is currently typed.
+  let checkToken = 0;
+  let checkTimer = 0;
   let chosen = null; // { id, fullName, dateOfBirth, phone, preferredLanguage, existing }
   let slotsLoaded = false;
 
@@ -207,28 +212,54 @@
     }
   }
 
-  async function checkExisting() {
+  async function checkExisting({ quiet = false } = {}) {
     const current = details();
-    if (!available) return;
+    if (!available || busy) return;
     if (!current.fullName && !current.phone && !current.dateOfBirth) {
-      showPageError('Enter a name, phone number or date of birth before checking.');
-      nameInput.focus();
+      if (!quiet) {
+        showPageError('Enter a name, phone number or date of birth before checking.');
+        nameInput.focus();
+      }
       return;
     }
-    setBusy(true, 'Checking your records…');
+    const token = ++checkToken;
+    if (!quiet) setBusy(true, 'Checking your records…');
+    else if (matchState) matchState.textContent = 'Checking your records…';
     showPageError('');
     try {
       const query = new URLSearchParams();
       if (current.fullName) query.set('name', current.fullName);
       if (current.phone) query.set('phone', current.phone);
       if (current.dateOfBirth) query.set('dateOfBirth', current.dateOfBirth);
-      renderMatches(await call(`/doctor/walkin/matches?${query}`));
+      const rows = await call(`/doctor/walkin/matches?${query}`);
+      // A newer keystroke already started another check; its answer is the one
+      // that belongs on screen.
+      if (token === checkToken) renderMatches(rows);
     } catch (error) {
+      if (token !== checkToken) return;
       renderMatches([]);
       showPageError(error.status === 403 ? error.message : 'Existing patients could not be checked. You can still register this patient.');
     } finally {
-      setBusy(false);
+      if (token === checkToken) {
+        if (!quiet) setBusy(false);
+        else if (matchState) matchState.textContent = '';
+      }
     }
+  }
+
+  // Matching runs while the doctor types, which is how a returning patient is
+  // usually recognised before a duplicate record is created. It needs enough
+  // detail to be useful and never replaces the explicit Check button.
+  function scheduleCheck() {
+    window.clearTimeout(checkTimer);
+    if (!available || busy || form.hidden) return;
+    const current = details();
+    const enough = current.fullName.trim().length >= 2 || current.phone.trim().length >= 6 || Boolean(current.dateOfBirth);
+    if (!enough) {
+      if (matchState) matchState.textContent = '';
+      return;
+    }
+    checkTimer = window.setTimeout(() => checkExisting({ quiet: true }), 450);
   }
 
   // --------------------------------------------------------- registration ---
@@ -365,6 +396,9 @@
     clearFieldErrors();
     setError(doneError, '');
     matchesBox.replaceChildren();
+    if (matchState) matchState.textContent = '';
+    window.clearTimeout(checkTimer);
+    checkToken += 1;
     matches = [];
     chosen = null;
     key = crypto.randomUUID();
@@ -400,7 +434,9 @@
   });
 
   form.addEventListener('submit', register);
-  checkButton.addEventListener('click', checkExisting);
+  checkButton.addEventListener('click', () => checkExisting());
+  for (const input of [nameInput, phoneInput]) input.addEventListener('input', scheduleCheck);
+  dobInput.addEventListener('change', scheduleCheck);
   startButton.addEventListener('click', startConsultation);
   bookButton.addEventListener('click', bookAppointment);
 

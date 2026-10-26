@@ -357,6 +357,100 @@
   font-size: 0.78rem;
 }
 
+/* ---- Report preview: what the PDF will contain, from the saved record ---- */
+.dw-report {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  margin: 1rem 0 1.1rem;
+}
+
+.dw-report__block {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.dw-report__block--preview {
+  background: #f7faff;
+  border-color: #c9d9f7;
+}
+
+.dw-report__block h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.dw-report__block .muted {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.dw-report__checks {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.84rem;
+}
+
+.dw-report__check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.dw-report__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.dw-report__check[data-state="done"] .dw-report__mark {
+  color: #1f6b45;
+  background: var(--success-soft);
+  border-color: #b9e2cc;
+}
+
+.dw-report__check[data-state="missing"] .dw-report__mark {
+  color: #8a4b00;
+  background: var(--warning-soft);
+  border-color: #f0c98a;
+}
+
+.dw-report__check a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dw-report__block .review-summary {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 900px) {
+  .dw-report {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---- Results page ---- */
 .assessment-page {
   display: grid;
