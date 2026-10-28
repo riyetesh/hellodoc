@@ -1,34 +1,211 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HelloDoc | My health</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your HelloDoc care overview: appointments, health records and follow-up guidance.">
+  <title>HelloDoc | Patient home</title>
   <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
   <link rel="stylesheet" href="/Styles/app.css?v=blue2">
-  <link rel="stylesheet" href="/Styles/patient.css">
+  <link rel="stylesheet" href="/Styles/patient.css?v=care-2">
 </head>
-<body>
-  <nav class="navbar" id="navbar"><div class="container navbar-inner">
-    <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo"></a>
-        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
-          <span class="nav-toggle__icon" aria-hidden="true"></span>
-        </button>
-    <ul class="nav-links" id="navLinks"><li><a href="index.html#about" class="nav-link">About</a></li><li><a href="dashboard.html" class="nav-link">Find a doctor</a></li><li><a href="appointments.html" class="nav-link">Appointments <span class="nav-badge" data-appt-badge>0</span></a></li><li><a href="story.html" class="nav-link">My Story</a></li><li><a href="help.html" class="nav-link">Help</a></li></ul>
-    <div class="navbar-actions" id="navActions"><a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a><a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a><button class="user-chip" id="userChip" hidden><span class="avatar" id="userAvatar">U</span><span class="user-name" id="userName">Guest</span></button></div>
-  </div></nav>
-  <header class="page-head"><div class="container page-head-inner"><div><h1 id="greeting">My health</h1><p>Your appointments and account details in one place.</p></div><a class="btn btn-primary" href="dashboard.html">Find a doctor</a></div></header>
-  <main class="container patient-main" id="portal" hidden>
-    <p class="lead" id="nextVisit"></p>
-    <p class="lead" id="visitMetrics"></p>
-    <div class="patient-grid">
-      <section class="patient-panel"><h2>Appointments</h2><div id="visits"></div><a href="appointments.html">Manage appointments</a></section>
-      <section class="patient-panel"><h2>Follow up tasks</h2><p id="tasks"></p><p>Task assignment is not built yet, so this panel never lists a task.</p></section>
-      <section class="patient-panel"><h2>Past visits</h2><p>Past appointments only. Clinical results, prescriptions and care plans are not shown in this prototype.</p><div id="history"></div></section>
+<body class="patient-page">
+  <a class="patient-skip" href="#patientMain">Skip to your dashboard</a>
 
-      <section class="patient-panel"><h2>Settings</h2><p id="profile"></p><button class="btn btn-outline" id="logout" type="button">Log out</button><p>Clinical questionnaires are not part of the patient portal yet.</p></section>
+  <!-- ===== Shared navbar (canonical block) ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+      </a>
+
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
+        <span class="nav-toggle__icon" aria-hidden="true"></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+        <li>
+          <a href="appointments.html" class="nav-link">
+            Appointments
+            <span class="nav-badge" data-appt-badge>0</span>
+          </a>
+        </li>
+        <li><a href="story.html" class="nav-link">My Story</a></li>
+        <li><a href="help.html" class="nav-link">Help</a></li>
+      </ul>
+
+      <div class="navbar-actions" id="navActions">
+        <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
+        <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
+        <button class="user-chip" id="userChip" hidden>
+          <span class="avatar" id="userAvatar">U</span>
+          <span class="user-name" id="userName">Guest</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+        </button>
+      </div>
     </div>
-  </main>
-  <div class="container patient-message" id="portalMessage" role="status">Loading your health information…</div>
-  <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
-  <script src="/Scripts/appointments.js"></script><script src="/Scripts/nav.js"></script><script src="/Scripts/patient.js"></script>
-</body></html>
+  </nav>
+
+  <div class="container patient-workspace">
+    <!-- Primary care navigation. Account and sign-out sit below, apart from it. -->
+    <aside class="patient-rail" data-patient-nav>
+      <p class="patient-rail__title">Patient area</p>
+      <nav class="patient-rail__nav" aria-label="Patient area">
+        <a class="patient-rail__link" href="patient.html"><i class="fa-solid fa-house-medical" aria-hidden="true"></i>Dashboard</a>
+        <a class="patient-rail__link" href="dashboard.html"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>Find a doctor</a>
+        <a class="patient-rail__link" href="appointments.html"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>My appointments</a>
+        <a class="patient-rail__link" href="records.html"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>Health records</a>
+        <a class="patient-rail__link" href="walkin.html"><i class="fa-solid fa-door-open" aria-hidden="true"></i>Walk-in queue</a>
+      </nav>
+      <div class="patient-rail__account">
+        <div class="patient-rail__identity">
+          <span class="patient-rail__avatar" id="railAvatar" aria-hidden="true">P</span>
+          <span class="patient-rail__identity-text">
+            <strong id="railName">Patient</strong>
+            <small id="railEmail"></small>
+          </span>
+        </div>
+        <a class="patient-rail__link" href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account &amp; settings</a>
+        <button class="patient-rail__signout" id="patientSignOut" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Sign out</button>
+      </div>
+    </aside>
+
+    <main class="patient-main" id="patientMain">
+      <div class="patient-message" id="portalMessage" role="status" aria-live="polite" hidden></div>
+
+      <section class="setup-panel" id="onboarding" aria-labelledby="setupTitle" hidden>
+        <div class="setup-copy">
+          <p class="patient-kicker">A good place to start</p>
+          <h1 id="setupTitle">Welcome to your care space</h1>
+          <p>Find an approved doctor, request an appointment and keep track of your visits in one place.</p>
+          <p class="emergency-note"><span class="emergency-mark" aria-hidden="true">!</span><span><strong>Need urgent help?</strong> HelloDoc is for routine appointments, not emergencies. Contact your local emergency service for urgent symptoms.</span></p>
+        </div>
+        <div class="setup-progress" aria-label="Setup progress"><span id="setupProgressText">Step 1 of 3</span><span class="setup-progress__track"><span id="setupProgressBar"></span></span></div>
+        <div class="setup-step" id="setupWelcome">
+          <h2>Care that starts with a clear next step</h2>
+          <p>Browse verified doctor profiles and request a time that works for you. You can book without filling out a health questionnaire.</p>
+          <div class="setup-actions"><button class="patient-button patient-button--primary" type="button" data-setup-next>Get started</button><button class="patient-text-button" type="button" data-setup-skip>Skip setup for now</button></div>
+        </div>
+        <div class="setup-step" id="setupProfile" hidden>
+          <h2>Check your contact details</h2>
+          <p>We use your name for your appointment. A phone number is optional.</p>
+          <form id="setupProfileForm" class="patient-form" novalidate>
+            <div class="patient-form__row">
+              <label>First name<input name="firstName" type="text" autocomplete="given-name" maxlength="100" required></label>
+              <label>Last name <span class="field-optional">(optional)</span><input name="lastName" type="text" autocomplete="family-name" maxlength="100"></label>
+            </div>
+            <label>Phone number <span class="field-optional">(optional)</span><input name="phone" type="tel" autocomplete="tel" maxlength="40" inputmode="tel" aria-describedby="setupPhoneHint"><span class="patient-field-hint" id="setupPhoneHint">Only add a number if you would like us to have it.</span></label>
+            <p class="patient-form__message" id="setupProfileMessage" role="alert" hidden></p>
+            <div class="setup-actions"><button class="patient-button patient-button--quiet" type="button" data-setup-back>Back</button><button class="patient-button patient-button--primary" type="submit">Save and continue</button><button class="patient-text-button" type="button" data-setup-skip>Skip for now</button></div>
+          </form>
+        </div>
+        <div class="setup-step" id="setupFinish" hidden>
+          <span class="setup-check" aria-hidden="true">&#10003;</span>
+          <h2>You are ready to find care</h2>
+          <p>No health details are required to book. If you choose, you can add a short reason when requesting an appointment.</p>
+          <div class="setup-actions"><button class="patient-button patient-button--quiet" type="button" data-setup-back>Back</button><button class="patient-button patient-button--primary" id="finishSetup" type="button">Go to my dashboard</button></div>
+        </div>
+      </section>
+
+      <section class="patient-welcome" aria-labelledby="greeting">
+        <div class="patient-welcome__copy">
+          <p class="patient-kicker">Your HelloDoc home</p>
+          <h1 id="greeting">Your care, in view.</h1>
+          <p id="welcomeMessage">What happens next, what your clinician recorded, and what to do about it.</p>
+        </div>
+        <div class="patient-welcome__actions">
+          <a class="patient-button patient-button--primary" href="dashboard.html"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>Book an appointment</a>
+          <a class="patient-button patient-button--outline" href="walkin.html">Join the walk-in queue</a>
+        </div>
+      </section>
+
+      <section class="patient-summary" aria-label="Care overview" aria-busy="true" id="summarySection">
+        <article class="summary-item summary-item--next">
+          <span class="summary-label">Next appointment</span>
+          <strong id="nextVisitSummary">Loading appointments&hellip;</strong>
+          <span id="nextVisitDetail" class="summary-detail"></span>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Upcoming</span>
+          <strong id="upcomingCount">&mdash;</strong>
+          <span class="summary-detail">requests and confirmed visits</span>
+        </article>
+        <article class="summary-item">
+          <span class="summary-label">Completed</span>
+          <strong id="completedCount">&mdash;</strong>
+          <span class="summary-detail">visits in your history</span>
+        </article>
+      </section>
+
+      <div class="patient-content-grid">
+        <div class="patient-column">
+          <section class="patient-section" aria-labelledby="appointmentsTitle">
+            <div class="section-heading">
+              <div><p class="patient-kicker">Your schedule</p><h2 id="appointmentsTitle">Appointments</h2></div>
+              <a class="patient-inline-link" href="appointments.html">See all appointments</a>
+            </div>
+            <div id="appointmentsList" class="patient-appointment-list" aria-live="polite"><div class="patient-loading" aria-hidden="true"><span></span><span></span></div></div>
+            <div id="appointmentsUnavailable" class="patient-empty" hidden>
+              <h3>Appointments are unavailable right now</h3>
+              <p>Your dashboard could not load the visit list. Retry in a moment.</p>
+              <button class="patient-button patient-button--outline" id="retryAppointments" type="button">Try again</button>
+            </div>
+            <div class="patient-empty" id="appointmentsEmpty" hidden>
+              <img class="patient-empty__art" src="/Asset/Illustrations/appointment.svg" alt="" aria-hidden="true">
+              <h3>Your schedule is clear</h3>
+              <p>Book a time with an approved doctor, or join the walk-in queue if you would rather be seen today.</p>
+              <a class="patient-button patient-button--primary" href="dashboard.html">Browse doctors</a>
+            </div>
+          </section>
+
+          <section class="patient-section" aria-labelledby="followUpTitle">
+            <div class="section-heading">
+              <div><p class="patient-kicker">After your last visit</p><h2 id="followUpTitle">Follow-up</h2></div>
+            </div>
+            <div id="followUpPanel" aria-live="polite"><div class="patient-loading" aria-hidden="true"><span></span></div></div>
+          </section>
+        </div>
+
+        <div class="patient-column">
+          <section class="patient-section" aria-labelledby="recordsTitle">
+            <div class="section-heading">
+              <div><p class="patient-kicker">Your history</p><h2 id="recordsTitle">Health records</h2></div>
+              <a class="patient-inline-link" href="records.html">All records</a>
+            </div>
+            <div id="latestRecord" aria-live="polite"><div class="patient-loading" aria-hidden="true"><span></span></div></div>
+          </section>
+
+          <section class="patient-section" aria-labelledby="quickTitle">
+            <div class="section-heading"><div><p class="patient-kicker">Shortcuts</p><h2 id="quickTitle">Quick actions</h2></div></div>
+            <nav class="patient-quick-links" aria-label="Patient shortcuts">
+              <a href="dashboard.html"><span class="quick-icon" aria-hidden="true"><i class="fa-regular fa-calendar-plus"></i></span><span><strong>Book a visit</strong><small>Choose a doctor and time</small></span><span class="quick-chevron" aria-hidden="true">&rsaquo;</span></a>
+              <a href="walkin.html"><span class="quick-icon quick-icon--teal" aria-hidden="true"><i class="fa-solid fa-door-open"></i></span><span><strong>Walk-in queue</strong><small>Be seen today without a booking</small></span><span class="quick-chevron" aria-hidden="true">&rsaquo;</span></a>
+              <a href="records.html"><span class="quick-icon quick-icon--iris" aria-hidden="true"><i class="fa-regular fa-folder-open"></i></span><span><strong>Health records</strong><small>Reports and your clinician&rsquo;s notes</small></span><span class="quick-chevron" aria-hidden="true">&rsaquo;</span></a>
+              <a href="account.html"><span class="quick-icon quick-icon--blue" aria-hidden="true"><i class="fa-regular fa-user"></i></span><span><strong>Account &amp; settings</strong><small>Your name, phone and sign out</small></span><span class="quick-chevron" aria-hidden="true">&rsaquo;</span></a>
+            </nav>
+          </section>
+
+          <p class="patient-privacy-note"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i><span>Appointments and health records are private to your account. HelloDoc shows only what a clinician recorded for you.</span></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="patient-confirm" id="cancelDialog" aria-labelledby="cancelDialogTitle" aria-describedby="cancelDialogText">
+    <form method="dialog">
+      <p class="patient-kicker">Appointment change</p>
+      <h2 id="cancelDialogTitle">Cancel this appointment?</h2>
+      <p id="cancelDialogText">The visit will no longer be held for you. You can request another appointment at any time.</p>
+      <div class="patient-confirm__actions"><button class="patient-button patient-button--quiet" value="keep">Keep appointment</button><button class="patient-button patient-button--danger" value="confirm">Cancel appointment</button></div>
+    </form>
+  </dialog>
+
+  <footer><div class="container"><p>&copy; HelloDoc. For urgent symptoms, contact your local emergency service.</p></div></footer>
+  <script src="/Scripts/appointments.js"></script>
+  <script src="/Scripts/nav.js"></script>
+  <script src="/Scripts/patient-shell.js?v=care-2"></script>
+  <script src="/Scripts/patient.js?v=care-2"></script>
+</body>
+</html>

@@ -181,14 +181,32 @@ test('public directory exposes approved profile details without private applicat
   directory=[];
 });
 test('patient overview includes only scoped server-side activity',async () => {
-  const response=await fetch(origin+'/api/patient/overview',{headers:{Cookie:'hd_access=valid'}});
+  const previousProfile = profile;
+  profile={...profile,role:'patient',full_name:'Synthetic Patient',phone:'+1 555 0123'};
+  try {
+    const response=await fetch(origin+'/api/patient/overview',{headers:{Cookie:'hd_access=valid'}});
+    assert.equal(response.status,200);
+    const data=await response.json();
+    assert.deepEqual(data.metrics,{upcoming:1,completed:2,cancelled:0});
+    assert.equal(data.profile.userId,profile.id);
+    assert.equal(data.profile.phone, '+1 555 0123');
+    assert.ok(calls.some((call) => call.name==='patient_activity'));
+    // Only implemented collections are returned. Empty placeholder arrays used to
+    // imply that symptoms, prescriptions and care plans were simply empty.
+    assert.deepEqual(Object.keys(data).sort(),['appointments','metrics','profile']);
+  } finally {
+    profile = previousProfile;
+  }
+});
+
+test('patient profile includes only the authenticated user’s existing contact fields', async () => {
+  profile={...profile,role:'patient',full_name:'Synthetic Patient',phone:'+1 555 0123'};
+  const response=await fetch(origin+'/api/auth/profile',{headers:{Cookie:'hd_access=valid'}});
   assert.equal(response.status,200);
-  const data=await response.json();
-  assert.deepEqual(data.metrics,{upcoming:1,completed:2,cancelled:0});
-  assert.ok(calls.some((call) => call.name==='patient_activity'));
-  // Only implemented collections are returned. Empty placeholder arrays used to
-  // imply that symptoms, prescriptions and care plans were simply empty.
-  assert.deepEqual(Object.keys(data).sort(),['appointments','metrics','profile']);
+  assert.deepEqual(await response.json(),{
+    id:profile.id,firstName:'Synthetic',lastName:'Patient',email:'test@example.invalid',phone:'+1 555 0123'
+  });
+  profile={...profile,phone:undefined};
 });
 test('protected booking verifies Auth identity and role; failed writes never succeed',async () => {
   const slotId='33333333-3333-4333-8333-333333333333', idempotencyKey='44444444-4444-4444-8444-444444444444';

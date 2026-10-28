@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your HelloDoc account: personal details, contact information and sign out.">
+  <title>HelloDoc | Account</title>
+  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+  <link rel="stylesheet" href="/Styles/app.css?v=blue2">
+  <link rel="stylesheet" href="/Styles/patient.css?v=care-2">
+</head>
+<body class="patient-page">
+  <a class="patient-skip" href="#patientMain">Skip to your account</a>
+
+  <!-- ===== Shared navbar (canonical block) ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+      </a>
+
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
+        <span class="nav-toggle__icon" aria-hidden="true"></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+        <li>
+          <a href="appointments.html" class="nav-link">
+            Appointments
+            <span class="nav-badge" data-appt-badge>0</span>
+          </a>
+        </li>
+        <li><a href="story.html" class="nav-link">My Story</a></li>
+        <li><a href="help.html" class="nav-link">Help</a></li>
+      </ul>
+
+      <div class="navbar-actions" id="navActions">
+        <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
+        <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
+        <button class="user-chip" id="userChip" hidden>
+          <span class="avatar" id="userAvatar">U</span>
+          <span class="user-name" id="userName">Guest</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container patient-workspace">
+    <aside class="patient-rail" data-patient-nav>
+      <p class="patient-rail__title">Patient area</p>
+      <nav class="patient-rail__nav" aria-label="Patient area">
+        <a class="patient-rail__link" href="patient.html"><i class="fa-solid fa-house-medical" aria-hidden="true"></i>Dashboard</a>
+        <a class="patient-rail__link" href="dashboard.html"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>Find a doctor</a>
+        <a class="patient-rail__link" href="appointments.html"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>My appointments</a>
+        <a class="patient-rail__link" href="records.html"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>Health records</a>
+        <a class="patient-rail__link" href="walkin.html"><i class="fa-solid fa-door-open" aria-hidden="true"></i>Walk-in queue</a>
+      </nav>
+      <div class="patient-rail__account">
+        <div class="patient-rail__identity">
+          <span class="patient-rail__avatar" id="railAvatar" aria-hidden="true">P</span>
+          <span class="patient-rail__identity-text">
+            <strong id="railName">Patient</strong>
+            <small id="railEmail"></small>
+          </span>
+        </div>
+        <a class="patient-rail__link" href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account &amp; settings</a>
+        <button class="patient-rail__signout" id="patientSignOut" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Sign out</button>
+      </div>
+    </aside>
+
+    <main class="patient-main" id="patientMain">
+      <div class="patient-message" id="portalMessage" role="status" aria-live="polite" hidden></div>
+
+      <section class="patient-welcome" aria-labelledby="accountTitle">
+        <div class="patient-welcome__copy">
+          <p class="patient-kicker">Account &amp; settings</p>
+          <h1 id="accountTitle">Your details</h1>
+          <p>Only you can see or change these details. HelloDoc staff never see your password.</p>
+        </div>
+      </section>
+
+      <section class="account-card" aria-labelledby="personalTitle">
+        <div>
+          <h2 id="personalTitle">Personal and contact information</h2>
+          <p>Your name is used on appointments. A phone number is optional and is only used for your visits.</p>
+        </div>
+        <dl class="account-meta" id="accountMeta">
+          <div><dt>Account</dt><dd id="metaEmail">&mdash;</dd></div>
+          <div><dt>Signed in as</dt><dd id="metaRole">Patient</dd></div>
+          <div><dt>Profile</dt><dd id="metaCompletion">&mdash;</dd></div>
+        </dl>
+        <form id="accountForm" class="patient-form" novalidate>
+          <div class="patient-form__row">
+            <label>First name<input name="firstName" type="text" autocomplete="given-name" maxlength="100" required aria-describedby="firstNameError"><span class="patient-field-error" id="firstNameError" hidden></span></label>
+            <label>Last name <span class="field-optional">(optional)</span><input name="lastName" type="text" autocomplete="family-name" maxlength="100"></label>
+          </div>
+          <label>Phone number <span class="field-optional">(optional)</span><input name="phone" type="tel" autocomplete="tel" maxlength="40" inputmode="tel" aria-describedby="phoneHint phoneError"><span class="patient-field-hint" id="phoneHint">Add a number only if you would like your clinic to have it.</span><span class="patient-field-error" id="phoneError" hidden></span></label>
+          <p class="patient-form__message" id="accountMessage" role="status" aria-live="polite" hidden></p>
+          <div class="setup-actions">
+            <button class="patient-button patient-button--primary" type="submit">Save changes</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="account-card" aria-labelledby="securityTitle">
+        <div>
+          <h2 id="securityTitle">Password and sign-in</h2>
+          <p>HelloDoc manages passwords through its existing secure recovery flow. Use the recovery page to set a new password; you will be signed out of other devices when you change it.</p>
+        </div>
+        <div class="setup-actions">
+          <a class="patient-button patient-button--outline" href="recover.html">Reset my password</a>
+          <a class="patient-button patient-button--quiet" href="patient.html">Back to my dashboard</a>
+        </div>
+      </section>
+
+      <section class="account-danger" aria-labelledby="sessionTitle">
+        <div>
+          <h2 id="sessionTitle">Sign out</h2>
+          <p>Signing out closes your session on this device and returns you to the HelloDoc home page. Your records stay private to your account.</p>
+        </div>
+        <button class="patient-button patient-button--quiet" id="accountSignOut" type="button">Sign out of this device</button>
+      </section>
+
+      <p class="patient-privacy-note"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i><span>HelloDoc does not store your password in this application and never shows your session tokens or account identifiers here.</span></p>
+    </main>
+  </div>
+
+  <footer><div class="container"><p>&copy; HelloDoc. For urgent symptoms, contact your local emergency service.</p></div></footer>
+  <script src="/Scripts/appointments.js"></script>
+  <script src="/Scripts/nav.js"></script>
+  <script src="/Scripts/patient-shell.js?v=care-2"></script>
+  <script src="/Scripts/account.js?v=care-2"></script>
+</body>
+</html>

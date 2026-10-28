@@ -41,14 +41,23 @@ test('help copy does not promise features the application does not implement', (
   assert.ok(help.includes('The public symptom checker has been withdrawn.'));
 });
 
-test('the patient portal labels the sections it cannot fill', () => {
+test('the patient dashboard uses real appointment/profile routes and does not claim patient records exist', () => {
   const patient = read('patient.html');
   const script = read('Scripts/patient.js');
-  assert.ok(patient.includes('Task assignment is not built yet'));
-  assert.ok(patient.includes('not shown in this prototype'));
-  assert.ok(script.includes('No follow up tasks are available in this prototype.'));
-  // Suspension is surfaced by code, not mistaken for the wrong portal.
+  assert.ok(patient.includes('id="appointmentsList"'));
+  assert.ok(patient.includes('id="onboarding"'));
+  assert.ok(patient.includes('id="cancelDialog"'));
+  // Profile editing moved to its own account page, away from care navigation.
+  const account = read('account.html');
+  assert.ok(account.includes('id="accountForm"'));
+  assert.ok(account.includes('id="accountSignOut"'));
+  assert.ok(!account.includes('service_role'));
+  // Records are loaded from the patient-scoped API, never baked into the page.
+  assert.ok(read('Scripts/records.js').includes('/api/patient/assessments'));
+  assert.ok(script.includes("'/api/patient/overview'"));
+  assert.ok(script.includes("'/api/patient/profile'"));
   assert.ok(script.includes("body.code === 'ACCOUNT_SUSPENDED'"));
+  assert.ok(script.includes('hellodoc:patient-setup:'));
   assert.ok(read('Scripts/doctor.js').includes("error.code === 'ACCOUNT_SUSPENDED'"));
 });
 

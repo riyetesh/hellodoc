@@ -59,18 +59,17 @@
       </div>
     </nav>
 
-    <!-- ===== Hero ===== -->
-    <header class="hero">
+    <!-- ===== Hero ===== --><header class="hero">
       <div class="container hero-inner">
         <div class="hero-copy">
           <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Verified doctors</span>
           <h1 id="heroGreeting">Find your doctor</h1>
-          <p>
-Browse approved doctors, review their specialties and consultation details, and request a visit when booking is open.
-          </p>
+          <p>Browse approved doctors, review their specialties and consultation details, and request a visit when booking is open.</p>
+          <div class="hero-action">
+            <a href="appointments.html" class="patient-button patient-button--primary">Book an appointment</a>
+          </div>
           <div class="hero-stats">
             <div class="stat"><strong id="statDoctors">0</strong><span>Approved doctors</span></div>
-
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -92,26 +91,34 @@ Browse approved doctors, review their specialties and consultation details, and 
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="search" placeholder="Search by doctor, speciality or language…" autocomplete="off" />
+          <span class="visually-hidden">Search doctors</span>
         </div>
 
-        <div class="dropdown" id="sortDropdown">
-          <button class="dropbtn" type="button">
-            <i class="fa-solid fa-arrow-down-wide-short"></i>
-            <span id="sortLabel">Sort: Relevance</span>
-            <i class="fa-solid fa-chevron-down caret"></i>
-          </button>
-          <div class="dropdown-content" id="sortMenu">
-            <a href="#" class="sort-option active" data-value="relevance">Relevance</a>
-            <a href="#" class="sort-option" data-value="feeLowHigh">Fee: Low to High</a>
-            <a href="#" class="sort-option" data-value="feeHighLow">Fee: High to Low</a>
+        <div class="toolbar-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+          <label class="availability-filter" for="availabilityFilter">
+            Availability
+            <select id="availabilityFilter"><option value="all">All doctors</option><option value="open">Booking now</option></select>
+          </label>
+
+          <div class="dropdown" id="sortDropdown">
+            <button class="dropbtn" type="button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-arrow-down-wide-short"></i>
+              <span id="sortLabel">Sort: Relevance</span>
+              <i class="fa-solid fa-chevron-down caret"></i>
+            </button>
+            <div class="dropdown-content" id="sortMenu">
+              <a href="#" class="sort-option active" data-value="relevance">Relevance</a>
+              <a href="#" class="sort-option" data-value="feeLowHigh">Fee: Low to High</a>
+              <a href="#" class="sort-option" data-value="feeHighLow">Fee: High to Low</a>
+            </div>
           </div>
-        </div>
 
-        <button class="filter-toggle" id="filterToggle" type="button">
-          <i class="fa-solid fa-sliders"></i>
-          Speciality
-          <span class="filter-count" id="filterCount" hidden>0</span>
-        </button>
+          <button class="filter-toggle" id="filterToggle" type="button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-sliders"></i>
+            Speciality
+            <span class="filter-count" id="filterCount" hidden>0</span>
+          </button>
+        </div>
       </div>
 
       <!-- Speciality chips -->
@@ -124,11 +131,12 @@ Browse approved doctors, review their specialties and consultation details, and 
         <h2 id="resultsTitle">All specialists</h2>
         <span class="results-count" id="resultsCount"></span>
       </div>
+      <p class="muted" style="font-size: var(--text-scale-3); color: var(--muted); margin-bottom: var(--space-2);">Find the right doctor for your needs</p>
       <div class="team-container" id="teamContainer" aria-live="polite"></div>
       <div class="no-results" id="noResults" role="status" hidden>
         <i class="fa-solid fa-user-doctor"></i>
         <h3>No doctors found</h3>
-        <p>No approved doctors are listed yet. Try again later.</p>
+        <p>No approved doctors match these filters. Try adjusting your search or speciality selection.</p>
         <button class="btn btn-outline" id="clearFilters">Clear filters</button>
       </div>
     </main>
@@ -149,13 +157,13 @@ Browse approved doctors, review their specialties and consultation details, and 
 
         <div class="modal-body">
           <div class="field">
-            <label>Select a date</label>
-            <div class="date-row" id="dateRow"></div>
+            <label for="dateRow">Choose a date</label>
+            <div class="date-row" id="dateRow" role="group" aria-label="Available appointment dates"></div>
           </div>
 
           <div class="field">
-            <label>Available slots</label>
-            <div class="slot-grid" id="slotGrid"></div>
+            <label>Available times <span>Shown in your local time zone</span></label>
+            <div class="slot-grid" id="slotGrid" role="group" aria-label="Available appointment times"></div>
           </div>
 
           <div class="field">
@@ -167,11 +175,21 @@ Browse approved doctors, review their specialties and consultation details, and 
             <span>Consultation fee</span>
             <strong id="bookingFee">Rs. 0</strong>
           </div>
+          <div class="booking-review" id="bookingReview" hidden aria-live="polite">
+            <h4>Review your request</h4><p id="bookingReviewText"></p>
+            <p class="booking-note">Your time is reserved only after the server confirms the request. Emergency symptoms need emergency care.</p>
+          </div>
+          <p class="booking-feedback" id="bookingFeedback" role="status" aria-live="polite" hidden></p>
+          <section class="booking-success" id="bookingSuccess" aria-live="polite" hidden>
+            <span class="booking-success__mark" aria-hidden="true">✓</span><h3 id="bookingSuccessHeading">Appointment requested</h3>
+            <p id="bookingSuccessText"></p><p class="booking-success__status" id="bookingSuccessStatus"></p>
+            <div class="booking-success__actions"><a class="btn btn-primary" href="appointments.html">View appointments</a><button class="btn btn-ghost" type="button" id="bookingDone">Done</button></div>
+          </section>
         </div>
 
         <div class="modal-footer">
           <button class="btn btn-ghost" id="bookingCancel">Cancel</button>
-          <button class="btn btn-primary" id="bookingConfirm" disabled>Confirm booking</button>
+          <button class="btn btn-primary" id="bookingConfirm" disabled>Request appointment</button>
         </div>
       </div>
     </div>

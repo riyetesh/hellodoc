@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your HelloDoc health records: assessments, clinician notes and follow-up guidance.">
+  <title>HelloDoc | Health records</title>
+  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+  <link rel="stylesheet" href="/Styles/app.css?v=blue2">
+  <link rel="stylesheet" href="/Styles/patient.css?v=care-2">
+</head>
+<body class="patient-page">
+  <a class="patient-skip" href="#patientMain">Skip to your records</a>
+
+  <!-- ===== Shared navbar (canonical block) ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+      </a>
+
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
+        <span class="nav-toggle__icon" aria-hidden="true"></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+        <li>
+          <a href="appointments.html" class="nav-link">
+            Appointments
+            <span class="nav-badge" data-appt-badge>0</span>
+          </a>
+        </li>
+        <li><a href="story.html" class="nav-link">My Story</a></li>
+        <li><a href="help.html" class="nav-link">Help</a></li>
+      </ul>
+
+      <div class="navbar-actions" id="navActions">
+        <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
+        <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
+        <button class="user-chip" id="userChip" hidden>
+          <span class="avatar" id="userAvatar">U</span>
+          <span class="user-name" id="userName">Guest</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container patient-workspace">
+    <aside class="patient-rail" data-patient-nav>
+      <p class="patient-rail__title">Patient area</p>
+      <nav class="patient-rail__nav" aria-label="Patient area">
+        <a class="patient-rail__link" href="patient.html"><i class="fa-solid fa-house-medical" aria-hidden="true"></i>Dashboard</a>
+        <a class="patient-rail__link" href="dashboard.html"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>Find a doctor</a>
+        <a class="patient-rail__link" href="appointments.html"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>My appointments</a>
+        <a class="patient-rail__link" href="records.html"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>Health records</a>
+        <a class="patient-rail__link" href="walkin.html"><i class="fa-solid fa-door-open" aria-hidden="true"></i>Walk-in queue</a>
+      </nav>
+      <div class="patient-rail__account">
+        <div class="patient-rail__identity">
+          <span class="patient-rail__avatar" id="railAvatar" aria-hidden="true">P</span>
+          <span class="patient-rail__identity-text">
+            <strong id="railName">Patient</strong>
+            <small id="railEmail"></small>
+          </span>
+        </div>
+        <a class="patient-rail__link" href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account &amp; settings</a>
+        <button class="patient-rail__signout" id="patientSignOut" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Sign out</button>
+      </div>
+    </aside>
+
+    <main class="patient-main" id="patientMain">
+      <div class="patient-message" id="portalMessage" role="status" aria-live="polite" hidden></div>
+
+      <!-- ===== List view ===== -->
+      <div id="recordsListView">
+        <section class="patient-welcome" aria-labelledby="recordsTitle">
+          <div class="patient-welcome__copy">
+            <p class="patient-kicker">Your history</p>
+            <h1 id="recordsTitle">Health records</h1>
+            <p>Everything a clinician recorded for you, with the guidance that came with it. Records are private to your account.</p>
+          </div>
+        </section>
+
+        <section class="patient-section" aria-label="Search records">
+          <form class="record-toolbar patient-form" id="recordSearchForm" role="search">
+            <label>Search records
+              <input id="recordSearch" type="search" placeholder="Condition, clinician or month" autocomplete="off" aria-describedby="recordSearchHint">
+              <span class="patient-field-hint" id="recordSearchHint">Searches the recorded condition, the clinician and the date.</span>
+            </label>
+            <div class="record-actions">
+              <a class="patient-button patient-button--outline" href="dashboard.html">Book a follow-up</a>
+            </div>
+          </form>
+        </section>
+
+        <section class="patient-section" aria-labelledby="listHeading">
+          <div class="section-heading">
+            <div><p class="patient-kicker">Chronological</p><h2 id="listHeading">All records</h2></div>
+            <span class="summary-detail" id="recordCount"></span>
+          </div>
+          <div id="recordsList" class="record-list" aria-live="polite"><div class="patient-loading" aria-hidden="true"><span></span><span></span></div></div>
+          <div id="recordsEmpty" class="patient-empty" hidden>
+            <img class="patient-empty__art" src="/Asset/Illustrations/care.svg" alt="" aria-hidden="true">
+            <h3 id="recordsEmptyTitle">No health records yet</h3>
+            <p id="recordsEmptyText">After a consultation, the assessment your clinician recorded will be listed here, along with any guidance they saved.</p>
+            <a class="patient-button patient-button--primary" href="dashboard.html">Book an appointment</a>
+          </div>
+          <div id="recordsUnavailable" class="patient-empty" hidden>
+            <h3>Health records are unavailable</h3>
+            <p>We could not load your records right now. Nothing has been lost; please try again in a moment.</p>
+            <button class="patient-button patient-button--outline" id="retryRecords" type="button">Try again</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== Detail view ===== -->
+      <div id="recordDetailView" hidden>
+        <p class="patient-kicker"><a class="patient-inline-link" href="records.html">&larr; All health records</a></p>
+        <div id="recordDetail" aria-live="polite"><div class="patient-loading" aria-hidden="true"><span></span><span></span><span></span></div></div>
+        <div id="recordDetailUnavailable" class="patient-empty" hidden>
+          <h3>This record could not be opened</h3>
+          <p id="recordDetailUnavailableText">It may have been removed, or it may not belong to your account.</p>
+          <a class="patient-button patient-button--primary" href="records.html">Back to all records</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer><div class="container"><p>&copy; HelloDoc. For urgent symptoms, contact your local emergency service.</p></div></footer>
+  <script src="/Scripts/appointments.js"></script>
+  <script src="/Scripts/nav.js"></script>
+  <script src="/Scripts/patient-shell.js?v=care-2"></script>
+  <script src="/Scripts/records.js?v=care-2"></script>
+</body>
+</html>

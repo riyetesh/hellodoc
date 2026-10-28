@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Join the HelloDoc walk-in queue and see an estimated wait for the day.">
+  <title>HelloDoc | Walk-in queue</title>
+  <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
+  <link rel="stylesheet" href="/Styles/app.css?v=blue2">
+  <link rel="stylesheet" href="/Styles/patient.css?v=care-2">
+</head>
+<body class="patient-page">
+  <a class="patient-skip" href="#patientMain">Skip to the walk-in queue</a>
+
+  <!-- ===== Shared navbar (canonical block) ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <img src="./Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" />
+      </a>
+
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation menu">
+        <span class="nav-toggle__icon" aria-hidden="true"></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
+        <li>
+          <a href="appointments.html" class="nav-link">
+            Appointments
+            <span class="nav-badge" data-appt-badge>0</span>
+          </a>
+        </li>
+        <li><a href="story.html" class="nav-link">My Story</a></li>
+        <li><a href="help.html" class="nav-link">Help</a></li>
+      </ul>
+
+      <div class="navbar-actions" id="navActions">
+        <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
+        <a href="signup.html" class="btn btn-primary" id="signupBtn">Sign Up</a>
+        <button class="user-chip" id="userChip" hidden>
+          <span class="avatar" id="userAvatar">U</span>
+          <span class="user-name" id="userName">Guest</span>
+          <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container patient-workspace">
+    <aside class="patient-rail" data-patient-nav>
+      <p class="patient-rail__title">Patient area</p>
+      <nav class="patient-rail__nav" aria-label="Patient area">
+        <a class="patient-rail__link" href="patient.html"><i class="fa-solid fa-house-medical" aria-hidden="true"></i>Dashboard</a>
+        <a class="patient-rail__link" href="dashboard.html"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>Find a doctor</a>
+        <a class="patient-rail__link" href="appointments.html"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>My appointments</a>
+        <a class="patient-rail__link" href="records.html"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>Health records</a>
+        <a class="patient-rail__link" href="walkin.html"><i class="fa-solid fa-door-open" aria-hidden="true"></i>Walk-in queue</a>
+      </nav>
+      <div class="patient-rail__account">
+        <div class="patient-rail__identity">
+          <span class="patient-rail__avatar" id="railAvatar" aria-hidden="true">P</span>
+          <span class="patient-rail__identity-text">
+            <strong id="railName">Patient</strong>
+            <small id="railEmail"></small>
+          </span>
+        </div>
+        <a class="patient-rail__link" href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account &amp; settings</a>
+        <button class="patient-rail__signout" id="patientSignOut" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Sign out</button>
+      </div>
+    </aside>
+
+    <main class="patient-main" id="patientMain">
+      <div class="patient-message" id="portalMessage" role="status" aria-live="polite" hidden></div>
+
+      <section class="walkin-hero" aria-labelledby="walkinTitle">
+        <div>
+          <p class="patient-kicker">Seen today, without a booked slot</p>
+          <h1 id="walkinTitle">Walk-in queue</h1>
+          <p>Add yourself to today&rsquo;s list for a doctor who is accepting walk-ins. Your place and the wait below are estimates that change as the clinic moves through the list &mdash; a walk-in is never a scheduled appointment time.</p>
+          <p><strong>Severe or urgent symptoms need emergency care, not a queue.</strong></p>
+        </div>
+        <img src="/Asset/Illustrations/appointment.svg" alt="" aria-hidden="true">
+      </section>
+
+      <!-- Current place in the queue -->
+      <section class="walkin-status" id="walkinStatus" aria-labelledby="walkinStatusTitle" aria-live="polite" hidden>
+        <div>
+          <p class="patient-kicker" id="walkinStatusTitle">You are in the queue</p>
+          <div class="walkin-status__position">
+            <strong id="walkinPosition">&mdash;</strong>
+            <span id="walkinPositionLabel">ahead of you</span>
+          </div>
+        </div>
+        <dl>
+          <div><dt>Estimated wait</dt><dd id="walkinEta">&mdash;</dd></div>
+          <div><dt>Status</dt><dd id="walkinQueueStatus">&mdash;</dd></div>
+          <div><dt>Waiting for</dt><dd id="walkinDoctor">&mdash;</dd></div>
+          <div><dt>Joined</dt><dd id="walkinJoined">&mdash;</dd></div>
+        </dl>
+        <p class="patient-field-hint" id="walkinEstimateNote"></p>
+        <div class="setup-actions">
+          <button class="patient-button patient-button--quiet" id="walkinLeave" type="button">Leave the queue</button>
+          <a class="patient-button patient-button--outline" href="patient.html">Back to dashboard</a>
+        </div>
+      </section>
+
+      <!-- Join form -->
+      <section class="patient-section" id="walkinJoin" aria-labelledby="joinTitle" hidden>
+        <div class="section-heading">
+          <div><p class="patient-kicker">Step 1</p><h2 id="joinTitle">Choose a doctor</h2></div>
+        </div>
+        <div id="walkinDoctors" class="walkin-doctors" role="radiogroup" aria-label="Doctors accepting walk-ins"><div class="patient-loading" aria-hidden="true"><span></span><span></span></div></div>
+        <div id="walkinNoDoctors" class="patient-empty" hidden>
+          <img class="patient-empty__art" src="/Asset/Illustrations/doctor.svg" alt="" aria-hidden="true">
+          <h3>No doctors are accepting walk-ins</h3>
+          <p>Everyone listed is either fully booked or has walk-ins switched off. You can still request a scheduled appointment instead.</p>
+          <a class="patient-button patient-button--primary" href="dashboard.html">Find a doctor</a>
+        </div>
+
+        <form id="walkinForm" class="patient-form walkin-join-form" novalidate>
+          <label>Reason for the visit <span class="field-optional">(optional)</span>
+            <input name="reason" type="text" maxlength="500" placeholder="e.g. Sore throat for three days" aria-describedby="reasonHint">
+            <span class="patient-field-hint" id="reasonHint">A short note helps the clinic prepare. Do not include emergency symptoms here.</span>
+          </label>
+          <p class="patient-form__message" id="walkinMessage" role="status" aria-live="polite" hidden></p>
+          <div class="setup-actions">
+            <button class="patient-button patient-button--primary" id="walkinJoinButton" type="submit" disabled>Join the queue</button>
+            <span class="patient-field-hint">Joining reserves your place for today only.</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Honest state when the database does not have the queue yet -->
+      <section class="walkin-unavailable" id="walkinUnavailable" hidden aria-labelledby="unavailableTitle">
+        <h2 id="unavailableTitle">The walk-in queue is not available yet</h2>
+        <p id="walkinUnavailableText">This database does not have the walk-in queue enabled, so HelloDoc will not ask you to wait in a queue it cannot hold. Booked appointments work normally and are unaffected.</p>
+        <div class="setup-actions">
+          <a class="patient-button patient-button--primary" href="dashboard.html">Book a scheduled appointment</a>
+          <a class="patient-button patient-button--quiet" href="patient.html">Back to dashboard</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer><div class="container"><p>&copy; HelloDoc. For urgent symptoms, contact your local emergency service.</p></div></footer>
+  <script src="/Scripts/appointments.js"></script>
+  <script src="/Scripts/nav.js"></script>
+  <script src="/Scripts/patient-shell.js?v=care-2"></script>
+  <script src="/Scripts/patient-walkin.js?v=care-2"></script>
+</body>
+</html>

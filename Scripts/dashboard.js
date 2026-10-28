@@ -11,11 +11,15 @@
   "use strict";
 
   // --- state ---
+  const statusLabels = { pending: "Requested", confirmed: "Confirmed", completed: "Completed", cancelled: "Cancelled", no_show: "Missed" };
+
   let state = {
     query: "",
     sort: "relevance",
     specialities: new Set(),
-    booking: null, // { doctor, date, time }
+    availability: "all",
+    booking: null, // selected real server slot and idempotency key
+    submitting: false,
   };
 
   const els = {};
@@ -47,6 +51,9 @@
     if (state.specialities.size > 0) {
       list = list.filter((d) => state.specialities.has(d.speciality));
     }
+    if (state.availability === "open") {
+      list = list.filter((d) => d.acceptingAppointments);
+    }
 
     if (state.query) {
       const q = state.query.toLowerCase();
@@ -56,10 +63,10 @@
     switch (state.sort) {
 
       case "feeLowHigh":
-        list.sort((a, b) => a.hourlyFee - b.hourlyFee);
+        list.sort((a, b) => (a.hourlyFee ?? Number.MAX_SAFE_INTEGER) - (b.hourlyFee ?? Number.MAX_SAFE_INTEGER));
         break;
       case "feeHighLow":
-        list.sort((a, b) => b.hourlyFee - a.hourlyFee);
+        list.sort((a, b) => (b.hourlyFee ?? -1) - (a.hourlyFee ?? -1));
         break;
       default:
         // Show bookable doctors first; preserve server order within each group.
@@ -85,11 +92,10 @@
       const card = document.createElement("article");
       card.className = "card";
       card.innerHTML = `
-        <div class="profile">
-          <img src="./Asset/Illustrations/doctor.svg" alt="" loading="lazy" />
-          <span class="rating-pill" hidden></span>
+        <div class="profile profile-placeholder" aria-hidden="true">
+          <img class="doctor-art" src="./Asset/Illustrations/doctor.svg" alt="" loading="lazy" />
           <span class="status-dot ${doc.acceptingAppointments ? "online" : "offline"}">
-            ${doc.acceptingAppointments ? "Accepting visits" : "Not booking"}
+            ${doc.acceptingAppointments ? "Booking open" : "Not booking"}
           </span>
         </div>
         <div class="description">
@@ -108,12 +114,12 @@
         </div>`;
       card.querySelector("[data-book]").dataset.book = String(doc.id);
       card.querySelector(".description h2").textContent = doc.name;
-      card.querySelector(".description .spec").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
+      card.querySelector(".description .spec").textContent = doc.speciality || "Specialty not listed";
       const bio = card.querySelector(".doctor-bio");
       bio.textContent = doc.bio || "";
       bio.hidden = !doc.bio;
-      card.querySelector(".meta strong").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
-      card.querySelector(".next-slot span").textContent = doc.nextSlot ? `Next: ${doc.nextSlot}` : doc.acceptingAppointments ? "View times for availability" : "Appointments currently unavailable";
+      card.querySelector(".meta strong").textContent = doc.hourlyFee === null ? "Fee not listed" : doc.hourlyFee === 0 ? "No fee listed" : `Rs. ${doc.hourlyFee.toLocaleString()}`;
+      card.querySelector(".next-slot span").textContent = doc.nextSlot ? `Next: ${doc.nextSlot}` : doc.acceptingAppointments ? "See available appointment times" : "Appointments currently unavailable";
       frag.appendChild(card);
     });
     grid.appendChild(frag);
@@ -151,25 +157,38 @@
   let bookingTrigger = null;
 
   async function openBooking(doc, fromBtn) {
-    // `fromBtn` is the button the visitor used to open the modal. If it is
-    // not provided we fall back to the current active element so focus can be
-    // restored later.
     bookingTrigger = fromBtn || (document.activeElement && document.activeElement !== document.body
       ? document.activeElement
       : null);
-
+    const bookButton = fromBtn || document.querySelector(`[data-book="${CSS.escape(String(doc.id))}"]`);
+    if (bookButton) { bookButton.disabled = true; bookButton.setAttribute("aria-busy", "true"); }
     state.booking = { doctor: doc, date: null, time: null, slots: [], idempotencyKey: crypto.randomUUID() };
     try {
-      const response = await fetch(`/api/doctors/${doc.id}/slots`);
-      if (!response.ok) throw new Error("Could not load available slots");
+      const response = await fetch(`/api/doctors/${encodeURIComponent(doc.id)}/slots`, { credentials: "same-origin", cache: "no-store" });
+      if (!response.ok) throw new Error(response.status === 503 ? "Availability could not be loaded. Please try again." : "Could not load available appointment times.");
       state.booking.slots = await response.json();
-    } catch (error) { state.booking = null; toast(error.message, "error"); return; }
-    $("#bookingImg").src = doc.image;
-    $("#bookingImg").alt = doc.name;
+      if (!Array.isArray(state.booking.slots)) throw new Error("Availability could not be loaded. Please try again.");
+    } catch (error) {
+      state.booking = null;
+      toast(error.message, "error");
+      if (bookButton) { bookButton.disabled = false; bookButton.removeAttribute("aria-busy"); }
+      return;
+    }
+    if (bookButton) { bookButton.disabled = false; bookButton.removeAttribute("aria-busy"); }
     $("#bookingTitle").textContent = doc.name;
-    $("#bookingSpeciality").textContent = [doc.speciality, doc.language, doc.consultationType].filter(Boolean).join(" · ");
-    $("#bookingFee").textContent = doc.hourlyFee === null ? "Ask for fee" : `Rs.${doc.hourlyFee.toLocaleString()}`;
+    $("#bookingImg").hidden = true;
+    $("#bookingSuccessHeading").textContent = "Appointment requested";
+    $("#bookingSpeciality").textContent = doc.speciality || "Specialty not listed";
+    $("#bookingFee").textContent = doc.hourlyFee === null || doc.hourlyFee === 0 ? "Not listed" : `Rs. ${doc.hourlyFee.toLocaleString()}`;
     $("#bookingReason").value = "";
+    $("#bookingFeedback").hidden = true;
+    $("#bookingReview").hidden = true;
+    $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
+    $("#bookingSuccess").hidden = true;
+    $(".modal-body").hidden = false;
+    $(".modal-footer").hidden = false;
+    $("#bookingConfirm").textContent = "Review request";
+    state.submitting = false;
     buildDateRow();
     buildSlotGrid();
     syncConfirm();
@@ -188,6 +207,7 @@
   }
 
   function closeBooking() {
+    if (state.submitting) return;
     els.overlay.classList.remove("open");
     document.body.style.overflow = "";
     state.booking = null;
@@ -195,6 +215,11 @@
     const trigger = els.overlay._focusRestorer?.trigger || bookingTrigger;
     if (trigger && typeof trigger.focus === "function" && trigger.offsetParent !== null) {
       trigger.focus();
+    }
+    if (els.overlay.classList.contains("booking-complete")) {
+      document.querySelector("#bookingAnnounce")?.remove();
+      els.overlay.classList.remove("booking-complete");
+      els.overlay.removeAttribute("aria-label");
     }
     els.overlay._focusRestorer = null;
     bookingTrigger = null;
@@ -207,8 +232,11 @@
       const day = new Date(value);
       return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
     };
-    const dates = [...new Set(state.booking.slots.map((slot) => localDate(slot.startsAt)))];
-    if (!dates.length) { row.textContent = "No available slots yet."; return; }
+    const dates = [...new Set(state.booking.slots.filter((slot) => new Date(slot.startsAt).getTime() > Date.now()).map((slot) => localDate(slot.startsAt)))];
+    if (!dates.length) {
+      row.textContent = "No open appointments are listed for this doctor right now.";
+      return;
+    }
     dates.forEach((iso) => {
       const d = new Date(iso + "T12:00:00");
       const chip = document.createElement("button");
@@ -219,9 +247,11 @@
         <span class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</span>
         <span class="dnum">${d.getDate()}</span>
         <span class="mon">${d.toLocaleDateString(undefined, { month: "short" })}</span>`;
+      chip.setAttribute("aria-pressed", "false");
       chip.addEventListener("click", () => {
-        row.querySelectorAll(".date-chip").forEach((c) => c.classList.remove("active"));
+        row.querySelectorAll(".date-chip").forEach((c) => { c.classList.remove("active"); c.setAttribute("aria-pressed", "false"); });
         chip.classList.add("active");
+        chip.setAttribute("aria-pressed", "true");
         state.booking.date = iso;
         state.booking.time = null;
         buildSlotGrid();
@@ -237,17 +267,20 @@
     const slots = state.booking.slots.filter((slot) => {
       const date = new Date(slot.startsAt);
       const localDay = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      return localDay === state.booking.date;
+      return localDay === state.booking.date && date.getTime() > Date.now();
     });
+    if (!slots.length) { grid.textContent = "No times are available on this date."; return; }
     slots.forEach((slot) => {
       const btnTime = new Date(slot.startsAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "slot";
       btn.textContent = btnTime;
+      btn.setAttribute("aria-pressed", "false");
       btn.addEventListener("click", () => {
-        grid.querySelectorAll(".slot").forEach((s) => s.classList.remove("active"));
+        grid.querySelectorAll(".slot").forEach((s) => { s.classList.remove("active"); s.setAttribute("aria-pressed", "false"); });
         btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
         state.booking.time = slot.id;
         syncConfirm();
       });
@@ -257,23 +290,77 @@
 
   function syncConfirm() {
     const ok = state.booking && state.booking.date && state.booking.time;
-    $("#bookingConfirm").disabled = !ok;
+    $("#bookingConfirm").disabled = !ok || state.submitting;
+    $("#bookingConfirm").setAttribute("aria-busy", state.submitting ? "true" : "false");
+  }
+
+  function selectedSlot() {
+    return state.booking?.slots.find((slot) => slot.id === state.booking.time) || null;
   }
 
   async function confirmBooking() {
     const b = state.booking;
-    if (!b || !b.date || !b.time) return;
-    const confirm = $("#bookingConfirm");
-    confirm.disabled = true;
+    if (!b || !b.date || !b.time || state.submitting) return;
+    const action = $("#bookingConfirm");
+    const review = $("#bookingReview");
+    if (review.hidden) {
+      const slot = selectedSlot();
+      if (!slot) return;
+      const reason = $("#bookingReason").value.trim();
+      $("#bookingReviewText").textContent = `${b.doctor.name} · ${b.doctor.speciality} · ${new Date(slot.startsAt).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}${reason ? ` · Reason: ${reason}` : ""}`;
+      b.review = { slotId: slot.id, reason };
+      $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = true; });
+      review.hidden = false;
+      action.textContent = "Confirm appointment request";
+      announce("Review the selected doctor and appointment time, then confirm your request.");
+      return;
+    }
+
+    const slot = selectedSlot();
+    if (!slot) return;
+    state.submitting = true;
+    action.disabled = true;
+    action.textContent = "Sending request…";
+    $("#bookingFeedback").hidden = true;
     try {
-      const result = await window.Appointments.add({ slotId: b.time, idempotencyKey: b.idempotencyKey, reason: $("#bookingReason").value.trim() });
-      const message = result.refreshFailed ? "Appointment saved, but the list could not refresh. Reload My Appointments to check it." : `Appointment requested with ${b.doctor.name}. View its status in My Appointments.`;
-      announce(message);
-      closeBooking();
-      toast(message, "success");
+      const result = await window.Appointments.add({ slotId: b.review?.slotId || b.time, idempotencyKey: b.idempotencyKey, reason: b.review?.reason ?? $("#bookingReason").value.trim() });
+      if (!result?.id || !["pending", "confirmed"].includes(result.status)) {
+        throw new Error("The booking could not be verified. Check your appointments before trying again.");
+      }
+      const status = result.status;
+      const confirmedSlot = selectedSlot();
+      const when = confirmedSlot ? new Date(confirmedSlot.startsAt).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" }) : "the selected time";
+      $("#bookingSuccessHeading").textContent = status === "confirmed" ? "Appointment confirmed" : "Appointment requested";
+      $("#bookingSuccessText").textContent = `${b.doctor.name} · ${b.doctor.speciality} · ${when}`;
+      if (result.refreshFailed) $("#bookingSuccessText").textContent += " · Reload appointments to check current details.";
+      $("#bookingSuccessStatus").textContent = status === "confirmed" ? "Confirmed by the clinic" : "Request sent · awaiting confirmation";
+      $("#bookingReview").hidden = true;
+      $(".modal-body").hidden = true;
+      $(".modal-footer").hidden = true;
+      $("#bookingSuccess").hidden = false;
+      els.overlay.classList.add("booking-complete");
+      els.overlay.setAttribute("aria-label", "Appointment request confirmation");
+      $("#bookingClose").focus();
+      announce(`${statusLabels[status] || status}: appointment with ${b.doctor.name} for ${when}.`);
     } catch (error) {
-      toast(error.message === "Not authenticated" ? "Log in to request an appointment." : error.message, "error");
-    } finally { if (state.booking) syncConfirm(); }
+      const message = error.message === "Not authenticated" || /session/i.test(error.message)
+        ? "Your session has ended. Sign in again before requesting an appointment."
+        : /unavailable|conflict/i.test(error.message)
+          ? "That time is no longer available. Choose another available time and try again."
+          : error.message || "We couldn’t send this request. Check your connection and try again.";
+      $("#bookingFeedback").textContent = message;
+      $("#bookingFeedback").hidden = false;
+      $("#bookingFeedback").setAttribute("role", /session/i.test(message) ? "alert" : "status");
+      review.hidden = true;
+      $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
+      b.review = null;
+      action.textContent = "Review request";
+      syncConfirm();
+      announce(message);
+    } finally {
+      state.submitting = false;
+      if (state.booking && $("#bookingSuccess").hidden) syncConfirm();
+    }
   }
 
   // --- user greeting (auth state itself is handled by nav.js) ---
@@ -317,10 +404,16 @@
     $("#filterToggle").addEventListener("click", () => {
       els.chips.hidden = !els.chips.hidden;
     });
+    $("#availabilityFilter").addEventListener("change", (event) => {
+      state.availability = event.target.value;
+      renderCards();
+    });
 
     $("#clearFilters").addEventListener("click", () => {
       state.query = "";
       state.specialities.clear();
+      state.availability = "all";
+      $("#availabilityFilter").value = "all";
       els.search.value = "";
       renderChips();
       syncFilterCount();
@@ -395,6 +488,7 @@
   function initModal() {
     $("#bookingClose").addEventListener("click", closeBooking);
     $("#bookingCancel").addEventListener("click", closeBooking);
+    $("#bookingDone").addEventListener("click", closeBooking);
     $("#bookingConfirm").addEventListener("click", confirmBooking);
     els.overlay.addEventListener("click", (e) => {
       if (e.target === els.overlay) closeBooking();
@@ -416,18 +510,6 @@
       }
     });
 
-    // When the DOM inside the modal changes, keep focus inside it.
-    if (typeof MutationObserver !== "undefined") {
-      const observer = new MutationObserver(() => {
-        const first = modalFocusableControls()[0];
-        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
-          first.focus();
-        }
-      });
-      observer.observe(els.overlay, { childList: true, subtree: true });
-      els.overlay._bookingObserver = observer;
-    }
-
     // Announce the modal opening for assistive tech.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       // If motion is reduced, we still focus on open; no need to announce twice.
@@ -441,18 +523,6 @@
       }, 50);
     }
 
-    // When the DOM inside the modal changes, restore focus to the first
-    // control if focus is no longer inside the modal.
-    if (typeof MutationObserver !== "undefined") {
-      const observer = new MutationObserver(() => {
-        const first = modalFocusableControls()[0];
-        if (first && (document.activeElement === els.overlay || document.activeElement === document.body)) {
-          first.focus();
-        }
-      });
-      observer.observe(els.overlay, { childList: true, subtree: true });
-      els.overlay._bookingObserver = observer;
-    }
   }
 
   // --- init ---
@@ -472,7 +542,9 @@
       return response.json();
     }).then((doctors) => {
       if (!Array.isArray(doctors)) throw new Error("Directory unavailable");
-      window.DOCTORS = doctors.map((d) => ({ ...d, speciality: d.specialty, hourlyFee: d.fee == null ? null : Number(d.fee), acceptingAppointments: d.accepting_appointments !== false, nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null, image: "./Asset/Illustrations/doctor.svg" }));
+      window.DOCTORS = doctors
+        .filter((d) => !/fictional test doctor/i.test(String(d.bio || "")) && !/^TEST ONLY\s*[-:]/i.test(String(d.name || "")))
+        .map((d) => ({ ...d, speciality: d.specialty, hourlyFee: d.fee == null ? null : Number(d.fee), acceptingAppointments: d.accepting_appointments === true, nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null }));
       window.SPECIALITIES = [...new Set(window.DOCTORS.map((d) => d.speciality))];
       $("#statDoctors").textContent = window.DOCTORS.length;
       renderChips(); renderCards();

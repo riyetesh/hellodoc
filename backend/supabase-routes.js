@@ -83,7 +83,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       // The access token has already been checked by getUser; pass it to PostgREST
       // without creating a second session or exposing it to browser JavaScript.
       const scoped = createClient(url, key, { ...options, accessToken: async () => token });
-      const result = await scoped.from('profiles').select('id,full_name,role,suspended').eq('id', user.id).single();
+      const result = await scoped.from('profiles').select('id,full_name,role,suspended,phone').eq('id', user.id).single();
       if (result.data?.suspended) return res.status(403).json({ code: 'ACCOUNT_SUSPENDED', message: 'Account restricted. Contact HelloDoc support.' });
       if (result.error || !result.data) return res.status(403).json({ code: 'PROFILE_UNAVAILABLE', message: 'Profile unavailable. Contact support.' });
       req.care = { db: scoped, user, profile: result.data };
@@ -339,7 +339,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     } catch { clear(res); res.status(503).json({ message: 'Local session cleared; server revocation unavailable.' }); }
   });
   router.get('/auth/current-user', ...guard(null, async (req, res, { user, profile }) => res.json({ userId: user.id, email: user.email, role: profile.role, user: { firstName: profile.full_name.split(' ')[0] } })));
-  router.get('/auth/profile', ...guard('patient', async (req, res, { user, profile }) => res.json({ id: user.id, firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email })));
+  router.get('/auth/profile', ...guard('patient', async (req, res, { user, profile }) => res.json({ id: user.id, firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email, phone: profile.phone || '' })));
   // Doctor registration is the only path to a doctor account; a patient account
   // can no longer be converted into an application from the API.
   router.get('/doctors', async (req, res) => {
@@ -362,7 +362,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const directory = await db.rpc('public_doctors');
     if (directory.error) return res.status(503).json({ message:'Directory unavailable' });
     const doctors = new Map(directory.data.map((d) => [d.id,d]));
-    res.json({ profile: { firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email },
+    res.json({ profile: { userId: user.id, firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email, phone: profile.phone || '' },
       appointments: result.data.map((a) => ({ id:a.id, doctorName:doctors.get(a.doctor_id)?.name || 'Doctor', specialty:doctors.get(a.doctor_id)?.specialty || 'Consultation', startsAt:a.scheduled_start, status:a.status, reason:a.reason })),
       // Only implemented data is returned. Clinical results, care plans,
       // prescriptions, notifications and tasks have no backing yet, so they are
@@ -382,6 +382,240 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return res.status(result.error.code === 'P0002' ? 404 : 409).json({ message:'Cannot cancel this appointment' });
     res.json({ status:result.data.status });
   }));
+  // ---------------------------------------------------------------------------
+  // Patient health records.
+  //
+  // These are the same assessment rows the recording doctor sees. Row Level
+  // Security already scopes them to the signed-in patient; the server adds an
+  // explicit ownership filter on top and never accepts a patient id from the
+  // browser, so one patient cannot read another's record by guessing an id.
+  //
+  // Only columns that exist in every migrated schema are selected. The model
+  // outcome is derived from whether a prediction was stored, rather than from
+  // the later model_status column, so an older database still answers.
+  // ---------------------------------------------------------------------------
+  const PATIENT_ASSESSMENT_COLUMNS = 'id,doctor_id,appointment_id,patient_reported,clinician_added,observations,symptom_duration,clinical_note,predicted_disease,model_version,model_confidence,description,precautions,medications,diet,workout,doctor_assessment,plan,report_generated_at,created_at,updated_at';
+
+  const doctorNames = (directory) => new Map((directory?.data || []).map((d) => [d.id, d.name]));
+
+  // Own appointments only, so a record never leaks a visit the patient cannot see.
+  async function ownAppointments(db, userId, ids) {
+    const wanted = [...new Set((Array.isArray(ids) ? ids : [ids]).filter(Boolean))];
+    if (!wanted.length) return { rows: new Map(), failed: false };
+    const result = await db.from('appointments')
+      .select('id,scheduled_start,status,doctor_id')
+      .eq('patient_id', userId).in('id', wanted);
+    if (result.error) return { rows: new Map(), failed: true };
+    return { rows: new Map(result.data.map((row) => [row.id, row])), failed: false };
+  }
+
+  router.get('/patient/assessments', ...guard('patient', async (req, res, { db, user }) => {
+    const result = await db.from('assessments')
+      .select('id,doctor_id,appointment_id,predicted_disease,doctor_assessment,created_at')
+      .eq('patient_id', user.id).order('created_at', { ascending: false }).limit(50);
+    if (result.error) { report('patient_assessments', result.error); return res.status(503).json({ message: 'Health records are unavailable right now.' }); }
+    const appointments = await ownAppointments(db, user.id, result.data.map((row) => row.appointment_id));
+    if (appointments.failed) return res.status(503).json({ message: 'Health records are unavailable right now.' });
+    const directory = await db.rpc('public_doctors');
+    const names = doctorNames(directory);
+    res.json(result.data.map((row) => {
+      const visit = appointments.rows.get(row.appointment_id);
+      return {
+        id: row.id,
+        recordedAt: row.created_at,
+        doctorName: names.get(row.doctor_id) || 'Your clinician',
+        // A stored null means the model was unavailable for that consultation.
+        // It is reported as "unavailable", never as an empty diagnosis.
+        predictedDisease: row.predicted_disease || null,
+        modelStatus: row.predicted_disease ? 'completed' : 'unavailable',
+        clinicianSummary: row.doctor_assessment || null,
+        hasPlan: Boolean(row.plan),
+        appointmentStart: visit?.scheduled_start || null,
+        appointmentStatus: visit?.status || null,
+      };
+    }));
+  }));
+
+  router.get('/patient/assessments/:id', ...guard('patient', async (req, res, { db, user }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid health record' });
+    const result = await db.from('assessments').select(PATIENT_ASSESSMENT_COLUMNS)
+      .eq('id', req.params.id).eq('patient_id', user.id).single();
+    if (result.error) {
+      // Not found and not yours are the same answer: the id is never echoed back.
+      const missing = result.error.code === 'PGRST116';
+      if (!missing) report('patient_assessment_detail', result.error);
+      return res.status(missing ? 404 : 503).json({ message: missing ? 'That health record could not be found.' : 'Health records are unavailable right now.' });
+    }
+    const row = result.data;
+    const appointment = await ownAppointments(db, user.id, row.appointment_id);
+    if (appointment.failed) return res.status(503).json({ message: 'Health records are unavailable right now.' });
+    const visit = appointment.rows.get(row.appointment_id);
+    const directory = await db.rpc('public_doctors');
+    res.json({
+      id: row.id,
+      recordedAt: row.created_at,
+      updatedAt: row.updated_at,
+      reportGeneratedAt: row.report_generated_at,
+      doctorName: doctorNames(directory).get(row.doctor_id) || 'Your clinician',
+      appointmentId: row.appointment_id || null,
+      appointmentStart: visit?.scheduled_start || null,
+      appointmentStatus: visit?.status || null,
+      modelStatus: row.predicted_disease ? 'completed' : 'unavailable',
+      predictedDisease: row.predicted_disease || null,
+      modelVersion: row.model_version || null,
+      modelConfidence: typeof row.model_confidence === 'number' ? row.model_confidence : null,
+      description: row.description || null,
+      patientReported: row.patient_reported || [],
+      clinicianAdded: row.clinician_added || [],
+      observations: row.observations || [],
+      symptomDuration: row.symptom_duration || null,
+      clinicalNote: row.clinical_note || null,
+      precautions: row.precautions || [],
+      medications: row.medications || [],
+      diet: row.diet || [],
+      workout: row.workout || [],
+      doctorAssessment: row.doctor_assessment || null,
+      plan: row.plan || null,
+    });
+  }));
+
+  router.get('/patient/assessments/:id/report.pdf', ...guard('patient', async (req, res, { db, user, profile }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid health record' });
+    const result = await db.from('assessments').select(PATIENT_ASSESSMENT_COLUMNS)
+      .eq('id', req.params.id).eq('patient_id', user.id).single();
+    if (result.error) {
+      const missing = result.error.code === 'PGRST116';
+      return res.status(missing ? 404 : 503).json({ message: missing ? 'That report could not be found.' : 'Reports are unavailable right now.' });
+    }
+    const row = result.data;
+    const appointment = await ownAppointments(db, user.id, row.appointment_id);
+    if (appointment.failed) return res.status(503).json({ message: 'Reports are unavailable right now.' });
+    const visit = appointment.rows.get(row.appointment_id);
+    const directory = await db.rpc('public_doctors');
+    // Same renderer the doctor uses, fed the same fields, so a patient's copy of
+    // a record can never disagree with the clinician's copy.
+    let pdf;
+    try {
+      pdf = renderAssessmentReport({
+        id: row.id,
+        patientName: profile.full_name || 'Patient',
+        patientEmail: null,
+        appointmentId: row.appointment_id || null,
+        appointmentStart: visit?.scheduled_start || null,
+        appointmentStatus: visit?.status || null,
+        createdAt: row.created_at,
+        doctorName: doctorNames(directory).get(row.doctor_id) || 'Your clinician',
+        patientReported: row.patient_reported || [],
+        clinicianAdded: row.clinician_added || [],
+        observations: row.observations || [],
+        symptomDuration: row.symptom_duration || null,
+        clinicalNote: row.clinical_note || null,
+        modelStatus: row.predicted_disease ? 'completed' : 'unavailable',
+        predictedDisease: row.predicted_disease || null,
+        modelVersion: row.model_version || null,
+        modelConfidence: typeof row.model_confidence === 'number' ? row.model_confidence : null,
+        description: row.description || null,
+        precautions: row.precautions || [],
+        medications: row.medications || [],
+        diet: row.diet || [],
+        workout: row.workout || [],
+        doctorAssessment: row.doctor_assessment || null,
+        plan: row.plan || null,
+        disclaimer: 'Patient copy. Model output is experimental decision support, not a confirmed diagnosis. Follow the plan recorded by your clinician.',
+      }, { generatedAt: new Date() });
+    } catch (error) { report('patient_report', error); return res.status(503).json({ message: 'Report generation failed. Please retry.' }); }
+    // Report metadata only; the record itself is not modified here.
+    await db.from('assessments').update({ report_generated_at: new Date().toISOString() })
+      .eq('id', row.id).eq('patient_id', user.id);
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', `attachment; filename="HelloDoc-health-record-${String(row.id).slice(0, 8)}.pdf"`);
+    res.send(pdf);
+  }));
+  // ---------------------------------------------------------------------------
+  // Walk-in queue.
+  //
+  // Requires migration 015. Until it is applied the RPCs do not exist, so every
+  // route answers one unambiguous code and the UI says the feature is not
+  // enabled yet instead of pretending to hold a place in a queue.
+  // ---------------------------------------------------------------------------
+  const QUEUE_MISSING_CODES = new Set(['42P01', '42883', 'PGRST202', 'PGRST302']);
+  const queueNotConfigured = (res) => res.status(503).json({
+    code: 'QUEUE_NOT_CONFIGURED',
+    message: 'The walk-in queue is not enabled for this database yet. Scheduled appointments still work normally.',
+  });
+
+  router.get('/patient/walkin', ...guard('patient', async (req, res, { db }) => {
+    const result = await db.rpc('patient_walkin_status');
+    if (result.error) {
+      if (QUEUE_MISSING_CODES.has(result.error.code)) return queueNotConfigured(res);
+      report('walkin_status', result.error);
+      return res.status(503).json({ message: 'The walk-in queue is unavailable right now. Please try again shortly.' });
+    }
+    res.json(result.data || { inQueue: false });
+  }));
+
+  router.post('/patient/walkin/join', ...guard('patient', async (req, res, { db }) => {
+    const body = req.body || {};
+    if (!isUuid(body.doctorId) || !isUuid(body.idempotencyKey)) return res.status(400).json({ message: 'Choose a doctor and try again.' });
+    if (typeof body.reason !== 'string' || body.reason.length > 500) return res.status(400).json({ message: 'Invalid reason' });
+    const result = await db.rpc('patient_walkin_join', {
+      p_doctor: body.doctorId, p_key: body.idempotencyKey, p_reason: body.reason.trim() || null,
+    });
+    if (result.error) {
+      if (QUEUE_MISSING_CODES.has(result.error.code)) return queueNotConfigured(res);
+      if (result.error.code === 'P0002') return res.status(404).json({ message: 'That doctor could not be found.' });
+      if (result.error.code === '42501') return res.status(409).json({ message: 'This doctor is not accepting walk-ins right now.' });
+      if (result.error.code === '22023') return res.status(400).json({ message: 'That request was not valid. Check the form and try again.' });
+      report('walkin_join', result.error);
+      return res.status(503).json({ message: 'Your place could not be reserved. Nothing was changed; please try again.' });
+    }
+    res.status(201).json(result.data);
+  }));
+
+  router.post('/patient/walkin/leave', ...guard('patient', async (req, res, { db }) => {
+    const result = await db.rpc('patient_walkin_leave');
+    if (result.error) {
+      if (QUEUE_MISSING_CODES.has(result.error.code)) return queueNotConfigured(res);
+      report('walkin_leave', result.error);
+      return res.status(503).json({ message: 'Your place could not be released. Please try again.' });
+    }
+    res.json(result.data || { inQueue: false });
+  }));
+
+  // Clinician side, so the queue belongs to the existing workflow rather than
+  // being a patient-only panel nobody can serve.
+  router.get('/doctor/walkin', ...guard('doctor', async (req, res, { db }) => {
+    const result = await db.rpc('doctor_walkin_queue');
+    if (result.error) {
+      if (QUEUE_MISSING_CODES.has(result.error.code)) return queueNotConfigured(res);
+      return res.status(503).json({ message: 'The walk-in queue is unavailable right now.' });
+    }
+    res.json((result.data || []).map((row) => ({
+      id: row.entry_id ?? row.id,
+      patientId: row.patient_id,
+      patientName: row.patient_name,
+      reason: row.entry_reason ?? row.reason,
+      status: row.entry_status ?? row.status,
+      position: row.queue_position ?? row.position,
+      estimatedMinutes: row.estimated_minutes,
+      joinedAt: row.joined_at,
+    })));
+  }));
+
+  router.post('/doctor/walkin/:id/status', ...guard('doctor', async (req, res, { db }) => {
+    if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid queue entry' });
+    const status = req.body?.status;
+    if (!['called', 'seen', 'left'].includes(status)) return res.status(400).json({ message: 'Invalid queue status' });
+    const result = await db.rpc('doctor_walkin_advance', { p_id: req.params.id, p_status: status });
+    if (result.error) {
+      if (QUEUE_MISSING_CODES.has(result.error.code)) return queueNotConfigured(res);
+      if (result.error.code === 'P0002') return res.status(404).json({ message: 'That queue entry no longer exists.' });
+      if (result.error.code === '42501') return res.status(409).json({ message: 'That queue entry is already closed.' });
+      return res.status(503).json({ message: 'The queue could not be updated. Please try again.' });
+    }
+    res.json(result.data);
+  }));
+
   router.get('/doctor/symptoms', ...guard('doctor', async (req, res) => {
     try { res.json(await symptomVocabulary()); }
     catch (error) {
