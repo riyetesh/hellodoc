@@ -31,7 +31,6 @@ as $$
   where p.role = 'doctor'
     and d.verification_status = 'approved'
   order by p.full_name
-  limit 100
 $$;
 
 revoke all on function public.public_doctors() from public;
