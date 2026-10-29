@@ -94,7 +94,19 @@
           <span class="visually-hidden">Search doctors</span>
         </div>
 
-        <div class="toolbar-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="toolbar-actions" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <label class="availability-filter" for="currencySelect">
+            Currency
+            <select id="currencySelect" aria-label="Display consultation fees in currency">
+              <option value="INR">INR ₹</option>
+              <option value="EUR">EUR €</option>
+              <option value="USD">USD $</option>
+              <option value="NPR">NPR रू</option>
+              <option value="GBP">GBP £</option>
+              <option value="CAD">CAD $</option>
+              <option value="AUD">AUD $</option>
+            </select>
+          </label>
           <label class="availability-filter" for="availabilityFilter">
             Availability
             <select id="availabilityFilter"><option value="all">All doctors</option><option value="open">Booking now</option></select>
