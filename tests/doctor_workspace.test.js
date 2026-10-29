@@ -57,12 +57,15 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   assert.ok(html.includes('id="saveAssessment"'));
   assert.ok(html.includes('id="saveAssessmentTop"'));
   assert.ok(html.includes('id="sideSummary"'));
-  // Prediction results are presented in a focused dialog, with each guidance
-  // category selectable before generating the report.
+  // Prediction results stay inline in the same doctor workspace, with each
+  // guidance category selectable before generating the report.
   assert.ok(html.includes('id="runModel"'));
-  assert.ok(html.includes('id="modelResultsDialog"'));
+  assert.ok(html.includes('id="modelResultsPanel"'));
+  assert.equal(html.includes('id="modelResultsDialog"'), false);
   assert.ok(html.includes('id="modelDialogCategories"'));
-  assert.ok(html.includes('Use selected items in report'));
+  assert.ok(html.includes('id="modelSuggestionInput"'));
+  assert.ok(html.includes('Confirm selected items'));
+  assert.ok(script.includes("state.selectedGuidance = { precautions: [], medications: [], diet: [], workout: [] }"));
   assert.ok(html.includes('Duration (days)'));
   assert.ok(html.includes('Generate consultation report'));
   assert.ok(script.includes("'/api/doctor/predict'"));
