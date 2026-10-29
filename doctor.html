@@ -425,15 +425,27 @@
           <section class="patient-panel dw-practice-card" id="doctorAvailability" aria-labelledby="availabilityTitle">
             <div class="dw-practice-card__head">
               <h3 id="availabilityTitle">Availability</h3>
-              <p class="muted">30 minute slots, saved in UTC. Patients book from these times.</p>
+              <p class="muted">Choose a date and start time. Each slot is 30 minutes, shown in your local time.</p>
             </div>
-            <form id="slotForm" class="dw-slot-form">
-              <label class="dw-filter">
-                <span>Start</span>
-                <input type="datetime-local" name="startsAt" required />
-              </label>
-              <button class="btn btn-primary" type="submit">Add slot</button>
+            <form id="slotForm" class="dw-slot-form dw-slot-form--easy">
+              <div class="dw-slot-form__fields">
+                <label class="dw-filter" for="slotDate">
+                  <span>Date</span>
+                  <input id="slotDate" type="date" name="slotDate" required />
+                </label>
+                <label class="dw-filter" for="slotTime">
+                  <span>Start time</span>
+                  <input id="slotTime" type="time" name="slotTime" step="1800" required />
+                </label>
+              </div>
+              <div class="dw-slot-form__presets" aria-label="Quick start times">
+                <button type="button" class="dw-slot-preset" data-slot-preset="09:00">9:00 AM</button>
+                <button type="button" class="dw-slot-preset" data-slot-preset="12:00">12:00 PM</button>
+                <button type="button" class="dw-slot-preset" data-slot-preset="15:00">3:00 PM</button>
+              </div>
+              <button class="btn btn-primary dw-slot-form__submit" type="submit"><span aria-hidden="true">＋</span> Add 30-minute slot</button>
             </form>
+            <div class="dw-slot-list__head"><h4>Upcoming slots</h4><span>Patients can book open times</span></div>
             <div id="slots" class="dw-slot-list"></div>
           </section>
         </div>
