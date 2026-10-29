@@ -125,6 +125,27 @@ test('admin APIs enforce identity, role, validation and RPC authorization', asyn
   assert.equal((await fetch(origin+'/api/auth/current-user',{headers:{Cookie:'hd_access=valid'}})).status,403);
   profile={...profile,suspended:false};
 });
+test('admin demo workspace requires an admin session and an explicit selected doctor', async () => {
+  const previous = profile;
+  try {
+    profile = { ...profile, role:'admin', suspended:false };
+    const target = '22222222-2222-4222-8222-222222222222';
+    const allowed = await fetch(origin+'/api/doctor/overview', {
+      headers: { Cookie:'hd_access=valid', 'X-HelloDoc-Demo-Doctor':target }
+    });
+    assert.equal(allowed.status,200);
+    assert.equal((await allowed.json()).demoMode,true);
+
+    profile = { ...profile, role:'patient', suspended:false };
+    const denied = await fetch(origin+'/api/doctor/overview', {
+      headers: { Cookie:'hd_access=valid', 'X-HelloDoc-Demo-Doctor':target }
+    });
+    assert.equal(denied.status,403);
+  } finally {
+    profile = previous;
+  }
+});
+
 test('only patient registration; no password sent to application tables',async () => {
   assert.equal((await post('/api/auth/signup',{role:'doctor',firstName:'Synthetic',lastName:'Test',email:'test@example.invalid',password:'password123'})).status,403);
   assert.equal((await post('/api/auth/signup',{firstName:'Synthetic',lastName:'Test',email:'test@example.invalid',password:'password123'})).status,201);
