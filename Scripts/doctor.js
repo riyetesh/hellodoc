@@ -788,44 +788,57 @@
   }
 
   // ---------------------------------------------------------- section nav ---
-  // The navbar's section links follow the section you are reading, so the three
-  // areas stay legible in a single page.
+  // Keep the schedule, clinical record and practice settings in focused views.
+  // Deep links (including appointment -> assessment) still open the right view.
   function initSectionNav() {
     const links = [...document.querySelectorAll('[data-section-link]')];
-    const sections = links
-      .map((link) => document.getElementById(link.dataset.sectionLink))
-      .filter(Boolean);
+    const sections = links.map((link) => document.getElementById(link.dataset.sectionLink)).filter(Boolean);
     if (!links.length || !sections.length) return;
-
+    const sectionIds = new Set(sections.map((section) => section.id));
+    const viewForHash = (hash) => {
+      const id = String(hash || '').replace(/^#/, '');
+      if (id === 'practiceSettings') return 'practiceSettings';
+      if (id === 'assessmentSection' || ['areaVisit', 'areaSymptoms', 'areaDecision', 'reviewArea'].includes(id)) return 'assessmentSection';
+      if (id.startsWith('appointment-')) return 'doctorAppointments';
+      return sectionIds.has(id) ? id : 'doctorAppointments';
+    };
     const mark = (id) => {
       for (const link of links) {
         const current = link.dataset.sectionLink === id;
         link.classList.toggle('is-current', current);
-        if (current) link.setAttribute('aria-current', 'true');
+        if (current) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
       }
     };
-
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      // The section under the header wins; before the first one, the first wins.
-      const line = window.scrollY + 140;
-      let current = sections[0].id;
-      for (const section of sections) {
-        if (section.getBoundingClientRect().top + window.scrollY <= line) current = section.id;
+    const activate = (id, { scroll = false } = {}) => {
+      const targetId = sectionIds.has(id) ? id : 'doctorAppointments';
+      for (const section of sections) section.hidden = section.id !== targetId;
+      mark(targetId);
+      document.body.dataset.doctorView = targetId;
+      if (scroll) window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+    document.addEventListener('click', (event) => {
+      const anchor = event.target.closest('a[href^="#"]');
+      if (!anchor) return;
+      const hash = anchor.getAttribute('href');
+      if (!hash || hash === '#') return;
+      const id = hash.slice(1);
+      const target = document.getElementById(id);
+      const targetView = viewForHash(hash);
+      if (!target && !sectionIds.has(id) && !id.startsWith('appointment-')) return;
+      event.preventDefault();
+      activate(targetView);
+      if (window.location.hash !== hash) history.pushState(null, '', hash);
+      if (target && target.id !== targetView) {
+        requestAnimationFrame(() => target.scrollIntoView({ block: 'start', behavior: 'auto' }));
+      } else {
+        window.scrollTo({ top: 0, behavior: 'auto' });
       }
-      mark(current);
-    };
-    const schedule = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    update();
+    });
+    window.addEventListener('hashchange', () => activate(viewForHash(window.location.hash)));
+    window.addEventListener('popstate', () => activate(viewForHash(window.location.hash)));
+    activate(viewForHash(window.location.hash));
   }
-
   // -------------------------------------------------------------- controls ---
   const filters = $('#filters');
   if (filters) {
