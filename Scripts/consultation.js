@@ -124,7 +124,7 @@
       if (context.appointmentStatus === 'pending') await updateStatus('confirmed');
       if (context.appointmentStatus !== 'completed') await updateStatus('completed');
 
-      summary.textContent = 'Consultation ended at ' + formatMoment(endedAt) + '. The report is saved and available in the patient’s Health records.';
+      summary.textContent = 'Started: ' + formatMoment(startedAt) + ' · Ended: ' + formatMoment(endedAt) + ' · Duration: ' + elapsedDisplay.textContent + '. Report saved to the patient’s Health records.';
       summary.hidden = false;
       activeView.hidden = true;
       endButton.hidden = true;
