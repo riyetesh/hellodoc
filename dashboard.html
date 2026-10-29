@@ -12,7 +12,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
     <link rel="stylesheet" href="./Styles/app.css?v=sos3" />
-    <link rel="stylesheet" href="./Styles/dashboard.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/dashboard.css?v=booking2" />
     <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
 </head>
 
@@ -170,11 +170,13 @@
         <div class="modal-body">
           <div class="field">
             <label for="dateRow">Choose a date</label>
-            <div class="date-row" id="dateRow" role="group" aria-label="Available appointment dates"></div>
+            <select id="dateRow" class="booking-date-select" aria-label="Choose an available appointment date"></select>
+            <p class="booking-help" id="bookingDateHelp">Only dates with open appointment times are shown.</p>
           </div>
 
           <div class="field">
             <label>Available times <span>Shown in your local time zone</span></label>
+            <p class="booking-availability" id="bookingAvailability" role="status" aria-live="polite">Choose a date to see available times.</p>
             <div class="slot-grid" id="slotGrid" role="group" aria-label="Available appointment times"></div>
           </div>
 
@@ -216,6 +218,6 @@
 
     <script src="./Scripts/appointments.js"></script>
     <script src="./Scripts/nav.js?v=nosos2"></script>
-    <script src="./Scripts/dashboard.js?v=slots1"></script>
+    <script src="./Scripts/dashboard.js?v=booking2"></script>
   </body>
 </html>
