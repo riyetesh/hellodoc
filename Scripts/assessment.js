@@ -641,7 +641,7 @@
     if (state.modelPreview) {
       result.hidden = false;
       $('modelOutput').textContent = state.modelPreview.output;
-      $('modelMeta').textContent = `Model version ${state.modelPreview.modelVersion} · experimental decision support, not a diagnosis`;
+      $('modelMeta').textContent = `Model version ${state.modelPreview.modelVersion}`;
       $('modelHint').textContent = 'Only the selected symptoms were sent. Your assessment and plan were not.';
     } else {
       result.hidden = true;
@@ -696,7 +696,7 @@
       renderPredictionDialog();
       showError('assessmentError', '');
       renderModelPanel();
-      announce(`Model suggestion: ${state.modelPreview.output}. This is decision support, not a diagnosis.`);
+      announce(`Prediction ready: ${state.modelPreview.output}.`);
     } catch (error) {
       noteModelOutage(error.code, error.message);
       announce(error.message);
@@ -778,7 +778,14 @@
     activeGuidanceCategory = key;
     renderPredictionDialog();
     const modal = $('guidanceModal');
-    if (modal && !modal.open) modal.showModal();
+    if (modal && !modal.open) {
+      try {
+        modal.showModal();
+      } catch {
+        // Keep the category usable in browsers where showModal is unavailable.
+        modal.setAttribute('open', '');
+      }
+    }
   }
   function closePredictionDialog() {
     const target = $('areaSymptoms');
@@ -1342,8 +1349,12 @@
   document.querySelectorAll('[data-wizard-go]').forEach((button) => {
     button.addEventListener('click', () => { const target = Number(button.dataset.wizardGo); if (target <= activeWizardStep) setWizardStep(target); });
   });
-  document.querySelectorAll('[data-guidance-category]').forEach((button) => {
-    button.addEventListener('click', () => openGuidanceCategory(button.dataset.guidanceCategory));
+  // Delegate category clicks so the controls keep working after the result panel re-renders.
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-guidance-category]');
+    if (!button) return;
+    event.preventDefault();
+    openGuidanceCategory(button.dataset.guidanceCategory);
   });
   $('guidanceModalClose')?.addEventListener('click', () => $('guidanceModal')?.close());
   $('guidanceModal')?.addEventListener('click', (event) => {
