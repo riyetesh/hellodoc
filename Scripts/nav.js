@@ -379,6 +379,8 @@
   // Emergency access is intentionally separate from HelloDoc's routine-care flow.
   // Browser locale is only a hint, never proof of the user's physical location.
   function initEmergencyAccess() {
+    // The floating SOS control has been removed from the site navigation.
+    return;
     if (document.getElementById("hdEmergencyRoot")) return;
     const countryHints = {
       FI:"fi", SE:"eu", NO:"eu", DK:"eu", IS:"eu", DE:"eu", FR:"eu", ES:"eu", IT:"eu",
