@@ -384,6 +384,18 @@ guidance. Local development is unaffected. The model artifact and vocabulary are
 verified: Flask loads all 132 symptoms and returns a prediction with no
 calibrated confidence.
 
+
+To restore production predictions, deploy the included `render.yaml` blueprint
+from the GitHub repository on Render. Set a long random value for
+`PREDICTION_INTERNAL_TOKEN` in the Render service environment. After the service
+deploys, add these two **server-side Production** variables in Vercel:
+`FLASK_ORIGIN` = the Render service's base URL (for example,
+`https://hellodoc-private-model.onrender.com`, without a path) and
+`PREDICTION_INTERNAL_TOKEN` = the exact same token configured in Render. Do not
+put the token in frontend code or expose it as a `NEXT_PUBLIC_*` variable.
+Redeploy HelloDoc after saving the Vercel variables. Confirm symptom search
+returns the 132 model symptoms and test an assessment with disposable data.
+
 ### Verification status
 
 | Area | Status |
