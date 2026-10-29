@@ -114,15 +114,29 @@ function createApp({ config = readConfig(), allowSameHostOrigin = false } = {}) 
         signal: AbortSignal.timeout(5000),
       });
       if (!response.ok) {
-        console.error(JSON.stringify({ event: 'supabase_readiness_failed', status: response.status }));
+        // Keep credentials and raw provider messages private, but expose enough
+        // diagnostic detail to distinguish a bad key, missing RPC, or outage.
+        let providerCode = null;
+        try {
+          const payload = await response.json();
+          providerCode = typeof payload.code === 'string' ? payload.code : null;
+        } catch { /* response may not be JSON */ }
+        console.error(JSON.stringify({
+          event: 'supabase_readiness_failed',
+          status: response.status,
+          providerCode,
+        }));
         return res.status(503).json({
           status: 'unavailable',
           application: 'running',
           configuration: 'valid',
           supabase: 'unavailable',
+          supabase_http_status: response.status,
+          supabase_error_code: providerCode,
         });
       }
-      if (!Array.isArray(await response.json())) throw new Error('Invalid directory response');
+      const payload = await response.json();
+      if (!Array.isArray(payload)) throw new Error('Invalid directory response');
       res.json({ status: 'ok', application: 'running', configuration: 'valid', supabase: 'connected' });
     } catch (error) {
       console.error(JSON.stringify({ event: 'supabase_readiness_failed', errorType: error.name }));
@@ -131,6 +145,7 @@ function createApp({ config = readConfig(), allowSameHostOrigin = false } = {}) 
         application: 'running',
         configuration: 'valid',
         supabase: 'unavailable',
+        supabase_error_type: error.name,
       });
     }
   };
