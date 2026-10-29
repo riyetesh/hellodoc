@@ -181,7 +181,7 @@
   const patientSelect = $('assessmentPatient');
   const syncDock = () => {
     const step = document.querySelector('.consultation-wizard__step.is-active');
-    dock.hidden = !patientSelect || !patientSelect.value || (step && ['0', '4'].includes(step.dataset.wizardGo));
+    dock.hidden = !patientSelect || !patientSelect.value || (step && ['4'].includes(step.dataset.wizardGo));
     $('dockPatientName').textContent = patientName();
   };
   patientSelect && patientSelect.addEventListener('change', syncDock);
