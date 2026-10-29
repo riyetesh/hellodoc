@@ -286,3 +286,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* Refined landing-page pass: less oversized, fewer decorative effects, more product credibility. */
+.lp-hero::before { display: none; }
+.lp-hero__inner { padding-block: clamp(3.5rem, 6vw, 6rem); gap: clamp(2rem, 4vw, 4rem); }
+.lp-hero__title { font-size: clamp(2.8rem, 5.2vw, 5rem); line-height: 1.02; letter-spacing: -.065em; max-width: 12ch; }
+.lp-eyebrow { letter-spacing: .09em; }
+.lp-preview { transform: none; border-radius: 1.1rem; box-shadow: 0 18px 50px rgba(17,24,39,.09); }
+.lp-section__title { font-size: clamp(2rem, 3.8vw, 3.5rem); line-height: 1.08; letter-spacing: -.045em; }
+.lp-trust__list > div { border-radius: 12px; box-shadow: 0 2px 10px rgba(25,55,100,.035); }
+.lp-trust__list > div:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(25,55,100,.07); }
+.lp-story::after { display: none; }
+.lp-story { background: #172b48; }
+.lp-path, .lp-journey, .lp-consult__col, .lp-dir { border-radius: 14px; box-shadow: 0 2px 12px rgba(17,24,39,.035); }
+.lp-final .btn-primary { background: var(--lp-cobalt); border-color: var(--lp-cobalt); }
+@media (max-width: 640px) {
+  .lp-hero__title { font-size: clamp(2.6rem, 11vw, 3.8rem); }
+  .lp-section__title { font-size: clamp(1.9rem, 8vw, 2.7rem); }
+}
