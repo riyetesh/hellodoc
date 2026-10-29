@@ -70,7 +70,7 @@
     }
   }
   const $ = (sel) => document.querySelector(sel);
-  const $ = (sel) => Array.from(document.querySelectorAll(sel));
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   function toast(message, type = "info") {
     const container = $("#toastContainer");
