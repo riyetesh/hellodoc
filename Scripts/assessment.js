@@ -1017,7 +1017,7 @@
     return moved.length;
   }
 
-  async function saveAssessment({ withoutModel = false } = {}) {
+  async function saveAssessment({ withoutModel = false, redirect = true } = {}) {
     if (state.saving) return;
     if (withoutModel && !state.modelOutage) return;
     if (!withoutModel && !state.modelPreview) {
@@ -1079,8 +1079,8 @@
           // record wins; open it rather than creating a duplicate.
           clearDraft();
           state.saved = true;
-          window.location.assign(`/prediction.html?id=${encodeURIComponent(body.assessmentId)}`);
-          return;
+          if (redirect) window.location.assign(`/prediction.html?id=${encodeURIComponent(body.assessmentId)}`);
+          return { id: body.assessmentId, existing: true };
         }
         if (response.status === 401) {
           throw new Error('Your session expired. Your text is still here; sign in again in another tab and retry.');
@@ -1109,7 +1109,8 @@
       markSaved();
       setDraftState('Saved', 'saved');
       announce('Assessment saved.');
-      window.location.assign(`/prediction.html?id=${encodeURIComponent(body.id)}`);
+      if (redirect) window.location.assign(`/prediction.html?id=${encodeURIComponent(body.id)}`);
+      return { id: body.id, existing: false };
     } catch (error) {
       setDraftState('Save failed, your text is kept', 'error');
       showError('reviewError', error.message || 'The assessment could not be saved. Your text is preserved; please retry.');
@@ -1540,5 +1541,21 @@
 
   setWizardStep(0);
   load();
-  window.HelloDocAssessment = { openReview, saveAssessment, saveWithoutModel };
+  window.HelloDocAssessment = {
+    openReview,
+    saveAssessment,
+    saveWithoutModel,
+    getConsultationContext() {
+      const option = $('assessmentPatient')?.selectedOptions?.[0];
+      return {
+        appointmentId: state.appointmentId || state.fixedAppointmentId || option?.dataset.appointmentId || '',
+        appointmentStatus: option?.dataset.status || '',
+        patientName: option?.textContent?.trim() || '',
+        hasModelPreview: Boolean(state.modelPreview),
+        modelOutage: Boolean(state.modelOutage),
+        hasSymptoms: modelSymptoms().length > 0,
+        patientSelected: Boolean(state.patientId),
+      };
+    },
+  };
 })();
