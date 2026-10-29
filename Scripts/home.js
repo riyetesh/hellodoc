@@ -117,10 +117,15 @@
     shown.forEach((doctor) => {
       const item = document.createElement("li");
       const avatar = document.createElement("img");
-      avatar.src = "./Asset/Illustrations/doctor.svg";
+      avatar.src = doctor.profile_image_url || "./Asset/Illustrations/doctor.svg";
       avatar.alt = "";
       avatar.width = 32;
       avatar.height = 32;
+      avatar.loading = "lazy";
+      avatar.addEventListener("error", () => {
+        avatar.src = "./Asset/Illustrations/doctor.svg";
+        avatar.alt = "";
+      }, { once: true });
 
       const lines = document.createElement("span");
       lines.className = "lp-wire__lines";
@@ -200,6 +205,21 @@
         const item = document.createElement("li");
         item.className = "lp-dir__item";
 
+        const avatar = document.createElement("img");
+        avatar.className = "lp-dir__avatar";
+        avatar.src = doctor.profile_image_url || "./Asset/Illustrations/doctor.svg";
+        avatar.alt = doctor.profile_image_url ? (doctor.name || "Doctor") + " profile photo" : "";
+        avatar.width = 48;
+        avatar.height = 48;
+        avatar.loading = "lazy";
+        avatar.addEventListener("error", () => {
+          avatar.src = "./Asset/Illustrations/doctor.svg";
+          avatar.alt = "";
+        }, { once: true });
+
+        const details = document.createElement("div");
+        details.className = "lp-dir__details";
+
         const name = document.createElement("p");
         name.className = "lp-dir__name";
         name.textContent = doctor.name || "Doctor";
@@ -210,7 +230,8 @@
         parts.push(doctor.accepting_appointments === false ? "Not accepting new appointments" : "Accepting appointments");
         meta.textContent = parts.join(" \u00b7 ");
 
-        item.append(name, meta);
+        details.append(name, meta);
+        item.append(avatar, details);
         list.append(item);
       });
 
@@ -242,6 +263,7 @@
             name: typeof doctor.name === "string" ? doctor.name : "",
             specialty: typeof doctor.specialty === "string" ? doctor.specialty : "",
             fee: doctor.fee === null || doctor.fee === undefined ? null : Number(doctor.fee),
+            profile_image_url: typeof doctor.profile_image_url === "string" ? doctor.profile_image_url : "",
             accepting_appointments: doctor.accepting_appointments !== false,
           }));
 
