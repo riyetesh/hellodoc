@@ -905,37 +905,49 @@
   }
 
   function renderReview() {
-    const symptoms = modelSymptoms().length;
     const selected = state.patients.find((patient) => patient.patientId === state.patientId);
     const option = $('assessmentPatient')?.selectedOptions[0];
-    fillSummary($('reviewSummary'), [
-      ['Reported by the patient', state.reported.map(labelFor).join(', ') || 'None'],
-      ['Recorded by you', state.clinician.map(labelFor).join(', ') || 'None'],
-      ['Sent to the model', state.modelOutage && !symptoms ? 'Nothing, saved without the model' : String(symptoms)],
-    ]);
-    fillSummary($('reviewClinician'), [
-      ['Assessment', state.doctorAssessment.trim() || 'Not recorded'],
-    ]);
-    const recordRows = [
-      ['Patient', selected ? selected.fullName : 'Not selected'],
-      ['Appointment', option?.dataset.when
-        ? `${formatMoment(option.dataset.when)} · ${humanize(option.dataset.status || 'status unknown')}`
-        : 'Not linked'],
-      ['Observations', state.observations.join(' · ') || 'None'],
-      ['Duration', state.duration || 'Not recorded'],
-      ['Clinical note', state.note || 'Not recorded'],
-    ];
-    if (state.revisingSource) {
-      recordRows.push(['Recorded originally', formatMoment(state.revisingSource.createdAt)]);
-      recordRows.push(['Original model result', state.revisingSource.modelStatus === 'unavailable'
-        ? 'No prediction was recorded'
-        : `${state.revisingSource.predictedDisease} (kept on the previous record)`]);
+    const target = $('reviewSummary');
+    const clinician = $('reviewClinician');
+    const record = $('reviewRecord');
+    const makeEditor = (parent, label, key, value, multiline = true) => {
+      const wrap = document.createElement('label'); wrap.className = 'dw-review-edit';
+      const caption = document.createElement('span'); caption.textContent = label;
+      const control = document.createElement(multiline ? 'textarea' : 'input');
+      control.value = value || ''; control.setAttribute('aria-label', label);
+      if (multiline) { control.rows = 2; control.maxLength = 4000; } else { control.type = 'text'; control.maxLength = 200; }
+      control.addEventListener('input', () => {
+        if (key === 'reported') { state.reported = []; state.clinician = []; state.observations = control.value.split(/\n|,/).map(x => x.trim()).filter(Boolean).slice(0, MAX_OBSERVATIONS); state.modelPreview = null; }
+        else if (key === 'observations') state.observations = control.value.split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, MAX_OBSERVATIONS);
+        else if (key === 'duration') state.duration = control.value;
+        else if (key === 'note') state.note = control.value;
+        else if (key === 'doctorAssessment') state.doctorAssessment = control.value;
+        else if (key === 'plan') state.plan = control.value;
+        markDirty(); renderSideSummary(); renderChecks();
+      });
+      wrap.append(caption, control); parent.append(wrap);
+    };
+    const makeGroup = (parent, title) => { const heading = document.createElement('h4'); heading.textContent = title; parent.replaceChildren(heading); };
+    makeGroup(target, 'Symptoms and findings');
+    makeEditor(target, 'Symptoms reported / recorded', 'reported', [...state.reported.map(labelFor), ...state.clinician.map(labelFor)].join(', '));
+    makeGroup(clinician, 'Clinical assessment');
+    makeEditor(clinician, 'Assessment', 'doctorAssessment', state.doctorAssessment);
+    makeEditor(clinician, 'Plan', 'plan', state.plan);
+    makeGroup(record, 'Patient and visit');
+    const patientLine = document.createElement('p'); patientLine.className = 'dw-review-static'; patientLine.textContent = 'Patient: ' + (selected ? selected.fullName : 'Not selected'); record.append(patientLine);
+    const visitLine = document.createElement('p'); visitLine.className = 'dw-review-static'; visitLine.textContent = 'Appointment: ' + (option?.dataset.when ? `${formatMoment(option.dataset.when)} · ${humanize(option.dataset.status || 'status unknown')}` : 'Not linked'); record.append(visitLine);
+    makeEditor(record, 'Duration (days)', 'duration', state.duration, false);
+    makeEditor(record, 'Clinical observations (one per line)', 'observations', state.observations.join('\n'));
+    makeEditor(record, 'Clinical note', 'note', state.note);
+    if (state.modelPreview) {
+      const model = document.createElement('div'); model.className = 'dw-review-model';
+      const heading = document.createElement('h4'); heading.textContent = 'Model suggestion';
+      const disease = document.createElement('p'); disease.textContent = state.modelPreview.output;
+      const note = document.createElement('p'); note.className = 'muted'; note.textContent = 'Model output is shown for clinician review; it is not a confirmed diagnosis.';
+      model.append(heading, disease, note); record.append(model);
     }
-    fillSummary($('reviewRecord'), recordRows);
-    renderChecks();
-    renderSideSummary();
+    renderChecks(); renderSideSummary();
   }
-
   function openReview() {
     showError('assessmentError', '');
     if (state.revisingSource?.latestRevisionId) {
