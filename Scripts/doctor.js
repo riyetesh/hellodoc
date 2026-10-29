@@ -917,20 +917,50 @@
 
   const slotForm = $('#slotForm');
   if (slotForm) {
+    const dateInput = $('#slotDate');
+    const timeInput = $('#slotTime');
+    const localDateValue = (date) => {
+      const offset = date.getTimezoneOffset();
+      return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
+    };
+    if (dateInput) dateInput.min = localDateValue(new Date());
+    slotForm.querySelectorAll('[data-slot-preset]').forEach((preset) => {
+      preset.addEventListener('click', () => {
+        if (timeInput) timeInput.value = preset.dataset.slotPreset;
+        timeInput?.focus();
+      });
+    });
     slotForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const button = event.target.querySelector('button');
+      const button = slotForm.querySelector('[type="submit"]');
+      const date = dateInput?.value;
+      const time = timeInput?.value;
+      if (!date || !time) {
+        message('Choose a date and start time.');
+        return;
+      }
+      const local = new Date(date + 'T' + time);
+      if (Number.isNaN(local.getTime()) || local <= new Date()) {
+        message('Choose a future date and time.');
+        return;
+      }
+      if (local.getMinutes() % 30 !== 0) {
+        message('Choose a time on the hour or half-hour.');
+        return;
+      }
       button.disabled = true;
+      button.dataset.originalText = button.textContent;
+      button.textContent = 'Adding slot…';
       try {
-        const local = new FormData(event.target).get('startsAt');
-        await request('/availability', { method: 'POST', body: JSON.stringify({ startsAt: new Date(local).toISOString() }) });
-        event.target.reset();
+        await request('/availability', { method: 'POST', body: JSON.stringify({ startsAt: local.toISOString() }) });
+        timeInput.value = '';
         await availability();
-        message('Slot saved. Patients can book it now.');
+        message('30-minute slot added.');
       } catch (error) {
         message(error.message);
       } finally {
         button.disabled = false;
+        button.textContent = button.dataset.originalText || 'Add 30-minute slot';
       }
     });
   }
