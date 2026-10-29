@@ -1151,3 +1151,249 @@
     margin-bottom: .35rem;
   }
 }
+
+
+/* ---------- Directory layout correction: compact, aligned, intentional ---------- */
+.hero {
+  padding: clamp(2rem, 4vw, 3.25rem) 0;
+}
+
+.hero-inner {
+  width: min(100% - 3rem, 1180px);
+  margin-inline: auto;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.hero-copy h1 {
+  max-width: 720px;
+  font-size: clamp(2.25rem, 4.1vw, 3.5rem);
+  line-height: 1.06;
+  letter-spacing: -.045em;
+}
+
+.hero-copy p {
+  max-width: 590px;
+  line-height: 1.65;
+}
+
+.hero-action {
+  margin-top: 1.25rem;
+}
+
+.hero-stats {
+  margin-top: 1.5rem;
+}
+
+.hero-art {
+  align-items: stretch;
+  gap: .75rem;
+}
+
+.hero-card {
+  max-width: 360px;
+  margin-left: auto;
+  padding: 1.1rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(22, 44, 88, .055);
+}
+
+.toolbar-wrap {
+  position: relative;
+  top: auto;
+  padding: 1.2rem 0 1.05rem;
+  background: #fff;
+  border-top: 1px solid #edf1f7;
+  border-bottom: 1px solid #e7ecf4;
+  box-shadow: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .9rem;
+  width: min(100% - 3rem, 1180px);
+  margin-inline: auto;
+}
+
+.toolbar .search {
+  width: 100%;
+  max-width: none;
+  flex: none;
+}
+
+.toolbar .search input {
+  min-height: 54px;
+  padding: .95rem 1rem .95rem 2.9rem;
+  border-radius: 14px;
+  border-color: #dfe6f0;
+  background: #f8fafc;
+  font-size: .96rem;
+}
+
+.toolbar-actions {
+  justify-content: flex-start;
+  gap: .65rem !important;
+}
+
+.toolbar-actions .availability-filter {
+  min-height: 42px;
+  padding: .25rem .65rem .25rem .8rem;
+  border-radius: 11px;
+  font-size: .76rem;
+}
+
+.toolbar-actions .availability-filter select {
+  font-size: .83rem;
+}
+
+.toolbar-actions .dropbtn,
+.toolbar-actions .filter-toggle {
+  min-height: 42px;
+  padding: .6rem .85rem;
+  border-radius: 11px;
+  font-size: .83rem;
+}
+
+.results {
+  width: min(100% - 3rem, 1180px);
+  margin-inline: auto;
+  padding: 1.8rem 0 4rem;
+}
+
+.results-head {
+  margin-bottom: .35rem;
+}
+
+.results-head h2 {
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  line-height: 1.2;
+}
+
+.results > .muted {
+  margin-bottom: 1.4rem !important;
+  font-size: .94rem !important;
+}
+
+.team-container {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr));
+  gap: 1.15rem;
+}
+
+.card {
+  border-radius: 16px;
+  border-color: #e5eaf2;
+  box-shadow: 0 4px 18px rgba(20, 39, 75, .045);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(20, 39, 75, .09);
+}
+
+@media (max-width: 860px) {
+  .hero-inner {
+    width: min(100% - 2rem, 720px);
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .hero-art {
+    display: none;
+  }
+
+  .hero-stats {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .toolbar {
+    width: min(100% - 2rem, 720px);
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .toolbar-actions .availability-filter {
+    flex: 0 0 auto;
+  }
+
+  .toolbar-actions .availability-filter select {
+    width: auto;
+  }
+
+  .results {
+    width: min(100% - 2rem, 720px);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 1.8rem 0 1.6rem;
+  }
+
+  .hero-inner {
+    width: calc(100% - 2rem);
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+  }
+
+  .hero-copy p {
+    font-size: .96rem;
+    margin-bottom: 1rem;
+  }
+
+  .toolbar-wrap {
+    padding: .85rem 0;
+  }
+
+  .toolbar {
+    width: calc(100% - 2rem);
+    gap: .7rem;
+  }
+
+  .toolbar-actions {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: .5rem !important;
+  }
+
+  .toolbar-actions .availability-filter {
+    flex: 1 1 calc(50% - .5rem);
+    min-width: 0;
+    justify-content: space-between;
+  }
+
+  .toolbar-actions .availability-filter select {
+    max-width: 110px;
+    min-width: 0;
+  }
+
+  .toolbar-actions .dropdown,
+  .toolbar-actions .dropbtn,
+  .toolbar-actions .filter-toggle {
+    width: auto;
+  }
+
+  .toolbar-actions .dropbtn,
+  .toolbar-actions .filter-toggle {
+    min-height: 40px;
+    padding: .55rem .7rem;
+    font-size: .78rem;
+  }
+
+  .results {
+    width: calc(100% - 2rem);
+    padding-top: 1.4rem;
+  }
+
+  .team-container {
+    grid-template-columns: 1fr;
+    gap: .9rem;
+  }
+}
