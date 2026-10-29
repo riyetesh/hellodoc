@@ -61,6 +61,15 @@
 
     <main class="container dw-main" id="workspace" hidden>
       <div id="clinicalPanels">
+        <!-- Doctor analytics belong above the appointment workspace. -->
+        <section class="dw-activity dw-activity--overview" id="doctorAnalytics" aria-labelledby="doctorAnalyticsTitle">
+          <div>
+            <p class="dw-eyebrow">Overview</p>
+            <h2 id="doctorAnalyticsTitle">Activity, last 30 days</h2>
+          </div>
+          <div id="analytics" class="dw-metrics"><span class="dw-state__text">Loading activity…</span></div>
+        </section>
+
         <!-- ============ Workspace: the appointments doctors work from ============ -->
         <section class="dw-section" id="doctorAppointments" aria-labelledby="appointmentsTitle">
           <div class="dw-section-head">
@@ -119,13 +128,6 @@
             <div class="dw-visits" id="appointments"></div>
           </div>
 
-          <div class="dw-activity" id="doctorAnalytics">
-            <div>
-              <h3>Activity, last 30 days</h3>
-              <p class="dw-activity__hint">Supporting information. Appointments above stay usable if this is unavailable.</p>
-            </div>
-            <div id="analytics" class="dw-metrics"><span class="dw-state__text">Loading activity…</span></div>
-          </div>
         </section>
 
         <!-- ============ Clinical records: one consultation at a time ============ -->
