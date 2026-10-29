@@ -1537,3 +1537,10 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 .page-head { padding-block: clamp(1.5rem, 3vw, 2.5rem); }
 .page-head h1 { letter-spacing: -.04em; }
 
+
+
+/* Compact round emergency launcher */
+.hd-sos-fab{width:60px;height:60px;min-width:60px;padding:0;display:grid;place-items:center;grid-template-columns:1fr;border-radius:50%;text-align:center;box-shadow:0 8px 28px rgba(116,20,16,.25)}
+.hd-sos-fab__label{font-size:.88rem;font-weight:900;letter-spacing:.04em}
+.hd-sos-fab__sub,.hd-sos-fab__pulse{display:none!important}
+@media(max-width:520px){.hd-sos-fab{width:54px;height:54px;min-width:54px;padding:0}}
