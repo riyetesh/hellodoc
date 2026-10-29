@@ -1408,3 +1408,11 @@ footer.site-footer .site-footer__col a:hover {
     flex-direction: column;
   }
 }
+
+
+/* Doctor directory profile photos */
+.lp-dir__item { display:flex; align-items:center; gap:0.9rem; }
+.lp-dir__avatar { display:block; flex:0 0 48px; width:48px; height:48px; object-fit:cover; border-radius:50%; background:var(--surface, #f2f5f8); }
+.lp-dir__details { min-width:0; flex:1; }
+.lp-dir__details .lp-dir__name, .lp-dir__details .lp-dir__meta { margin-top:0; }
+.lp-dir__details .lp-dir__meta { margin-bottom:0; }
