@@ -535,3 +535,49 @@
     border: 1px solid #ccc;
   }
 }
+
+/* Simple clinician prediction workflow and selectable report guidance. */
+.model-results-dialog {
+  width: min(900px, calc(100vw - 2rem)); max-width: 900px; max-height: min(88vh, 900px);
+  padding: 0; border: 1px solid var(--border, #dce5f3); border-radius: 18px;
+  color: var(--text, #233650); background: var(--surface, #fff);
+  box-shadow: 0 24px 80px rgba(20, 35, 60, .28); overflow: auto;
+}
+.model-results-dialog::backdrop { background: rgba(15, 28, 48, .58); backdrop-filter: blur(3px); }
+.model-results-dialog__close-form { position: sticky; top: 0; display: flex; justify-content: flex-end; height: 0; z-index: 2; }
+.model-results-dialog__close { margin: .7rem .7rem 0 0; width: 2.4rem; height: 2.4rem; border: 1px solid var(--border, #dce5f3); border-radius: 50%; background: #fff; font-size: 1.5rem; cursor: pointer; }
+.model-results-dialog__head { padding: 1.5rem 1.5rem .9rem; }
+.model-results-dialog__head h2 { margin: .2rem 0 .4rem; font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.model-results-dialog__head p:last-child { max-width: 65ch; color: var(--text-soft, #41536d); line-height: 1.5; }
+.model-results-dialog__disease { margin: 0 1.5rem 1rem; padding: 1rem 1.1rem; border: 1px solid #c9d9f7; border-radius: 12px; background: #f4f8ff; }
+.model-results-dialog__disease span { font-size: .78rem; color: var(--text-soft, #41536d); text-transform: uppercase; letter-spacing: .04em; }
+.model-results-dialog__disease h3 { margin: .3rem 0; font-size: 1.4rem; }
+.model-results-dialog__disease p { margin: 0; color: var(--text-soft, #41536d); font-size: .8rem; }
+.model-results-dialog__categories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; padding: 0 1.5rem; }
+.model-results-category { min-width: 0; border: 1px solid var(--border, #dce5f3); border-radius: 12px; padding: .9rem 1rem; }
+.model-results-category h3 { font-size: 1rem; margin: 0 0 .65rem; }
+.model-results-category ul { display: grid; gap: .6rem; padding: 0; margin: 0; list-style: none; }
+.model-results-category li label { display: flex; align-items: flex-start; gap: .6rem; line-height: 1.45; cursor: pointer; }
+.model-results-category input[type="checkbox"] { margin-top: .2rem; flex: 0 0 auto; }
+.model-results-category li span { overflow-wrap: anywhere; }
+.model-results-empty { font-size: .875rem; color: var(--text-soft, #41536d); }
+.model-results-dialog__notice { margin: 1rem 1.5rem 0; color: var(--text-soft, #41536d); font-size: .8rem; line-height: 1.5; }
+.model-results-dialog__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .65rem; padding: 1.1rem 1.5rem 1.4rem; }
+.dw-page #areaSymptoms .shortcut-strip, .dw-page #areaSymptoms .symptom-group--observed { display: none !important; }
+.dw-page #areaSymptoms .cw-split { display: block; }
+.dw-page #areaSymptoms .symptom-group--reported { margin-bottom: .75rem; }
+.dw-page #areaVisit .cw-area__lead, .dw-page #areaVisit #stageVisit { display: none; }
+.dw-page #areaVisit .cw-area__head { padding-bottom: .35rem; }
+.dw-page #areaVisit .cw-area__body { padding-top: .5rem; }
+.dw-page #areaDecision .cw-model { margin-top: 1rem; }
+.dw-page .cw-side__hint { line-height: 1.5; }
+.dw-page #reviewArea[hidden] { display: none !important; }
+@media (max-width: 640px) {
+  .model-results-dialog { width: calc(100vw - 1rem); max-height: 92vh; border-radius: 14px; }
+  .model-results-dialog__head { padding: 1.2rem 1rem .75rem; }
+  .model-results-dialog__disease { margin-inline: 1rem; }
+  .model-results-dialog__categories { grid-template-columns: minmax(0, 1fr); padding-inline: 1rem; }
+  .model-results-dialog__notice { margin-inline: 1rem; }
+  .model-results-dialog__actions { padding-inline: 1rem; }
+  .model-results-dialog__actions .btn { flex: 1 1 100%; }
+}
