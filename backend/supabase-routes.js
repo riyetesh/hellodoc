@@ -797,7 +797,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   };
   router.get('/doctor/patients', ...guard('doctor', async (req, res, care) => {
     const { db } = care;
-    const result = care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patients');
+    const result = care.demoMode ? await db.rpc('admin_demo_assigned_patients', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patients');
     if (result.error) return res.status(503).json({ message: 'Patient list unavailable' });
     res.json(result.data.map((row) => ({
       patientId: row.patient_id || row.id, fullName: row.full_name, email: row.email,
@@ -1263,9 +1263,9 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return res.status(404).json({ message:'Appointment not found' });
     const people = care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patient_names');
     if (people.error) return res.status(503).json({message:'Patient unavailable'});
-    const clinic = await db.rpc('doctor_clinic_patients');
+    const clinic = care.demoMode ? await db.rpc('admin_demo_clinic_patients', { p_doctor: care.demoDoctorId }) : await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
-    const names = new Map([...(people.data || []).map((p) => [p.id, p.full_name]), ...clinicRows.map((p) => [p.id, p.full_name])]);
+    const names = new Map([...(people.data || []).map((p) => [p.id || p.patient_id, p.full_name]), ...clinicRows.map((p) => [p.id, p.full_name])]);
     const patientId = result.data.patient_id || result.data.clinic_patient_id;
     res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:names.get(patientId) || 'Patient', walkIn:!result.data.patient_id } });
   }));
