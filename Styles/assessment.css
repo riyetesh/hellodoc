@@ -581,3 +581,45 @@
   .model-results-dialog__actions { padding-inline: 1rem; }
   .model-results-dialog__actions .btn { flex: 1 1 100%; }
 }
+
+
+/* Prediction results are part of the doctor workspace, not a separate popup. */
+.model-results-inline {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #dce5f3);
+  border-radius: 14px;
+  color: var(--text, #233650);
+  background: var(--surface, #fff);
+}
+.model-results-inline[hidden] { display: none !important; }
+.model-results-inline .model-results-dialog__head { padding: 0 0 .9rem; }
+.model-results-inline .model-results-dialog__head h4 { margin: .2rem 0 .4rem; font-size: 1.2rem; }
+.model-results-inline .model-results-dialog__disease { margin: 0 0 1rem; }
+.model-results-inline .model-results-dialog__disease h5 { margin: .3rem 0; font-size: 1.2rem; }
+.model-suggestion-add {
+  margin: 1rem 0 0;
+  padding: 1rem;
+  border: 1px dashed var(--border, #dce5f3);
+  border-radius: 12px;
+  background: #f8faff;
+}
+.model-suggestion-add h5 { margin: 0 0 .35rem; font-size: 1rem; }
+.model-suggestion-add > p { color: var(--text-soft, #41536d); font-size: .82rem; line-height: 1.5; }
+.model-suggestion-add__controls {
+  display: grid;
+  grid-template-columns: minmax(9rem, .8fr) minmax(12rem, 2fr) auto;
+  align-items: end;
+  gap: .75rem;
+}
+.model-suggestion-add__controls label { display: grid; gap: .35rem; font-size: .82rem; font-weight: 600; }
+.model-suggestion-add__controls input,
+.model-suggestion-add__controls select { width: 100%; min-width: 0; }
+.model-suggestion-add__status { margin: .5rem 0 0; min-height: 1.2em; font-size: .8rem; color: var(--text-soft, #41536d); }
+.model-results-inline .model-results-dialog__notice { margin-inline: 0; }
+.model-results-inline .model-results-dialog__actions { padding: 1rem 0 0; }
+@media (max-width: 720px) {
+  .model-results-inline .model-results-dialog__categories { grid-template-columns: minmax(0, 1fr); padding-inline: 0; }
+  .model-results-inline .model-results-dialog__disease { margin-inline: 0; }
+  .model-suggestion-add__controls { grid-template-columns: minmax(0, 1fr); }
+}
