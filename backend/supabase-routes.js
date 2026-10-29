@@ -118,6 +118,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         await handler(req, res, care);
         return;
       }
+      if (!care) return res.status(403).json({ message: 'Access denied' });
       if (roles && !roles.includes(care.profile.role)) return res.status(403).json({ message: 'Access denied' });
       await handler(req, res, care);
     } catch { res.status(503).json({ message: 'Service unavailable' }); }
@@ -130,6 +131,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         await handler(req, res, care);
         return;
       }
+      if (!care) return res.status(403).json({ message: 'Access denied' });
       if (role && care.profile.role !== role) return res.status(403).json({ message: 'Access denied' });
       if (role === 'doctor') {
         const approval = await care.db.from('doctor_profiles').select('verification_status').eq('user_id',care.user.id).single();
@@ -213,7 +215,9 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       return res.status(201).json({ authenticated: Boolean(data.session), verificationStatus: 'pending', redirectTo: data.session ? '/doctor.html' : null, message: data.session ? 'Doctor account created. Your verification is pending review.' : 'Check your email to confirm your account. Your doctor verification is saved as pending.' });
     } catch (error) { report('doctor_signup', error); return res.status(503).json({ message: 'Doctor registration unavailable. Please try again later.' }); }
   });
-  router.get('/doctor/application-status', ...session(['doctor','doctor_applicant'], async (req, res, { db, profile, user }) => {
+  router.get('/doctor/application-status', ...session(['doctor','doctor_applicant'], async (req, res, care) => {
+    const { db, profile, user } = care;
+    if (care.demoMode) return res.json({ role: 'doctor', approved: true, verificationStatus: 'demo', application: null, demoMode: true });
     const verified = await verificationOf(db, user.id);
     if (!verified.profile) return res.status(409).json({ code: 'APPLICATION_INCONSISTENT', message: 'Your doctor profile is incomplete. Contact support; do not create another account.' });
     const result = await db.from('doctor_applications').select('status,specialty,license_number,qualifications,institution,years_experience,review_reason,created_at,updated_at').eq('applicant_id', user.id).single();
@@ -227,7 +231,16 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   // The pending-verification dashboard: any doctor account can see its own status
   // and profile, but no appointments or clinical data until approved.
-  router.get('/doctor/overview', ...session(['doctor','doctor_applicant'], async (req, res, { db, user, profile }) => {
+  router.get('/doctor/overview', ...session(['doctor','doctor_applicant'], async (req, res, care) => {
+    const { db, user, profile } = care;
+    if (care.demoMode) {
+      return res.json({
+        profile: { firstName: profile.full_name.split(' ')[0], lastName: profile.full_name.split(' ').slice(1).join(' '), email: user.email, role: 'doctor' },
+        approved: true, verificationStatus: 'demo', specialty: care.demoDoctor.specialty || 'Demo workspace',
+        institution: care.demoDoctor.institution || null, application: null, canAttendConsultations: true,
+        appointments: [], demoMode: true, demoActor: req.care.user.id,
+      });
+    }
     const verified = await verificationOf(db, user.id);
     const application = await db.from('doctor_applications')
       .select('status,specialty,license_number,qualifications,institution,years_experience,review_reason,created_at,updated_at')
@@ -1255,6 +1268,15 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const result = await db.rpc('doctor_activity',{p_since:since,p_until:until});
     if (result.error) return res.status(503).json({message:'Analytics unavailable'});
     res.json(result.data);
+  }));
+  router.post('/admin/demo/start', ...guard('admin', async (req, res, { db }) => {
+    const target = req.body?.doctorId;
+    if (!isUuid(target)) return res.status(400).json({ message: 'Choose a valid doctor account.' });
+    const profile = await db.rpc('admin_demo_doctor_profile', { p_doctor: target });
+    if (profile.error || !profile.data) return res.status(404).json({ message: 'That doctor is unavailable for demo access.' });
+    const audited = await db.rpc('admin_demo_workspace_opened', { p_doctor: target });
+    if (audited.error) return res.status(503).json({ message: 'Could not record demo access.' });
+    res.json({ doctor: profile.data, demoMode: true, banner: 'ADMIN DEMO MODE — actions are attributed to the administrator.' });
   }));
   router.get('/admin/overview', ...guard('admin', async (req, res, { db }) => {
     const { since, until } = req.query;
