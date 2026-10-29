@@ -219,6 +219,7 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
   doc.drawText(MARGIN, doc.y, 'Clinical assessment', 20, true);
   doc.space(24);
   doc.paragraph(`Report generated ${dateText(generatedAt)}`, { size: 9, gray: 0.4 });
+  if (assessment.demoMode) doc.paragraph('ADMIN DEMO MODE — this report was generated in an administrator demo workspace.', { size: 11, bold: true, gray: 0.2 });
   doc.keyValue('Assessment', String(assessment.id || ''));
 
   doc.heading('Patient and consultation');
