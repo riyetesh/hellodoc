@@ -98,7 +98,7 @@
         el("strong", "", record.predictedDisease || "Clinical consultation"),
         el("span", "", `${record.doctorName} · ${dayMonthYear(record.recordedAt)}`)
       );
-      const meta = el("span", "record-card__meta", record.predictedDisease ? "Model guidance" : "Clinician notes");
+      const meta = el("span", "record-card__meta", record.demoMode ? "ADMIN DEMO · " + (record.predictedDisease ? "Model guidance" : "Clinician notes") : (record.predictedDisease ? "Model guidance" : "Clinician notes"));
       card.append(art, body, meta);
       list.append(card);
     }
@@ -166,6 +166,7 @@
     const badges = el("div", "record-actions");
     const recorded = el("span", "record-badge", `Recorded ${dayMonthYear(record.recordedAt)}`);
     badges.append(recorded);
+    if (record.demoMode) badges.append(el("span", "record-badge record-badge--none", "ADMIN DEMO RECORD"));
     if (record.modelStatus === "completed") {
       badges.append(el("span", "record-badge record-badge--model", "Model suggestion included"));
     } else {
