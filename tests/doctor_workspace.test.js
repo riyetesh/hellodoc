@@ -40,7 +40,7 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   const html = read('doctor.html');
   const script = read('Scripts/assessment.js');
   for (const [id, title] of [
-    ['areaVisit', 'Who this record is for'],
+    ['areaVisit', 'Patient details'],
     ['areaSymptoms', 'Add symptoms and duration'],
     ['areaDecision', 'Clinical assessment'],
   ]) {
