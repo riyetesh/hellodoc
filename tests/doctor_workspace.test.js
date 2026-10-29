@@ -64,6 +64,7 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   assert.equal(html.includes('id="modelResultsDialog"'), false);
   assert.ok(html.includes('id="modelDialogCategories"'));
   assert.ok(html.includes('id="modelSuggestionInput"'));
+  assert.ok(html.includes('<option value="observations">Clinical observation</option>'));
   assert.ok(html.includes('Confirm selected items'));
   assert.ok(script.includes("state.selectedGuidance = { precautions: [], medications: [], diet: [], workout: [] }"));
   assert.ok(html.includes('Duration (days)'));
