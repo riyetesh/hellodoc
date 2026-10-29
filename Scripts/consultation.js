@@ -110,15 +110,19 @@
       endDisplay.textContent = formatMoment(endedAt);
       statusDisplay.textContent = 'Ended';
 
-      const response = await fetch('/api/appointments/' + encodeURIComponent(context.appointmentId) + '/status', {
-        method: 'PATCH', credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
-      });
-      if (!response.ok) {
-        const problem = await response.json().catch(() => ({}));
-        throw new Error(problem.message || 'The report was saved, but the appointment status could not be updated.');
-      }
+      const updateStatus = async (status) => {
+        const response = await fetch('/api/appointments/' + encodeURIComponent(context.appointmentId) + '/status', {
+          method: 'PATCH', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status })
+        });
+        if (!response.ok) {
+          const problem = await response.json().catch(() => ({}));
+          throw new Error(problem.message || 'The report was saved, but the appointment status could not be updated.');
+        }
+      };
+      if (context.appointmentStatus === 'pending') await updateStatus('confirmed');
+      if (context.appointmentStatus !== 'completed') await updateStatus('completed');
 
       summary.textContent = 'Consultation ended at ' + formatMoment(endedAt) + '. The report is saved and available in the patient’s Health records.';
       summary.hidden = false;
@@ -144,6 +148,7 @@
   };
 
   const closeModal = () => {
+    const wasEnded = Boolean(endedAt);
     if (interval) window.clearInterval(interval);
     interval = null;
     if (modal.close && modal.open) modal.close();
@@ -158,6 +163,7 @@
       endDisplay.textContent = 'In progress';
       statusDisplay.textContent = 'Ready to start';
     }
+    if (wasEnded) window.location.reload();
   };
 
   startButton && startButton.addEventListener('click', openConsultation);
@@ -185,6 +191,5 @@
   if (patientSelect && window.MutationObserver) {
     new MutationObserver(syncDock).observe(patientSelect, { childList: true, subtree: true });
   }
-  window.addEventListener('hellodoc:consultation-ended', () => window.location.reload());
   syncDock();
 })();
