@@ -696,8 +696,9 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const selected = requested[key];
       if (!Array.isArray(selected) || selected.length > 100
         || selected.some((item) => typeof item !== 'string' || item.length > 500)) continue;
-      const allowed = new Set(Array.isArray(assessment[key]) ? assessment[key] : []);
-      result[key] = [...new Set(selected.filter((item) => allowed.has(item)))];
+      // The doctor may add their own guidance. Keep only non-empty strings,
+      // trim whitespace and de-duplicate; the UI sends checked items only.
+      result[key] = [...new Set(selected.map((item) => item.trim()).filter(Boolean))];
     }
     return result;
   };
