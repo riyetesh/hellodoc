@@ -657,3 +657,6 @@
 .model-results-inline .model-suggestion-add>p{display:none}
 .model-results-inline .model-results-dialog__actions{display:none}
 @media(max-width:650px){.consultation-wizard{gap:.2rem;padding:.25rem}.consultation-wizard__step{flex-direction:column;gap:.2rem;padding:.45rem .1rem;font-size:.68rem}.consultation-wizard__step svg{width:1.2rem;height:1.2rem}.dw-page .cw-area__body{padding:.8rem}.consultation-wizard__controls{position:sticky;bottom:.5rem;background:var(--surface,#fff);border-radius:10px;z-index:5}}
+
+/* Pastel red symptom tags */
+.symptom-picker .symptom-tag{background:#fff0f0!important;border-color:#f2c5c5!important;color:#733f45!important}
