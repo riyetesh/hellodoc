@@ -350,9 +350,24 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   });
   router.get('/doctors/:id/slots', async (req, res) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid doctor' });
-    const result = await client().rpc('public_slots',{ p_doctor:req.params.id });
-    if (result.error) return res.status(503).json({ message: 'Slots unavailable' });
-    res.json(result.data.map((s) => ({ id: s.id, startsAt: s.scheduled_start })));
+    const result = await client().rpc('public_slots', { p_doctor: req.params.id });
+    if (result.error) {
+      // Keep the browser message useful without exposing SQL or database details.
+      // The structured server log contains only the operation, error code and status.
+      report('public_slots', result.error);
+      const missingRpc = ['PGRST202', '42883'].includes(result.error.code);
+      return res.status(503).json({
+        code: missingRpc ? 'SLOTS_RPC_UNAVAILABLE' : 'SLOTS_UNAVAILABLE',
+        message: missingRpc
+          ? 'Appointment availability is being refreshed. Please retry in a moment.'
+          : 'Appointment availability is temporarily unavailable. Please try again.',
+      });
+    }
+    if (!Array.isArray(result.data)) {
+      report('public_slots_invalid_response', { code: 'INVALID_RPC_RESPONSE' });
+      return res.status(503).json({ code: 'SLOTS_UNAVAILABLE', message: 'Appointment availability is temporarily unavailable. Please try again.' });
+    }
+    res.json(result.data.map((slot) => ({ id: slot.id, startsAt: slot.scheduled_start })));
   });
   router.get('/patient/overview', ...guard('patient', async (req, res, { db, user, profile }) => {
     const result = await db.from('appointments').select('id,doctor_id,scheduled_start,status,reason').eq('patient_id',user.id).order('scheduled_start',{ ascending:false }).limit(100);
