@@ -70,6 +70,13 @@
           <div id="analytics" class="dw-metrics"><span class="dw-state__text">Loading activity…</span></div>
         </section>
 
+        <section class="assessment-recent dw-history" aria-labelledby="recentTitle" hidden id="recentSection">
+          <div class="dw-section-head">
+            <div><p class="dw-eyebrow">Clinical records</p><h2 id="recentTitle">History</h2></div>
+          </div>
+          <ul id="recentAssessments" class="assessment-recent-list"></ul>
+        </section>
+
         <!-- ============ Workspace: the appointments doctors work from ============ -->
         <section class="dw-section" id="doctorAppointments" aria-labelledby="appointmentsTitle">
           <div class="dw-section-head">
@@ -380,10 +387,7 @@
             </form>
           </div>
 
-          <section class="assessment-recent" aria-labelledby="recentTitle" hidden id="recentSection">
-            <h3 id="recentTitle">Recent records</h3>
-            <ul id="recentAssessments" class="assessment-recent-list"></ul>
-          </section>
+
         </section>
       </div>
 
@@ -453,7 +457,23 @@
     <!-- Walk-in registration: a clinical record for a patient with no account.
          Native <dialog> gives focus trapping, Escape and the inert background. -->
     <dialog class="walkin" id="walkinDialog" aria-labelledby="walkinTitle">
-      <form class="walkin-form" id="walkinForm" method="dialog" novalidate>
+      <section class="walkin-queue-pane" id="walkinQueuePane" aria-labelledby="walkinQueueTitle">
+        <div class="walkin-head">
+          <div><p class="dw-eyebrow">Live walk-in queue</p><h2 id="walkinQueueTitle">Patients waiting</h2><p class="walkin-sub">Review the waiting list before registering another walk-in patient.</p></div>
+          <button class="walkin-close" id="walkinQueueClose" type="button" aria-label="Close walk-in queue">&times;</button>
+        </div>
+        <div class="walkin-body">
+          <p class="walkin-state" id="walkinQueueState" role="status" aria-live="polite">Loading queue…</p>
+          <p class="walkin-error" id="walkinQueueError" role="alert" hidden></p>
+          <div class="walkin-queue-stack" id="walkinQueueList" aria-live="polite"></div>
+          <div class="walkin-empty" id="walkinQueueEmpty" hidden>No patients are waiting in your walk-in queue.</div>
+        </div>
+        <div class="walkin-actions"><div class="walkin-actions__buttons">
+          <button class="btn btn-outline" id="walkinQueueRefresh" type="button">Refresh queue</button>
+          <button class="btn btn-primary" id="walkinQueueContinue" type="button">Register a new patient →</button>
+        </div></div>
+      </section>
+      <form class="walkin-form" id="walkinForm" method="dialog" novalidate hidden>
         <div class="walkin-head">
           <div>
             <p class="dw-eyebrow">Walk-in</p>
@@ -561,7 +581,7 @@
     </aside>
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=workspace6"></script>
-    <script src="/Scripts/walkin.js?v=workspace4"></script>
+    <script src="/Scripts/walkin.js?v=queue1"></script>
     <script src="/Scripts/assessment.js?v=workspace11"></script>
     <script src="/Scripts/nav.js?v=docbot1"></script>
 
