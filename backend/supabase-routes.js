@@ -4,7 +4,7 @@ const { modelRequest, validSymptoms, symptomVocabulary } = require('./model-clie
 const { renderAssessmentReport } = require('./report-pdf');
 
 const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
-const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY, origin = process.env.APP_ORIGIN }) {
   if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY required');
   // Derive the Secure flag from the trusted public origin rather than NODE_ENV
