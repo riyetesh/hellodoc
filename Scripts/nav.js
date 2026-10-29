@@ -379,8 +379,6 @@
   // Emergency access is intentionally separate from HelloDoc's routine-care flow.
   // Browser locale is only a hint, never proof of the user's physical location.
   function initEmergencyAccess() {
-    // The floating SOS control has been removed from the site navigation.
-    return;
     if (document.getElementById("hdEmergencyRoot")) return;
     const countryHints = {
       FI:"fi", SE:"eu", NO:"eu", DK:"eu", IS:"eu", DE:"eu", FR:"eu", ES:"eu", IT:"eu",
@@ -455,12 +453,6 @@
     country.addEventListener("change", () => { try { localStorage.setItem("hellodoc-emergency-country", country.value); } catch {} updateNumber(); });
     service.addEventListener("change", updateNumber);
     document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !dialog.hidden) closeDialog(); });
-    const navActions = document.querySelector("#navActions");
-    if (navActions) {
-      const navButton = document.createElement("button"); navButton.className="hd-sos-nav"; navButton.type="button";
-      navButton.textContent="SOS"; navButton.setAttribute("aria-label","Open emergency calling options");
-      navButton.addEventListener("click", openDialog); navActions.prepend(navButton);
-    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
