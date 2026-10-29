@@ -1221,10 +1221,20 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   router.post('/admin/actions', ...guard('admin', async (req, res, { db }) => {
     const { action, target, reason, details = {} } = req.body || {};
-    if (!['approve_doctor','reject_doctor','request_resubmission','suspend','reactivate','update_doctor','cancel_appointment'].includes(action) || !isUuid(target) || typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 500 || !details || typeof details !== 'object' || Array.isArray(details)) return res.status(400).json({ message: 'Valid target, action and review reason required' });
-    const result = await db.rpc('admin_action', { p_action: action, p_target: target, p_reason: reason.trim(), p_details: details });
-    if (result.error) return res.status(409).json({ message: 'Action refused. Check verification, account and appointment state.' });
-    res.json({ message: 'Administrative action saved and audited.' });
+    if (!['approve_doctor','reject_doctor','request_resubmission','suspend','reactivate','update_doctor','cancel_appointment','edit_user','delete_user'].includes(action) || !isUuid(target) || typeof reason !== 'string' || reason.trim().length < 5 || reason.length > 500 || !details || typeof details !== 'object' || Array.isArray(details)) return res.status(400).json({ message: 'Valid target, action and review reason required' });
+    let result;
+    if (action === 'edit_user') {
+      const fullName = typeof details.fullName === 'string' ? details.fullName.trim() : '';
+      const phone = typeof details.phone === 'string' ? details.phone.trim() : '';
+      if (!fullName || fullName.length > 200 || phone.length > 40) return res.status(400).json({ message: 'Enter a valid name and phone number.' });
+      result = await db.rpc('admin_update_user', { p_target: target, p_full_name: fullName, p_phone: phone || null });
+    } else if (action === 'delete_user') {
+      result = await db.rpc('admin_delete_user', { p_target: target, p_reason: reason.trim() });
+    } else {
+      result = await db.rpc('admin_action', { p_action: action, p_target: target, p_reason: reason.trim(), p_details: details });
+    }
+    if (result.error) { report('admin_action', result.error); return res.status(409).json({ message: action === 'delete_user' ? 'Account could not be deleted. It may have linked records that require retention.' : 'Action refused. Check verification, account and appointment state.' }); }
+    res.json({ message: action === 'delete_user' ? 'Account deletion completed and audited.' : 'Administrative action saved and audited.' });
   }));
   return router;
 };
