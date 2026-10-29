@@ -313,6 +313,10 @@
       });
       row.appendChild(chip);
     });
+    // Select the earliest available date immediately so its time slots are
+    // visible as soon as the booking dialog opens; users can still choose another day.
+    const firstDate = row.querySelector(".date-chip");
+    if (firstDate) firstDate.click();
   }
 
   function buildSlotGrid() {
