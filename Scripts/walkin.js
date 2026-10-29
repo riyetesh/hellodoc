@@ -350,6 +350,8 @@
 
   function showDone(patient) {
     chosen = patient;
+    const queuePane = $('walkinQueuePane');
+    if (queuePane) queuePane.hidden = true;
     form.hidden = true;
     done.hidden = false;
     const facts = [
@@ -453,7 +455,9 @@
     matches = [];
     chosen = null;
     key = crypto.randomUUID();
-    form.hidden = false;
+    form.hidden = true;
+    const queuePane = $('walkinQueuePane');
+    if (queuePane) queuePane.hidden = false;
     done.hidden = true;
     slotSelect.disabled = false;
     bookButton.disabled = false;
@@ -464,7 +468,10 @@
   function open() {
     reset();
     dialog.showModal();
-    nameInput.focus();
+    const queuePane = $('walkinQueuePane');
+    if (queuePane) queuePane.hidden = false;
+    form.hidden = true;
+    done.hidden = true;
     probe();
   }
 
@@ -475,6 +482,15 @@
   }
 
   openButton.addEventListener('click', open);
+  $('walkinQueueContinue')?.addEventListener('click', () => {
+    const queuePane = $('walkinQueuePane');
+    if (queuePane) queuePane.hidden = true;
+    form.hidden = false;
+    nameInput.focus();
+    probe();
+  });
+  $('walkinQueueClose')?.addEventListener('click', close);
+  $('walkinQueueRefresh')?.addEventListener('click', () => window.HelloDocWalkinQueue?.refresh());
   $('walkinClose').addEventListener('click', close);
   $('walkinCancel').addEventListener('click', close);
   $('walkinFinish').addEventListener('click', () => { refreshWorkspace(); close(); });
