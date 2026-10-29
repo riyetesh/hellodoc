@@ -895,7 +895,6 @@
     ]);
     fillSummary($('reviewClinician'), [
       ['Assessment', state.doctorAssessment.trim() || 'Not recorded'],
-      ['Plan', state.plan.trim() || 'Not recorded'],
     ]);
     const recordRows = [
       ['Patient', selected ? selected.fullName : 'Not selected'],
