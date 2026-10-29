@@ -17,6 +17,14 @@
     </section>`;
   document.body.appendChild(root);
   const panel = root.querySelector(".hd-docbot-panel"), launcher = root.querySelector(".hd-docbot-launcher");
+  if (document.body.classList.contains("dw-page")) {
+    const dock = document.getElementById("consultationDock");
+    if (dock && window.MutationObserver) {
+      const syncDock = () => root.classList.toggle("hd-docbot-with-dock", !dock.hidden);
+      syncDock();
+      new MutationObserver(syncDock).observe(dock, { attributes: true, attributeFilter: ["hidden"] });
+    }
+  }
   const messages = root.querySelector(".hd-docbot-messages"), input = root.querySelector("#hdDocBotInput");
   const faq = [
     {k:["book","booking","appointment","schedule","available slot","find a doctor"],a:"To book a visit, sign in as a patient, open Find a Doctor, choose an approved doctor, select View times, pick an available slot, and confirm. Your booking appears under My Appointments.",u:"dashboard.html",l:"Find a doctor"},
