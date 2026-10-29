@@ -600,8 +600,8 @@
       text.textContent = 'You can still record observations, a clinical note, an assessment and a plan. Saving that record stores no prediction.';
     } else if (state.modelPreview) {
       box.dataset.state = 'ready';
-      title.textContent = 'Model suggestion loaded';
-      text.textContent = 'This is a preview. Saving runs the model again and stores the result with your record.';
+      title.textContent = 'Prediction ready';
+      text.textContent = '';
     } else {
       box.dataset.state = 'ready';
       title.textContent = `Symptom search ready · ${state.vocabulary.symptoms.length} model symptoms`;
@@ -715,30 +715,36 @@
     ['workout', 'Exercise suggestions'],
   ];
 
+  let activeGuidanceCategory = 'precautions';
   function renderPredictionDialog() {
     const preview = state.modelPreview;
     const panel = $('modelResultsPanel');
     const disease = $('modelDialogDisease');
     const meta = $('modelDialogMeta');
     const categories = $('modelDialogCategories');
-    const filter = $('guidanceCategorySelect');
+    const modalTitle = $('guidanceModalTitle');
+    const categoryInput = $('modelSuggestionCategory');
     if (!panel || !disease || !meta || !categories || !preview) return;
     panel.hidden = false;
     disease.textContent = preview.output;
     meta.textContent = `Model ${preview.modelVersion} · Duration: ${state.duration.trim() || "not provided"} days`;
     categories.replaceChildren();
-    const key = ['precautions', 'medications', 'diet', 'workout'].includes(filter?.value) ? filter.value : 'precautions';
+    const key = activeGuidanceCategory;
     const title = guidanceGroups.find(([group]) => group === key)?.[1] || 'Precautions';
+    if (modalTitle) modalTitle.textContent = title;
+    if (categoryInput) categoryInput.value = key;
+    document.querySelectorAll('[data-guidance-category]').forEach((button) => {
+      const active = button.dataset.guidanceCategory === key;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
     const section = document.createElement('section');
     section.className = 'model-results-category';
-    const heading = document.createElement('h3');
-    heading.textContent = title;
-    section.append(heading);
     const items = preview[key] || [];
     if (!items.length) {
       const empty = document.createElement('p');
       empty.className = 'model-results-empty';
-      empty.textContent = 'No items available.';
+      empty.textContent = 'No items yet. Add one below.';
       section.append(empty);
     } else {
       const list = document.createElement('ul');
@@ -766,6 +772,13 @@
       section.append(list);
     }
     categories.append(section);
+  }
+  function openGuidanceCategory(key) {
+    if (!['precautions', 'medications', 'diet', 'workout'].includes(key) || !state.modelPreview) return;
+    activeGuidanceCategory = key;
+    renderPredictionDialog();
+    const modal = $('guidanceModal');
+    if (modal && !modal.open) modal.showModal();
   }
   function closePredictionDialog() {
     const target = $('areaSymptoms');
@@ -1259,35 +1272,13 @@
 
   $('modelSuggestionAdd')?.addEventListener('click', () => {
     const input = $('modelSuggestionInput');
-    const category = $('modelSuggestionCategory')?.value;
+    const category = $('modelSuggestionCategory')?.value || activeGuidanceCategory;
     const value = input?.value.trim();
     const status = $('modelSuggestionStatus');
-    if (!state.modelPreview || !['observations', 'precautions', 'medications', 'diet', 'workout'].includes(category)) return;
+    if (!state.modelPreview || !['precautions', 'medications', 'diet', 'workout'].includes(category)) return;
     if (!value) {
       if (status) status.textContent = 'Enter text first.';
       input?.focus();
-      return;
-    }
-    if (category === 'observations') {
-      if (value.length > 200) {
-        if (status) status.textContent = 'Clinical observations must be 200 characters or fewer.';
-        return;
-      }
-      if (state.observations.includes(value)) {
-        if (status) status.textContent = 'That observation is already listed.';
-        return;
-      }
-      if (state.observations.length >= MAX_OBSERVATIONS) {
-        if (status) status.textContent = `Limit observations to ${MAX_OBSERVATIONS} entries.`;
-        return;
-      }
-      state.observations.push(value);
-      renderObservations();
-      input.value = '';
-      if (status) status.textContent = 'Clinical observation added to the report.';
-      markDirty();
-      renderSideSummary();
-      input.focus();
       return;
     }
     if (value.length > 500) {
@@ -1301,10 +1292,11 @@
     state.modelPreview[category].push(value);
     state.selectedGuidance[category].push(value);
     input.value = '';
-    if (status) status.textContent = 'Added and checked. Uncheck it if you do not want it in the report.';
+    if (status) status.textContent = 'Added and selected for the report.';
     renderPredictionDialog();
     markDirty();
     renderSideSummary();
+    input.value = '';
     input.focus();
   });
   $('modelSuggestionInput')?.addEventListener('keydown', (event) => {
@@ -1350,7 +1342,13 @@
   document.querySelectorAll('[data-wizard-go]').forEach((button) => {
     button.addEventListener('click', () => { const target = Number(button.dataset.wizardGo); if (target <= activeWizardStep) setWizardStep(target); });
   });
-  $('guidanceCategorySelect')?.addEventListener('change', renderPredictionDialog);
+  document.querySelectorAll('[data-guidance-category]').forEach((button) => {
+    button.addEventListener('click', () => openGuidanceCategory(button.dataset.guidanceCategory));
+  });
+  $('guidanceModalClose')?.addEventListener('click', () => $('guidanceModal')?.close());
+  $('guidanceModal')?.addEventListener('click', (event) => {
+    if (event.target === $('guidanceModal')) $('guidanceModal').close();
+  });
 
   // ------------------------------------------------------------------ init ---
   async function load() {
