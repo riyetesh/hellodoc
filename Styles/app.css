@@ -721,6 +721,135 @@ hr.soft {
   white-space: nowrap;
 }
 
+/* The chip carries a CSS caret so the menu affordance never depends on an
+   icon font that individual pages may not load. */
+.account-menu .user-chip i {
+  display: none;
+}
+
+.account-menu .user-chip::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin: 0 0.3rem 0.2rem 0.1rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.18s var(--ease);
+}
+
+.account-menu .user-chip[aria-expanded="true"]::after {
+  margin-bottom: -0.15rem;
+  transform: rotate(-135deg);
+}
+
+.account-menu .user-chip[aria-expanded="true"] {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.account-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.account-menu__panel {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 1100;
+  width: max-content;
+  min-width: 244px;
+  max-width: min(300px, calc(100vw - 2rem));
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.account-menu__identity {
+  display: grid;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  padding: 0.55rem 0.7rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-menu__identity strong {
+  color: var(--text);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.account-menu__identity span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.account-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-menu__item:hover,
+.account-menu__item:focus-visible {
+  background: var(--surface-2);
+  color: var(--brand);
+}
+
+.account-menu__item--danger,
+.account-menu__signout {
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  color: var(--danger);
+}
+
+.account-menu__item--danger:hover,
+.account-menu__signout:hover,
+.account-menu__signout:focus-visible {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.account-menu__signout:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.account-menu__status {
+  margin: 0.2rem 0.1rem 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: #8a2c2c;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1200px) {
+  .account-menu__panel {
+    right: auto;
+    left: 0;
+  }
+}
+
 /* ============================================================
    Buttons
    ============================================================ */

@@ -97,12 +97,9 @@
       current = { ...current, firstName: result.firstName, lastName: result.lastName, phone: result.phone || "" };
       prefill(current);
       showMessage(messageNode, "Your details are up to date.");
-      // Keep the rail account area consistent with the saved name.
+      // Keep the shared navbar and account menu consistent with the saved name.
       const savedName = window.PatientShell.pretty([current.firstName, current.lastName].filter(Boolean).join(" ") || "Patient");
-      const railName = $("#railName");
-      const railAvatar = $("#railAvatar");
-      if (railName) railName.textContent = savedName;
-      if (railAvatar) railAvatar.textContent = savedName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "P";
+      window.PatientShell.setIdentity(savedName, current.email);
     } catch (error) {
       showMessage(messageNode, error.message || "Your changes could not be saved. Check your connection and try again.", true);
     } finally {
@@ -114,7 +111,7 @@
   document.addEventListener("DOMContentLoaded", async () => {
     $("#accountForm").addEventListener("submit", save);
 
-    // The shell owns session verification, the rail account area and sign-out.
+    // The shell owns session verification; nav.js owns navigation and sign-out.
     const session = await window.PatientShell.start();
     if (!session || session.redirecting) return;
     if (session.error) {
@@ -125,7 +122,14 @@
     current = session.profile || { email: session.identity?.email || "" };
     prefill(current);
 
+    // One sign-out implementation for the whole site: the shared navbar's.
     const signOut = $("#accountSignOut");
-    signOut.addEventListener("click", () => $("#patientSignOut").click());
+    signOut.addEventListener("click", () => {
+      if (window.HelloDocAuth && typeof window.HelloDocAuth.signOut === "function") {
+        window.HelloDocAuth.signOut(signOut);
+        return;
+      }
+      showMessage($("#portalMessage"), "Sign out is unavailable right now. Reload the page and try again.", true);
+    });
   });
 })();

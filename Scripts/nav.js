@@ -13,6 +13,48 @@
 
   const $ = (sel) => document.querySelector(sel);
 
+  // The patient area's primary navigation, defined once here instead of being
+  // copied into every patient page. Account settings and sign-out deliberately
+  // live in the account menu, never among the health destinations.
+  const PATIENT_LINKS = [
+    { href: "patient.html", label: "Dashboard" },
+    { href: "dashboard.html", label: "Find a doctor" },
+    { href: "appointments.html", label: "My appointments", badge: true },
+    { href: "records.html", label: "Health records" },
+    { href: "walkin.html", label: "Walk-in queue" },
+  ];
+
+  const ROLE_LINKS = {
+    patient: [{ href: "account.html", label: "Account and settings" }],
+    doctor: [{ href: "doctor.html", label: "Doctor workspace" }],
+    admin: [{ href: "/admin", label: "Administration" }],
+  };
+
+  function initPatientNav() {
+    if (!document.body || !document.body.classList.contains("patient-page")) return;
+    const links = $("#navLinks");
+    if (!links) return;
+    links.dataset.nav = "patient";
+    links.replaceChildren(
+      ...PATIENT_LINKS.map(({ href, label, badge }) => {
+        const item = document.createElement("li");
+        const anchor = document.createElement("a");
+        anchor.className = "nav-link";
+        anchor.href = href;
+        anchor.textContent = label;
+        if (badge) {
+          const count = document.createElement("span");
+          count.className = "nav-badge";
+          count.dataset.apptBadge = "";
+          count.textContent = "0";
+          anchor.append(count);
+        }
+        item.append(anchor);
+        return item;
+      })
+    );
+  }
+
   // Below the collapse breakpoint the canonical navbar becomes a menu behind a
   // conventional menu button, so the logo stays a plain home link at every
   // width. The breakpoint must match Styles/app.css (1200px).
@@ -130,7 +172,169 @@
     }
 
     window.dispatchEvent(new CustomEvent("hellodoc:user", { detail: { name: pretty, email } }));
+    return pretty;
   }
+
+  /* ------------------------------------------------------------
+     Account menu: the single place where account settings and
+     sign-out live, for every role and every page.
+     ------------------------------------------------------------ */
+  async function signOut(button) {
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Signing out…";
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      // The server clears the cookies even when revocation fails, so the
+      // visitor leaves the protected page either way.
+      if (!response.ok && response.status >= 500) {
+        window.location.replace("/login.html");
+        return;
+      }
+      window.location.replace("/index.html");
+    } catch {
+      button.disabled = false;
+      button.textContent = original;
+      const note = $("#accountMenuStatus");
+      if (note) {
+        note.hidden = false;
+        note.textContent = "Sign out could not be completed. Check your connection and try again.";
+      }
+    }
+  }
+
+  function menuItem(tag, label, extraClass) {
+    const node = document.createElement(tag);
+    node.className = `account-menu__item${extraClass ? ` ${extraClass}` : ""}`;
+    node.textContent = label;
+    node.setAttribute("role", "menuitem");
+    return node;
+  }
+
+  function buildAccountMenu(role, name, email) {
+    const chip = $("#userChip");
+    if (!chip || chip.dataset.accountMenu === "ready") return;
+    chip.dataset.accountMenu = "ready";
+
+    const menu = document.createElement("div");
+    menu.className = "account-menu";
+    chip.parentNode.insertBefore(menu, chip);
+    menu.append(chip);
+
+    const panel = document.createElement("div");
+    panel.className = "account-menu__panel";
+    panel.id = "accountMenuPanel";
+    panel.hidden = true;
+    panel.setAttribute("role", "menu");
+    panel.setAttribute("aria-label", "Account menu");
+
+    const identity = document.createElement("div");
+    identity.className = "account-menu__identity";
+    const display = document.createElement("strong");
+    display.id = "accountMenuName";
+    display.textContent = name;
+    const mail = document.createElement("span");
+    mail.id = "accountMenuEmail";
+    mail.textContent = email || "";
+    identity.append(display, mail);
+    panel.append(identity);
+
+    const currentPage = (window.location.pathname.split("/").pop() || "").toLowerCase();
+    for (const item of ROLE_LINKS[role] || []) {
+      const link = menuItem("a", item.label);
+      link.href = item.href;
+      if (item.href.replace(/^\/+/, "").toLowerCase() === currentPage) {
+        link.setAttribute("aria-current", "page");
+      }
+      panel.append(link);
+    }
+
+    const note = document.createElement("p");
+    note.className = "account-menu__status";
+    note.id = "accountMenuStatus";
+    note.setAttribute("role", "alert");
+    note.hidden = true;
+
+    const out = menuItem("button", "Sign out", "account-menu__signout");
+    out.type = "button";
+    out.addEventListener("click", () => signOut(out));
+
+    panel.append(note, out);
+    menu.append(panel);
+
+    chip.setAttribute("aria-haspopup", "menu");
+    chip.setAttribute("aria-controls", "accountMenuPanel");
+    chip.setAttribute("aria-expanded", "false");
+
+    function closeMenu(returnFocus) {
+      if (panel.hidden) return;
+      panel.hidden = true;
+      chip.setAttribute("aria-expanded", "false");
+      if (returnFocus) chip.focus();
+    }
+
+    function openMenu() {
+      panel.hidden = false;
+      chip.setAttribute("aria-expanded", "true");
+      const first = panel.querySelector('[role="menuitem"]');
+      if (first) first.focus();
+    }
+
+    chip.addEventListener("click", () => (panel.hidden ? openMenu() : closeMenu(false)));
+
+    document.addEventListener("click", (event) => {
+      if (!panel.hidden && !menu.contains(event.target)) closeMenu(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (panel.hidden) return;
+      if (event.key === "Escape") {
+        closeMenu(true);
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const items = Array.from(panel.querySelectorAll('[role="menuitem"]'));
+      if (!items.length) return;
+      event.preventDefault();
+      const current = items.indexOf(document.activeElement);
+      const next =
+        event.key === "ArrowDown"
+          ? (current + 1) % items.length
+          : (current - 1 + items.length) % items.length;
+      items[next].focus();
+    });
+
+    panel.addEventListener("keydown", (event) => {
+      if (event.key === "Tab") closeMenu(false);
+    });
+  }
+
+  // The patient shell reports a saved name change so the chip and the menu
+  // identity stay in step without a second account implementation.
+  window.addEventListener("hellodoc:identity", (event) => {
+    const { name, email } = event.detail || {};
+    if (name) {
+      const label = $("#userName");
+      const avatar = $("#userAvatar");
+      const menuName = $("#accountMenuName");
+      if (label) label.textContent = name;
+      if (avatar) avatar.textContent = name.trim().charAt(0).toUpperCase() || "U";
+      if (menuName) menuName.textContent = name;
+    }
+    if (email) {
+      const menuEmail = $("#accountMenuEmail");
+      const chip = $("#userChip");
+      if (menuEmail) menuEmail.textContent = email;
+      if (chip) chip.title = email;
+    }
+  });
+
+  window.HelloDocAuth = { signOut };
 
   async function initAuth() {
     try {
@@ -141,7 +345,8 @@
         const name =
           (data.user && data.user.firstName) ||
           (email ? email.split("@")[0].replace(/[._]/g, " ") : "there");
-        showUser(name, email);
+        const label = showUser(name, email);
+        buildAccountMenu(data.role, label, email);
         const chip = $("#userChip");
         if (chip) chip.dataset.role = data.role;
         if (data.role === "doctor" && !/\/doctor\.html$/.test(window.location.pathname)) {
@@ -153,9 +358,15 @@
             item.append(anchor); links.append(item);
           }
         }
-        if (data.role === "patient") {
+        // Patient pages already carry the full patient navigation in the same
+        // navbar, so the extra entry point is only added on public pages.
+        if (data.role === "patient" && !document.body.classList.contains("patient-page")) {
           const link = document.createElement("li");
-          link.innerHTML = '<a href="patient.html" class="nav-link">My health</a>';
+          const anchor = document.createElement("a");
+          anchor.href = "patient.html";
+          anchor.className = "nav-link";
+          anchor.textContent = "My health";
+          link.append(anchor);
           const links = document.querySelector("#navLinks");
           if (links && !links.querySelector('a[href="patient.html"]')) links.appendChild(link);
         }
@@ -164,15 +375,6 @@
       // Backend unreachable, keep the guest buttons.
     }
   }
-
-  function initUserChip() {
-    const chip = $("#userChip");
-    if (!chip) return;
-    chip.addEventListener("click", () => {
-      window.location.href = chip.dataset.role === 'admin' ? '/admin' : chip.dataset.role === 'doctor' ? 'doctor.html' : 'patient.html';
-    });
-  }
-
 
   // Emergency access is intentionally separate from HelloDoc's routine-care flow.
   // Browser locale is only a hint, never proof of the user's physical location.
@@ -263,9 +465,9 @@
     initMenu();
     initEmergencyAccess();
     initScrollShadow();
+    initPatientNav();
     initActiveLink();
     initBadge();
-    initUserChip();
     initAuth();
   });
 })();

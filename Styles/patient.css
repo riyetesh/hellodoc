@@ -44,158 +44,11 @@
   transform: translateY(0);
 }
 
-/* ---------- Workspace: shared rail + page ---------- */
-.patient-workspace {
-  display: grid;
-  grid-template-columns: 244px minmax(0, 1fr);
-  align-items: start;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  padding-top: clamp(1.5rem, 4vw, 2.75rem);
-  padding-bottom: 3rem;
-}
-
-.patient-rail {
-  position: sticky;
-  top: 92px;
-  display: grid;
-  gap: 1.1rem;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
-}
-
-.patient-rail__title {
-  padding: 0 0.5rem;
-  color: var(--muted);
-  font-size: var(--text-scale-1);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: none;
-}
-
-.patient-rail__nav {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.patient-rail__link {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 42px;
-  padding: 0.55rem 0.6rem;
-  border-radius: var(--radius-sm);
-  color: var(--text-soft);
-  font-size: var(--text-scale-4);
-  font-weight: 600;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
-}
-
-.patient-rail__link i {
-  width: 18px;
-  text-align: center;
-  color: var(--muted);
-}
-
-.patient-rail__link:hover {
-  background: var(--surface-2);
-  color: var(--brand);
-}
-
-.patient-rail__link:hover i {
-  color: var(--brand);
-}
-
-.patient-rail__link.active {
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-
-.patient-rail__link.active i {
-  color: var(--brand);
-}
-
-/* The account block is deliberately fenced off from primary navigation:
-   health destinations above, identity and sign-out below. */
-.patient-rail__account {
-  display: grid;
-  gap: 0.5rem;
-  padding-top: 0.9rem;
-  border-top: 1px solid var(--border);
-}
-
-.patient-rail__identity {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0 0.4rem;
-  min-width: 0;
-}
-
-.patient-rail__avatar {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand), var(--teal));
-  color: #fff;
-  font-weight: 700;
-  font-size: var(--text-scale-4);
-}
-
-.patient-rail__identity-text {
-  min-width: 0;
-}
-
-.patient-rail__identity-text strong,
-.patient-rail__identity-text small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.patient-rail__identity-text strong {
-  color: var(--text);
-  font-size: var(--text-scale-3);
-}
-
-.patient-rail__identity-text small {
-  color: var(--muted);
-  font-size: var(--text-scale-1);
-}
-
-.patient-rail__signout {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 40px;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: var(--text-scale-3);
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.patient-rail__signout:hover {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
-.patient-rail__signout:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
+/* ---------- Page layout ----------
+   The patient area runs inside the website's universal navbar and a single
+   centred content column. There is no patient sidebar: health destinations
+   are navbar links (built once in Scripts/nav.js) and account actions belong
+   to the shared account menu. */
 
 /* ---------------------------------------------------------------
    Shared rules other HelloDoc pages still load from this file
@@ -216,13 +69,14 @@
 .patient-panel article strong, .patient-panel article span { display: block; }
 .patient-panel article span { color: var(--muted); font-size: var(--text-scale-3); }
 
-/* Patient workspace main column (scoped so it cannot restyle the above). */
+/* Patient page column (scoped so it cannot restyle the shared rules above). */
 .patient-page .patient-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-top: 0;
+  gap: 1.35rem;
+  padding-top: clamp(1.5rem, 4vw, 2.5rem);
+  padding-bottom: 3rem;
 }
 
 /* ---------- Shared bits ---------- */
@@ -417,17 +271,26 @@
 /* ---------- Welcome ---------- */
 .patient-welcome {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
+  padding: clamp(1.25rem, 2.6vw, 1.85rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.patient-welcome__copy {
+  min-width: 0;
 }
 
 .patient-welcome h1 {
-  max-width: 20ch;
+  max-width: 24ch;
   color: var(--text);
-  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  font-size: clamp(1.5rem, 3vw, 2rem);
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 .patient-welcome__copy > p:last-child {
@@ -446,7 +309,9 @@
 /* ---------- Care summary ---------- */
 .patient-summary {
   display: grid;
-  grid-template-columns: minmax(1.5fr, 2fr) repeat(2, minmax(150px, 0.85fr));
+  /* A flexible minimum is not valid inside minmax(), so the next-visit summary
+     stretches with a 0 minimum instead of silently collapsing to one column. */
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(150px, 0.85fr));
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1424,39 +1289,20 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1000px) {
-  .patient-workspace {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-
-  .patient-rail {
-    position: static;
-  }
-
-  .patient-rail__nav {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-
-  .patient-rail__account {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-  }
-
-  .patient-rail__account .patient-rail__link {
-    grid-column: 1 / -1;
-  }
-
   .patient-content-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .patient-welcome {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
+}
+
+@media (max-width: 760px) {
 
   .patient-summary {
     grid-template-columns: 1fr 1fr;

@@ -1,9 +1,9 @@
 /* ============================================================
-   HelloDoc - Patient workspace shell
-   Shared by every patient page: confirms the session really is a
-   patient, fills the account area in the rail, and owns the one
-   sign-out implementation. Sign-out lives here, away from the
-   healthcare navigation, so it is never mixed with a care action.
+   HelloDoc - Patient session shell
+   Shared by every patient page. It verifies server-side that the
+   session really is a patient, loads the profile and publishes the
+   patient's name. Navigation, the account menu and sign-out belong
+   to Scripts/nav.js so there is exactly one implementation.
    ============================================================ */
 (function () {
   "use strict";
@@ -57,87 +57,32 @@
     return full || (identity?.user?.firstName || "").trim() || "Patient";
   }
 
-  function initialsOf(name) {
-    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-    const letters = parts.slice(0, 2).map((part) => part[0].toUpperCase());
-    return letters.join("") || "P";
-  }
-
   function pretty(name) {
     return String(name).replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  function markActiveLink() {
-    const current = (window.location.pathname.split("/").pop() || "patient.html").toLowerCase();
-    $$("[data-patient-nav] .patient-rail__link").forEach((link) => {
-      const target = (link.getAttribute("href") || "").split("?")[0].toLowerCase();
-      const active = target === current;
-      link.classList.toggle("active", active);
-      if (active) link.setAttribute("aria-current", "page");
-      else link.removeAttribute("aria-current");
+  // Publishes the account name to the shared navbar and any page that opts in
+  // with data-patient-name, without a second navigation implementation here.
+  function setIdentity(name, email) {
+    const clean = pretty(name || "Patient");
+    $$("[data-patient-name]").forEach((node) => {
+      node.textContent = clean;
     });
+    window.dispatchEvent(new CustomEvent("hellodoc:identity", { detail: { name: clean, email } }));
+    return clean;
   }
 
-  function paintAccount(identity, profile) {
-    const name = pretty(displayName(identity, profile));
-    const email = profile?.email || identity?.email || "";
-    const nameNode = $("#railName");
-    const emailNode = $("#railEmail");
-    const avatarNode = $("#railAvatar");
-    if (nameNode) nameNode.textContent = name;
-    if (emailNode) emailNode.textContent = email;
-    if (avatarNode) avatarNode.textContent = initialsOf(name);
-    // The greeting on a page can opt in to the real name.
-    $$("[data-patient-name]").forEach((node) => { node.textContent = name; });
-    return { name, email };
-  }
-
-  function wireSignOut() {
-    const button = $("#patientSignOut");
-    if (!button) return;
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      const original = button.textContent;
-      button.textContent = "Signing out…";
-      try {
-        const response = await fetch("/api/auth/logout", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: "{}",
-        });
-        // The server clears the cookies even when revocation fails, so the
-        // visitor is signed out locally either way.
-        if (!response.ok && response.status >= 500) {
-          const body = await readJson(response);
-          window.location.replace("/login.html?role=patient");
-          return;
-        }
-        window.location.replace("/index.html");
-      } catch {
-        button.disabled = false;
-        button.textContent = original;
-        const message = $("#portalMessage");
-        if (message) {
-          message.hidden = false;
-          message.classList.add("is-error");
-          message.textContent = "Sign out could not be completed. Check your connection and try again.";
-        }
-      }
-    });
-  }
-
-  // Runs the guard, then paints the account area. Pages call this before any
+  // Runs the guard, then publishes the identity. Pages call this before any
   // patient-only request of their own.
   async function start() {
-    markActiveLink();
-    wireSignOut();
     const gate = await requirePatient();
     if (gate.redirecting || gate.error) return gate;
     const profile = await loadProfile();
-    const account = paintAccount(gate.identity, profile);
+    const subset = displayName(gate.identity, profile);
+    const email = profile?.email || gate.identity?.email || "";
+    const account = setIdentity(subset, email);
     return { identity: gate.identity, profile, account };
   }
 
-  window.PatientShell = { start, requirePatient, loadProfile, pretty };
+  window.PatientShell = { start, requirePatient, loadProfile, pretty, setIdentity };
 })();

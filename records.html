@@ -6,8 +6,8 @@
   <meta name="description" content="Your HelloDoc health records: assessments, clinician notes and follow-up guidance.">
   <title>HelloDoc | Health records</title>
   <link rel="icon" type="image/svg+xml" href="/Asset/favicon.svg">
-  <link rel="stylesheet" href="/Styles/app.css?v=sos1">
-  <link rel="stylesheet" href="/Styles/patient.css?v=care-2">
+  <link rel="stylesheet" href="/Styles/app.css?v=sos3">
+  <link rel="stylesheet" href="/Styles/patient.css?v=care-3">
 </head>
 <body class="patient-page">
   <a class="patient-skip" href="#patientMain">Skip to your records</a>
@@ -23,18 +23,7 @@
         <span class="nav-toggle__icon" aria-hidden="true"></span>
       </button>
 
-      <ul class="nav-links" id="navLinks">
-        <li><a href="index.html#about" class="nav-link">About</a></li>
-        <li><a href="dashboard.html" class="nav-link">Find a doctor</a></li>
-        <li>
-          <a href="appointments.html" class="nav-link">
-            Appointments
-            <span class="nav-badge" data-appt-badge>0</span>
-          </a>
-        </li>
-        <li><a href="story.html" class="nav-link">My Story</a></li>
-        <li><a href="help.html" class="nav-link">Help</a></li>
-      </ul>
+      <ul class="nav-links" id="navLinks" aria-label="Main navigation"></ul>
 
       <div class="navbar-actions" id="navActions">
         <a href="login.html" class="btn btn-ghost" id="loginBtn">Login</a>
@@ -48,30 +37,7 @@
     </div>
   </nav>
 
-  <div class="container patient-workspace">
-    <aside class="patient-rail" data-patient-nav>
-      <p class="patient-rail__title">Patient area</p>
-      <nav class="patient-rail__nav" aria-label="Patient area">
-        <a class="patient-rail__link" href="patient.html"><i class="fa-solid fa-house-medical" aria-hidden="true"></i>Dashboard</a>
-        <a class="patient-rail__link" href="dashboard.html"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>Find a doctor</a>
-        <a class="patient-rail__link" href="appointments.html"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>My appointments</a>
-        <a class="patient-rail__link" href="records.html"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>Health records</a>
-        <a class="patient-rail__link" href="walkin.html"><i class="fa-solid fa-door-open" aria-hidden="true"></i>Walk-in queue</a>
-      </nav>
-      <div class="patient-rail__account">
-        <div class="patient-rail__identity">
-          <span class="patient-rail__avatar" id="railAvatar" aria-hidden="true">P</span>
-          <span class="patient-rail__identity-text">
-            <strong id="railName">Patient</strong>
-            <small id="railEmail"></small>
-          </span>
-        </div>
-        <a class="patient-rail__link" href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account &amp; settings</a>
-        <button class="patient-rail__signout" id="patientSignOut" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Sign out</button>
-      </div>
-    </aside>
-
-    <main class="patient-main" id="patientMain">
+  <main class="container patient-main" id="patientMain">
       <div class="patient-message" id="portalMessage" role="status" aria-live="polite" hidden></div>
 
       <!-- ===== List view ===== -->
@@ -126,13 +92,12 @@
           <a class="patient-button patient-button--primary" href="records.html">Back to all records</a>
         </div>
       </div>
-    </main>
-  </div>
+  </main>
 
   <footer><div class="container"><p>&copy; HelloDoc. For urgent symptoms, contact your local emergency service.</p></div></footer>
   <script src="/Scripts/appointments.js"></script>
-  <script src="/Scripts/nav.js?v=sos1"></script>
-  <script src="/Scripts/patient-shell.js?v=care-2"></script>
-  <script src="/Scripts/records.js?v=care-2"></script>
+  <script src="/Scripts/nav.js?v=sos3"></script>
+  <script src="/Scripts/patient-shell.js?v=care-3"></script>
+  <script src="/Scripts/records.js?v=care-4"></script>
 </body>
 </html>
