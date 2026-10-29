@@ -1328,6 +1328,10 @@
       if (active) button.setAttribute('aria-current', 'step');
       else button.removeAttribute('aria-current');
     });
+    const consultationDock = $('consultationDock');
+    // Show the patient video panel after Continue leaves Patient and visit.
+    // Keep it open through the consultation steps, then close it on Review.
+    if (consultationDock) consultationDock.hidden = activeWizardStep === 0 || activeWizardStep === 4;
     const controls = $('wizardControls');
     const back = $('wizardBack');
     const next = $('wizardNext');
