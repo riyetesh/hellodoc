@@ -2383,3 +2383,102 @@
     width: 100%;
   }
 }
+
+
+/* Focused workspace views: show one primary task at a time. */
+.dw-page .dw-main {
+  padding-block: 1.25rem 2.5rem;
+  gap: 1.25rem;
+}
+.dw-page #clinicalPanels {
+  gap: 1.25rem;
+}
+.dw-page .dw-section {
+  scroll-margin-top: 1rem;
+}
+.dw-page .dw-section-head {
+  margin-bottom: 1rem;
+  gap: 0.75rem 1.25rem;
+}
+.dw-page .dw-section-sub {
+  max-width: 68ch;
+}
+.dw-page .dw-head {
+  padding-block: 1.25rem 1.1rem;
+}
+.dw-page .dw-alert {
+  margin-top: 0.75rem;
+}
+.dw-page .dw-visits,
+.dw-page .dw-schedule,
+.dw-page .dw-activity,
+.dw-page .dw-practice-card {
+  min-width: 0;
+}
+.dw-page .dw-activity {
+  margin-top: 1rem;
+}
+.dw-page .dw-filters {
+  gap: 0.6rem;
+  padding: 0.75rem;
+}
+.dw-page .dw-filter {
+  flex-basis: 10rem;
+}
+.dw-page .visit-row {
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  gap: 0.6rem 1rem;
+  padding: 0.9rem 1rem;
+}
+.dw-page .dw-record .dw-section-head {
+  align-items: center;
+}
+.dw-page .cw-area {
+  margin-bottom: 1rem;
+}
+.dw-page .cw-area__head {
+  padding: 1rem 1.1rem 0.75rem;
+}
+.dw-page .cw-area__body {
+  padding: 0.9rem 1.1rem 1.1rem;
+}
+.dw-page .cw-area__lead,
+.dw-page .dw-section-sub {
+  line-height: 1.5;
+}
+.dw-page .shortcut-strip {
+  margin-bottom: 0.75rem;
+}
+.dw-page .symptom-group {
+  margin-bottom: 0.75rem;
+}
+.dw-page .cw-model {
+  margin-block: 0.75rem 1rem;
+}
+.dw-page .cw-side {
+  align-self: start;
+}
+.dw-page .cw-side__card {
+  top: 1rem;
+}
+.dw-page [hidden] {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .dw-page .visit-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.85rem;
+  }
+  .dw-page .visit-row__when {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .dw-page .visit-row__actions {
+    justify-content: flex-start;
+  }
+  .dw-page .dw-filters .btn {
+    margin-left: 0;
+  }
+}
