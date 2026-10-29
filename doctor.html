@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/Styles/app.css?v=sos3" />
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css?v=workspace6" />
-    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace7" />
+    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace9" />
 
     <style>
       .consultation-dock{position:fixed;z-index:30;right:1rem;bottom:1rem;width:18rem;max-height:90vh;overflow:auto;padding:1rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 14px 42px rgba(20,35,60,.22)}
@@ -178,12 +178,12 @@
                   <section class="cw-area" id="areaVisit" aria-labelledby="areaVisitTitle">
                     <div class="cw-area__head">
                       <p class="cw-area__step">Patient and visit</p>
-                      <h3 id="areaVisitTitle">Patient details</h3>
+                      <h3 id="areaVisitTitle">Patient name and history</h3>
                       
                     </div>
                     <div class="cw-area__body cw-area__grid">
                       <div class="form-grp">
-                        <label for="assessmentPatient">Patient for this record</label>
+                        <label for="assessmentPatient">Patient name</label>
                         <select id="assessmentPatient" name="patient" required>
                           <option value="">Loading patients…</option>
                         </select>
@@ -292,26 +292,17 @@
                             <h5 id="modelDialogDisease">Waiting for prediction</h5>
                             <p id="modelDialogMeta"></p>
                           </div>
-                          <label class="guidance-filter" for="guidanceCategorySelect">Category<select id="guidanceCategorySelect"><option value="precautions">Precautions</option><option value="medications">Medication</option><option value="diet">Diet</option><option value="workout">Exercise</option></select></label><div class="model-results-dialog__categories" id="modelDialogCategories"></div>
-                          <div class="model-suggestion-add">
-                            <h5>Add an item</h5>
-                            <div class="model-suggestion-add__controls">
-                              <label for="modelSuggestionCategory">Category
-                                <select id="modelSuggestionCategory">
-                                  <option value="observations">Clinical observation</option>
-                                  <option value="precautions">Precautions</option>
-                                  <option value="medications">Medication suggestions</option>
-                                  <option value="diet">Diet suggestions</option>
-                                  <option value="workout">Exercise suggestions</option>
-                                </select>
-                              </label>
-                              <label for="modelSuggestionInput">Your suggestion
-                                <input id="modelSuggestionInput" type="text" maxlength="500" placeholder="Write a specific suggestion…" />
-                              </label>
-                              <button class="btn btn-outline" type="button" id="modelSuggestionAdd">Add suggestion</button>
-                            </div>
-                            <p class="model-suggestion-add__status" id="modelSuggestionStatus" role="status" aria-live="polite"></p>
-                          </div>
+                          <div class="guidance-category-buttons" role="group" aria-label="Guidance categories">
+<button type="button" class="guidance-category-button" data-guidance-category="precautions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>Precautions</span></button>
+<button type="button" class="guidance-category-button" data-guidance-category="medications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 11 11a4 4 0 0 1-6 6L3 10a4 4 0 0 1 6-6Z"/><path d="m7 12 5-5"/></svg><span>Medication</span></button>
+<button type="button" class="guidance-category-button" data-guidance-category="diet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="M12 12C5 12 3 8 3 4c5 0 9 2 9 8ZM12 16c0-5 3-8 9-8 0 5-3 8-9 8Z"/></svg><span>Diet</span></button>
+<button type="button" class="guidance-category-button" data-guidance-category="workout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12"/></svg><span>Exercise</span></button>
+</div>
+                          <dialog class="guidance-modal" id="guidanceModal" aria-labelledby="guidanceModalTitle">
+<div class="guidance-modal__head"><div><p class="dw-eyebrow">Prediction guidance</p><h3 id="guidanceModalTitle">Precautions</h3></div><button class="guidance-modal__close" type="button" id="guidanceModalClose" aria-label="Close category">×</button></div>
+<div class="model-results-dialog__categories" id="modelDialogCategories"></div>
+<div class="model-suggestion-add"><h5>Add to this category</h5><input id="modelSuggestionCategory" type="hidden" value="precautions" /><div class="model-suggestion-add__controls"><label for="modelSuggestionInput">New item<input id="modelSuggestionInput" type="text" maxlength="500" placeholder="Add a new item…" /></label><button class="btn btn-outline" type="button" id="modelSuggestionAdd">Add item</button></div><p class="model-suggestion-add__status" id="modelSuggestionStatus" role="status" aria-live="polite"></p></div>
+</dialog>
                           
                           
                         </section>
@@ -572,14 +563,14 @@
 
 
     <aside id="consultationDock" class="consultation-dock" aria-label="Consultation tools">
-      <p class="consultation-dock__doctor" id="dockDoctorName">Doctor workspace</p>
+      <p class="consultation-dock__doctor" id="dockPatientName">Select a patient</p>
       <div class="consultation-video"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=720&amp;q=80" alt="Patient preview placeholder" loading="lazy"><span>DEMO FEED · NOT CONNECTED</span></div>
       <div class="consultation-timer"><p>Consultation timer</p><strong id="consultationTimerDisplay">00:00:00</strong><div><button class="btn btn-primary" type="button" id="consultationTimerStart">Start</button> <button class="btn btn-outline" type="button" id="consultationTimerReset">Reset</button></div></div>
     </aside>
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=workspace6"></script>
     <script src="/Scripts/walkin.js?v=workspace4"></script>
-    <script src="/Scripts/assessment.js?v=workspace8"></script>
+    <script src="/Scripts/assessment.js?v=workspace9"></script>
     <script src="/Scripts/nav.js?v=sos3"></script>
 
     <script>
@@ -587,16 +578,19 @@
         const display = document.getElementById('consultationTimerDisplay');
         const toggle = document.getElementById('consultationTimerStart');
         const reset = document.getElementById('consultationTimerReset');
-        const identity = document.getElementById('doctorIdentity');
-        const dockName = document.getElementById('dockDoctorName');
+        const patientSelect = document.getElementById('assessmentPatient');
+        const consultationPatient = document.getElementById('consultationPatient');
+        const dockName = document.getElementById('dockPatientName');
         const syncName = () => {
-          const value = identity?.textContent?.trim() || '';
-          if (dockName && value && !value.startsWith('Checking')) {
-            dockName.textContent = value.split(' · ')[0];
-          }
+          const fromConsultation = consultationPatient?.textContent?.trim() || '';
+          const selected = patientSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+          const value = fromConsultation || (selected && !/loading|select a patient/i.test(selected) ? selected : '');
+          if (dockName) dockName.textContent = value || 'Select a patient';
         };
         syncName();
-        if (identity && window.MutationObserver) new MutationObserver(syncName).observe(identity,{childList:true,characterData:true,subtree:true});
+        patientSelect?.addEventListener('change', syncName);
+        if (consultationPatient && window.MutationObserver) new MutationObserver(syncName).observe(consultationPatient,{childList:true,characterData:true,subtree:true});
+        if (patientSelect && window.MutationObserver) new MutationObserver(syncName).observe(patientSelect,{childList:true,subtree:true});
         if (!display || !toggle || !reset) return;
         let elapsed=0, started=null, interval=null;
         const paint=()=>{const n=elapsed+(started===null?0:Math.floor((Date.now()-started)/1000));display.textContent=[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');};
