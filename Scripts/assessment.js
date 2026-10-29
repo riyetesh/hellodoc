@@ -1125,11 +1125,11 @@
     }
   }
 
-  function saveWithoutModel() {
+  function saveWithoutModel({ redirect = true } = {}) {
     if (!state.modelOutage || state.saving) return;
     const symptoms = modelSymptoms().length;
     if (symptoms && !window.confirm(`Save without the model?\n\n${symptoms} selected model symptom${symptoms === 1 ? '' : 's'} will be kept as clinical observations and no prediction will be stored.`)) return;
-    saveAssessment({ withoutModel: true });
+    return saveAssessment({ withoutModel: true, redirect });
   }
 
   // ------------------------------------------------------------------ sync ---
