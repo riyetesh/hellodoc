@@ -6,7 +6,7 @@
   root.id = "hdDocBotRoot";
   root.innerHTML = `
     <button class="hd-docbot-launcher" type="button" aria-controls="hdDocBotPanel" aria-expanded="false">
-      <span class="hd-docbot-mark" aria-hidden="true">D</span><span class="hd-docbot-launcher-copy"><strong>DocBot</strong><small>Website help</small></span><span class="hd-docbot-online" aria-hidden="true"></span>
+      <svg class="hd-docbot-launcher-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.8-3.2A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>
     </button>
     <section class="hd-docbot-panel" id="hdDocBotPanel" aria-label="DocBot website help" hidden>
       <header class="hd-docbot-header"><span class="hd-docbot-mark" aria-hidden="true">D</span><div><strong>DocBot</strong><small>HelloDoc website assistant</small></div><button class="hd-docbot-close" type="button" aria-label="Close DocBot">×</button></header>
@@ -57,8 +57,27 @@
     messages.appendChild(node);messages.scrollTop=messages.scrollHeight;
   }
   function send(value){const q=value.trim();if(!q)return;message(q,"user");const a=findAnswer(q);window.setTimeout(()=>message(a.a,"bot",a.u,a.l),120);}
-  function open(show){panel.hidden=!show;launcher.setAttribute("aria-expanded",String(show));if(show)input.focus();}
-  launcher.addEventListener("click",()=>open(panel.hidden));root.querySelector(".hd-docbot-close").addEventListener("click",()=>open(false));
+  let closeTimer = null;
+  function open(show) {
+    if (closeTimer !== null) { window.clearTimeout(closeTimer); closeTimer = null; }
+    if (show) {
+      panel.hidden = false;
+      panel.classList.remove("is-closing");
+      window.requestAnimationFrame(() => panel.classList.add("is-open"));
+      launcher.setAttribute("aria-expanded", "true");
+      input.focus();
+    } else {
+      panel.classList.remove("is-open");
+      panel.classList.add("is-closing");
+      launcher.setAttribute("aria-expanded", "false");
+      closeTimer = window.setTimeout(() => {
+        panel.hidden = true;
+        panel.classList.remove("is-closing");
+        closeTimer = null;
+      }, 220);
+    }
+  }
+  launcher.addEventListener("click",()=>open(panel.hidden || panel.classList.contains("is-closing")));root.querySelector(".hd-docbot-close").addEventListener("click",()=>open(false));
   root.querySelector(".hd-docbot-form").addEventListener("submit",e=>{e.preventDefault();const q=input.value;input.value="";send(q);input.focus();});
   root.querySelector(".hd-docbot-prompts").addEventListener("click",e=>{const b=e.target.closest("button");if(b)send(b.textContent);});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!panel.hidden){open(false);launcher.focus();}});
