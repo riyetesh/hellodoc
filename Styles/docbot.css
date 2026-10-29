@@ -16,3 +16,5 @@
 .hd-docbot-form{display:flex;gap:.45rem;padding:.65rem .75rem;border-top:1px solid #e7edf5}.hd-docbot-form input{min-width:0;flex:1;padding:.7rem .8rem;border:1px solid #cbd5e1;border-radius:10px;font:inherit;font-size:.85rem}.hd-docbot-form button{padding:.65rem .85rem;border:0;border-radius:10px;background:#2459a9;color:#fff;font-weight:750;cursor:pointer}
 .hd-docbot-note{padding:0 .8rem .65rem;color:#64748b;font-size:.66rem;line-height:1.4}
 @media(max-width:520px){#hdDocBotRoot{right:max(.65rem,env(safe-area-inset-right));bottom:max(.65rem,env(safe-area-inset-bottom))}.hd-docbot-panel{position:fixed;right:.65rem;bottom:4.8rem;width:calc(100vw - 1.3rem);height:min(70dvh,580px)}.hd-docbot-launcher{padding:.55rem .7rem}.hd-docbot-mark{width:34px;height:34px}}
+.dw-page #hdDocBotRoot.hd-docbot-with-dock{bottom:calc(1rem + 18rem)}
+@media(max-width:760px){.dw-page #hdDocBotRoot.hd-docbot-with-dock{bottom:calc(1rem + 15rem)}}
