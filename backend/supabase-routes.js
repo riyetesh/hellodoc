@@ -563,6 +563,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
         appointmentStart: visit?.scheduled_start || null,
         appointmentStatus: visit?.status || null,
         createdAt: row.created_at,
+        demoMode: Boolean(row.demo_mode),
+        createdByName: row.created_by === row.doctor_id ? null : 'Administrator',
         doctorName: doctorNames(directory).get(row.doctor_id) || 'Your clinician',
         patientReported: row.patient_reported || [],
         clinicianAdded: row.clinician_added || [],
