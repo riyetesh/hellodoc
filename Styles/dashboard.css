@@ -905,4 +905,249 @@
   .date-chip .dnum {
     font-size: 1rem;
   }
-}
+}
+
+/* ---------- Refined doctor-directory controls ---------- */
+.toolbar-wrap {
+  padding: 1.15rem 0 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e8edf5;
+  box-shadow: 0 8px 24px rgba(20, 39, 75, 0.035);
+  backdrop-filter: blur(14px);
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.toolbar .search {
+  min-width: 0;
+  max-width: none;
+}
+
+.toolbar .search input {
+  min-height: 50px;
+  border-radius: 14px;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  box-shadow: none;
+  padding-left: 2.8rem;
+}
+
+.toolbar .search input:focus {
+  background: #fff;
+  border-color: #4778f5;
+  box-shadow: 0 0 0 4px rgba(71, 120, 245, .1);
+}
+
+.toolbar-actions {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .65rem !important;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.toolbar-actions .availability-filter {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 46px;
+  padding: .35rem .65rem .35rem .85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: #fff;
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.toolbar-actions .availability-filter select {
+  max-width: 140px;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #17233b;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolbar-actions .availability-filter:focus-within {
+  border-color: #4778f5;
+  box-shadow: 0 0 0 3px rgba(71, 120, 245, .09);
+}
+
+.toolbar-actions .dropbtn,
+.toolbar-actions .filter-toggle {
+  min-height: 46px;
+  padding: .7rem .9rem;
+  border-radius: 13px;
+  border-color: #e2e8f0;
+  box-shadow: none;
+  font-size: .86rem;
+  white-space: nowrap;
+}
+
+.toolbar-actions .dropbtn:hover,
+.toolbar-actions .filter-toggle:hover {
+  background: #f8faff;
+  border-color: #c8d7ff;
+}
+
+.toolbar-actions .filter-toggle {
+  background: #f5f8ff;
+  border-color: #dce6ff;
+  color: #2855c5;
+}
+
+.toolbar-actions .filter-toggle:hover {
+  background: #edf3ff;
+}
+
+.toolbar-actions .filter-count {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+}
+
+.chips {
+  gap: .55rem;
+  padding-top: 1rem;
+  padding-bottom: .2rem;
+}
+
+.chip {
+  padding: .5rem .9rem;
+  border-radius: 12px;
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+}
+
+.chip.active {
+  background: #edf3ff;
+  border-color: #b9ccff;
+  color: #2855c5;
+}
+
+.results {
+  padding-top: 2rem;
+}
+
+.results-head {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-bottom: .45rem;
+}
+
+.results-head h2 {
+  font-size: clamp(1.35rem, 2vw, 1.7rem);
+  letter-spacing: -.035em;
+  font-weight: 780;
+  color: #14213a;
+}
+
+.results-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: .2rem .65rem;
+  border: 1px solid #e3eaf6;
+  border-radius: 999px;
+  background: #f6f8fc;
+  color: #52627a;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.results > .muted {
+  margin-bottom: 1.25rem !important;
+  color: #718096 !important;
+}
+
+@media (max-width: 1050px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+    gap: .8rem;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar-wrap {
+    top: 60px;
+    padding: .85rem 0 .75rem;
+  }
+
+  .toolbar {
+    gap: .7rem;
+  }
+
+  .toolbar .search input {
+    min-height: 48px;
+    font-size: .88rem;
+  }
+
+  .toolbar-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem !important;
+  }
+
+  .toolbar-actions .availability-filter {
+    min-width: 0;
+    justify-content: space-between;
+    padding: .35rem .55rem .35rem .65rem;
+    gap: .25rem;
+  }
+
+  .toolbar-actions .availability-filter select {
+    max-width: 105px;
+    font-size: .8rem;
+  }
+
+  .toolbar-actions .dropdown,
+  .toolbar-actions .dropbtn,
+  .toolbar-actions .filter-toggle {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-actions .dropbtn,
+  .toolbar-actions .filter-toggle {
+    justify-content: center;
+    padding: .7rem .5rem;
+    font-size: .8rem;
+  }
+
+  .toolbar-actions .dropbtn {
+    gap: .35rem;
+  }
+
+  .toolbar-actions .dropdown-content {
+    left: 0;
+    right: auto;
+    min-width: 100%;
+  }
+
+  .results {
+    padding: 1.4rem 1rem 3rem;
+  }
+
+  .results-head {
+    margin-bottom: .35rem;
+  }
+}
