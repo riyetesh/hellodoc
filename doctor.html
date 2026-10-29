@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/Styles/app.css?v=sos3" />
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css?v=workspace6" />
-    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace6" />
+    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace7" />
 
     <style>
       .consultation-dock{position:fixed;z-index:30;right:1rem;bottom:1rem;width:18rem;max-height:90vh;overflow:auto;padding:1rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 14px 42px rgba(20,35,60,.22)}
@@ -165,6 +165,13 @@
             <form id="assessmentForm" novalidate>
               <p class="assessment-error" id="assessmentError" role="alert" hidden></p>
 
+              <nav class="consultation-wizard" id="consultationWizard" aria-label="Consultation steps">
+                <button type="button" class="consultation-wizard__step is-active" data-wizard-go="0" aria-current="step"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span>Patient</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m8 13 2 2 5-5"></path></svg><span>Symptoms</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"></path><path d="m3 7 9 7 9-7"></path></svg><span>Prediction</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v18H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>Assessment</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v6h5M9 14l2 2 4-4"></path></svg><span>Review</span></button>
+              </nav>
               <div class="cw-layout">
                 <div class="cw-main">
                   <!-- A. Patient and visit ------------------------------------- -->
@@ -172,7 +179,7 @@
                     <div class="cw-area__head">
                       <p class="cw-area__step">Patient and visit</p>
                       <h3 id="areaVisitTitle">Who this record is for</h3>
-                      <p class="cw-area__lead">The patient and appointment are resolved by the server from this visit. A browser-supplied patient identifier is never treated as proof of access.</p>
+                      
                     </div>
                     <div class="cw-area__body cw-area__grid">
                       <div class="form-grp">
@@ -191,7 +198,7 @@
                     <div class="cw-area__head">
                       <p class="cw-area__step">Symptoms and duration</p>
                       <h3 id="areaSymptomsTitle">Add symptoms and duration</h3>
-                      <p class="cw-area__lead">Choose symptoms from the model vocabulary, then enter how long the patient has had them.</p>
+                      
                     </div>
                     <div class="cw-area__body">
                       <p class="shortcut-strip" aria-label="Keyboard shortcuts">
@@ -207,12 +214,12 @@
                       <div class="cw-split">
                         <fieldset class="symptom-group symptom-group--reported">
                           <legend>Symptoms</legend>
-                          <p class="symptom-hint">Search and select symptoms from the model vocabulary. Add any other details as observations below.</p>
+                          
                           <div class="symptom-picker" id="reportedPicker"></div>
                         </fieldset>
                         <fieldset class="symptom-group symptom-group--observed">
                           <legend>Recorded by you</legend>
-                          <p class="symptom-hint">Your own findings in the model's vocabulary. They stay labelled as yours in the record.</p>
+                          
                           <div class="symptom-picker" id="clinicianPicker"></div>
                         </fieldset>
                       </div>
@@ -221,7 +228,7 @@
                         <div class="form-grp">
                           <label for="symptomDuration">Duration (days)</label>
                           <input id="symptomDuration" type="number" min="0" max="36500" step="1" inputmode="numeric" placeholder="e.g. 3" />
-                          <p class="dw-field-hint">Recorded with this consultation. It is not read by the model.</p>
+                          
                         </div>
                         <div class="cw-model-state" id="modelState" data-state="unknown">
                           <p class="cw-model-state__title" id="modelStateTitle">Checking the symptom model…</p>
@@ -231,7 +238,7 @@
 
                       <fieldset class="symptom-group observation-group">
                         <legend>Clinical observations</legend>
-                        <p class="symptom-hint" id="observationHint">Anything the model cannot interpret. Stored with this record, never sent to the model, and never silently dropped.</p>
+                        
                         <div class="observation-row">
                           <label class="sr-only" for="observationInput">Clinical observation</label>
                           <input id="observationInput" type="text" maxlength="200" placeholder="e.g. rash worsened after starting a new detergent" />
@@ -243,11 +250,11 @@
                       <div class="form-grp">
                         <label for="clinicalNote">Clinical note</label>
                         <textarea id="clinicalNote" rows="4" maxlength="2000" placeholder="History and examination relevant to this assessment"></textarea>
-                        <p class="dw-field-hint">Your own words. Stored with the record, separate from the model input.</p>
+                        
                         <details class="dw-templates">
                           <summary>Insert a note structure</summary>
                           <div class="dw-templates__body">
-                            <p class="dw-field-hint">Adds headings only. No clinical text is filled in for you.</p>
+                            
                             <div class="dw-templates__buttons" role="group" aria-label="Insert a note heading">
                               <button class="btn btn-outline" type="button" data-template="History of presenting complaint">History</button>
                               <button class="btn btn-outline" type="button" data-template="Examination findings">Examination</button>
@@ -262,10 +269,9 @@
                       <section class="cw-model" aria-labelledby="modelPanelTitle">
                         <div class="cw-model__head">
                           <div>
-                            <h4 id="modelPanelTitle">Experimental model suggestion</h4>
-                            <p class="cw-model__note">Decision support only. It is stored beside your assessment, never above it, and it is not a diagnosis.</p>
+                            <h4 id="modelPanelTitle">Prediction</h4>
                           </div>
-                          <button class="btn btn-outline" type="button" id="runModel" disabled>Run model suggestion</button>
+                          <button class="btn btn-outline" type="button" id="runModel" disabled>Predict</button>
                         </div>
                         <p class="cw-model__status" id="modelPanelStatus" role="status" aria-live="polite"></p>
                         <div class="cw-model__result" id="modelResult" hidden>
@@ -279,17 +285,16 @@
                           <div class="model-results-dialog__head">
                             <p class="dw-eyebrow">Experimental decision support</p>
                             <h4 id="modelResultsTitle">Prediction results</h4>
-                            <p>Review each suggestion and check only the items you want included in the consultation report. The prediction is not a diagnosis.</p>
+                            
                           </div>
                           <div class="model-results-dialog__disease">
                             <span>Possible disease</span>
                             <h5 id="modelDialogDisease">Waiting for prediction</h5>
                             <p id="modelDialogMeta"></p>
                           </div>
-                          <div class="model-results-dialog__categories" id="modelDialogCategories"></div>
+                          <label class="guidance-filter" for="guidanceCategorySelect">Category<select id="guidanceCategorySelect"><option value="precautions">Precautions</option><option value="medications">Medication</option><option value="diet">Diet</option><option value="workout">Exercise</option></select></label><div class="model-results-dialog__categories" id="modelDialogCategories"></div>
                           <div class="model-suggestion-add">
-                            <h5>Add a doctor-written suggestion</h5>
-                            <p>Add a clinical observation or a suggestion. Suggestions start unchecked; only checked items are included in the report. Observations you add are recorded in the report's observations section.</p>
+                            <h5>Add an item</h5>
                             <div class="model-suggestion-add__controls">
                               <label for="modelSuggestionCategory">Category
                                 <select id="modelSuggestionCategory">
@@ -307,11 +312,8 @@
                             </div>
                             <p class="model-suggestion-add__status" id="modelSuggestionStatus" role="status" aria-live="polite"></p>
                           </div>
-                          <p class="model-results-dialog__notice">Medication, diet, exercise and precaution suggestions are dataset guidance for clinician review. Use your professional judgment before including them.</p>
-                          <div class="model-results-dialog__actions">
-                            <button class="btn btn-outline" type="button" id="modelDialogCancel">Back to symptoms</button>
-                            <button class="btn btn-primary" type="button" id="modelDialogApply">Confirm selected items</button>
-                          </div>
+                          
+                          
                         </section>
                         <p class="cw-model__fallback" id="modelFallback" hidden>
                           <button class="btn btn-outline" type="button" id="saveWithoutModel">Save clinical record without the model</button>
@@ -326,21 +328,17 @@
                     <div class="cw-area__head">
                       <p class="cw-area__step">Clinical decision and plan</p>
                       <h3 id="areaDecisionTitle">Your assessment and plan</h3>
-                      <p class="cw-area__lead">Your independent impression, then the optional model suggestion, then the plan you decide. The model never writes into your fields.</p>
+                      
                     </div>
                     <div class="cw-area__body">
                       <div class="form-grp">
                         <label for="doctorAssessment">Your assessment</label>
                         <textarea id="doctorAssessment" rows="5" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
-                        <p class="dw-field-hint">Write this before you look at the model suggestion if you want an uncontaminated opinion.</p>
+                        
                         <p class="dw-inline-note" id="assessmentHint" hidden></p>
                       </div>
 
-                      <div class="form-grp">
-                        <label for="plan">Plan and follow-up</label>
-                        <textarea id="plan" rows="5" maxlength="4000" placeholder="Investigations, treatment and follow-up"></textarea>
-                        <p class="dw-field-hint">Your decision. Dataset guidance on the saved record stays labelled as general information for clinician review.</p>
-                      </div>
+                      <textarea id="plan" hidden></textarea>
                     </div>
                   </section>
 
@@ -380,6 +378,7 @@
                   </section>
                 </div>
 
+                <div class="consultation-wizard__controls" id="wizardControls"><button class="btn btn-outline" type="button" id="wizardBack">← Back</button><button class="btn btn-primary" type="button" id="wizardNext">Continue →</button></div>
                 <!-- Persistent summary: one place to see what will be saved. -->
                 <aside class="cw-side" aria-label="Consultation summary">
                   <div class="cw-side__card">
@@ -580,7 +579,7 @@
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=workspace6"></script>
     <script src="/Scripts/walkin.js?v=workspace4"></script>
-    <script src="/Scripts/assessment.js?v=workspace7"></script>
+    <script src="/Scripts/assessment.js?v=workspace8"></script>
     <script src="/Scripts/nav.js?v=sos3"></script>
 
     <script>
