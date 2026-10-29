@@ -605,7 +605,7 @@
     } else {
       box.dataset.state = 'ready';
       title.textContent = `Symptom search ready · ${state.vocabulary.symptoms.length} model symptoms`;
-      text.textContent = 'Matches come from the model vocabulary. Saving runs the model once.';
+      text.textContent = 'Choose symptoms from the model vocabulary, then run Predict to see suggestions.';
     }
   }
 
@@ -624,13 +624,13 @@
       run.disabled = state.saving || !state.modelAvailable;
       run.textContent = state.modelAvailable ? 'Retry prediction' : 'Model unavailable';
     } else if (!symptoms.length) {
-      status.textContent = 'Add at least one symptom to run the model. Saving the assessment runs it as well.';
+      status.textContent = 'Add at least one symptom before running Predict.';
       run.disabled = true;
     } else if (state.modelPreview) {
-      status.textContent = `Preview from model version ${state.modelPreview.modelVersion}. Saving runs the model again and stores that result.`;
+      status.textContent = `Prediction ready · model version ${state.modelPreview.modelVersion}. Selected guidance will be included in the report.`;
       run.disabled = state.saving;
     } else {
-      status.textContent = `${symptoms.length} symptom${symptoms.length === 1 ? '' : 's'} will be sent to the model. Run it to preview the suggestion, or save and let the save run it.`;
+      status.textContent = `${symptoms.length} symptom${symptoms.length === 1 ? '' : 's'} selected. Choose Predict to view the possible disease and guidance.`;
       run.disabled = state.saving;
     }
     run.textContent = state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Predict');
