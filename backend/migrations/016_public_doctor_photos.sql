@@ -2,6 +2,11 @@
 -- Keep the public payload limited to fields used by the public directory.
 begin;
 
+-- The profile photo column is introduced here so this migration is standalone
+-- and works on a clean database after migrations 003-014.
+alter table public.doctor_profiles
+  add column if not exists profile_image_url text;
+
 drop function if exists public.public_doctors();
 
 create function public.public_doctors()
