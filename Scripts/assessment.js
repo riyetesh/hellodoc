@@ -1264,10 +1264,32 @@
     const category = $('modelSuggestionCategory')?.value;
     const value = input?.value.trim();
     const status = $('modelSuggestionStatus');
-    if (!state.modelPreview || !['precautions', 'medications', 'diet', 'workout'].includes(category)) return;
+    if (!state.modelPreview || !['observations', 'precautions', 'medications', 'diet', 'workout'].includes(category)) return;
     if (!value) {
-      if (status) status.textContent = 'Enter a suggestion first.';
+      if (status) status.textContent = 'Enter text first.';
       input?.focus();
+      return;
+    }
+    if (category === 'observations') {
+      if (value.length > 200) {
+        if (status) status.textContent = 'Clinical observations must be 200 characters or fewer.';
+        return;
+      }
+      if (state.observations.includes(value)) {
+        if (status) status.textContent = 'That observation is already listed.';
+        return;
+      }
+      if (state.observations.length >= MAX_OBSERVATIONS) {
+        if (status) status.textContent = `Limit observations to ${MAX_OBSERVATIONS} entries.`;
+        return;
+      }
+      state.observations.push(value);
+      renderObservations();
+      input.value = '';
+      if (status) status.textContent = 'Clinical observation added to the report.';
+      markDirty();
+      renderSideSummary();
+      input.focus();
       return;
     }
     if (value.length > 500) {
