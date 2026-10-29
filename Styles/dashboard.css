@@ -1865,3 +1865,39 @@
     transform: none;
   }
 }
+
+
+/* ---------- Accessible appointment picker refresh ---------- */
+.booking-date-select {
+  display: block;
+  width: 100%;
+  min-height: 3.1rem;
+  margin-top: 0.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 0.8rem 2.75rem 0.8rem 0.95rem;
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.booking-help { margin-top: 0.45rem; color: var(--muted); font-size: 0.82rem; }
+.booking-availability { margin: 0 0 0.75rem; color: var(--text-soft); font-size: 0.9rem; }
+.slot-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 0.65rem; }
+.slot {
+  min-height: 48px; padding: 0.7rem 0.6rem; border: 1px solid var(--border-strong);
+  border-radius: 12px; background: var(--surface); color: var(--text);
+  font-size: 0.98rem; font-weight: 650;
+}
+.slot:hover { background: var(--brand-soft); border-color: var(--brand); }
+.slot.active, .slot[aria-pressed="true"] {
+  background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.booking-date-select:focus-visible, .slot:focus-visible, #bookingConfirm:focus-visible,
+#bookingCancel:focus-visible, #bookingClose:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+@media (max-width: 560px) {
+  .modal-overlay .modal { width: min(100%, 100vw); max-height: 94vh; border-radius: 18px 18px 0 0; margin-top: auto; }
+  .modal-overlay .modal-body { padding: 1rem; }
+  .slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .slot, .booking-date-select { transition: none; } }
