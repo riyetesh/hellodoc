@@ -428,7 +428,9 @@
       const confirmedSlot = selectedSlot();
       const when = confirmedSlot ? new Date(confirmedSlot.startsAt).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" }) : "the selected time";
       $("#bookingSuccessHeading").textContent = status === "confirmed" ? "Appointment confirmed" : "Appointment requested";
-      $("#bookingSuccessText").textContent = `${b.doctor.name} · ${b.doctor.speciality} · ${when}`;
+      $("#bookingSuccessText").textContent = status === "confirmed"
+        ? `${b.doctor.name} · ${b.doctor.speciality} · ${when}. Please log in before your appointment and join the consultation from a quiet, private place with a stable internet connection.`
+        : `${b.doctor.name} · ${b.doctor.speciality} · ${when}. Your request is awaiting confirmation.`;
       if (result.refreshFailed) $("#bookingSuccessText").textContent += " · Reload appointments to check current details.";
       $("#bookingSuccessStatus").textContent = status === "confirmed" ? "Confirmed by the clinic" : "Request sent · awaiting confirmation";
       $("#bookingReview").hidden = true;
