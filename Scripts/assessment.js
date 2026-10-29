@@ -635,6 +635,9 @@
     }
     run.textContent = state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Predict');
 
+    const resultsPanel = $('modelResultsPanel');
+    if (resultsPanel) resultsPanel.hidden = !state.modelPreview;
+
     if (state.modelPreview) {
       result.hidden = false;
       $('modelOutput').textContent = state.modelPreview.output;
@@ -689,15 +692,8 @@
         diet: Array.isArray(body.diet) ? body.diet.filter((item) => typeof item === 'string') : [],
         workout: Array.isArray(body.workout) ? body.workout.filter((item) => typeof item === 'string') : [],
       };
-      state.selectedGuidance = {
-        precautions: [...state.modelPreview.precautions],
-        medications: [...state.modelPreview.medications],
-        diet: [...state.modelPreview.diet],
-        workout: [...state.modelPreview.workout],
-      };
+      state.selectedGuidance = { precautions: [], medications: [], diet: [], workout: [] };
       renderPredictionDialog();
-      const dialog = $('modelResultsDialog');
-      if (dialog && !dialog.open) dialog.showModal();
       showError('assessmentError', '');
       renderModelPanel();
       announce(`Model suggestion: ${state.modelPreview.output}. This is decision support, not a diagnosis.`);
@@ -721,11 +717,12 @@
 
   function renderPredictionDialog() {
     const preview = state.modelPreview;
-    const dialog = $('modelResultsDialog');
+    const panel = $('modelResultsPanel');
     const disease = $('modelDialogDisease');
     const meta = $('modelDialogMeta');
     const categories = $('modelDialogCategories');
-    if (!dialog || !disease || !meta || !categories || !preview) return;
+    if (!panel || !disease || !meta || !categories || !preview) return;
+    panel.hidden = false;
     disease.textContent = preview.output;
     meta.textContent = `Model version ${preview.modelVersion} · duration recorded: ${state.duration.trim() || 'not provided'}`;
     categories.replaceChildren();
@@ -769,14 +766,13 @@
   }
 
   function closePredictionDialog() {
-    const dialog = $('modelResultsDialog');
-    if (dialog?.open) dialog.close();
+    const target = $('areaSymptoms');
+    if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function applyPredictionSelection() {
-    closePredictionDialog();
     const status = $('modelPanelStatus');
-    if (status) status.textContent = 'Prediction reviewed. Selected guidance will be included in the report; unselected items will be left out.';
+    if (status) status.textContent = 'Selection confirmed. Only checked guidance will be included in the report.';
     markDirty();
     renderSideSummary();
     announce('Selected model guidance will be included in the consultation report.');
@@ -1262,8 +1258,40 @@
 
   $('modelDialogCancel')?.addEventListener('click', closePredictionDialog);
   $('modelDialogApply')?.addEventListener('click', applyPredictionSelection);
-  $('modelResultsDialog')?.addEventListener('click', (event) => {
-    if (event.target === $('modelResultsDialog')) closePredictionDialog();
+  $('modelDialogCancel')?.addEventListener('click', closePredictionDialog);
+  $('modelSuggestionAdd')?.addEventListener('click', () => {
+    const input = $('modelSuggestionInput');
+    const category = $('modelSuggestionCategory')?.value;
+    const value = input?.value.trim();
+    const status = $('modelSuggestionStatus');
+    if (!state.modelPreview || !['precautions', 'medications', 'diet', 'workout'].includes(category)) return;
+    if (!value) {
+      if (status) status.textContent = 'Enter a suggestion first.';
+      input?.focus();
+      return;
+    }
+    if (value.length > 500) {
+      if (status) status.textContent = 'Suggestions must be 500 characters or fewer.';
+      return;
+    }
+    if (state.modelPreview[category].some((item) => item.toLowerCase() === value.toLowerCase())) {
+      if (status) status.textContent = 'That suggestion is already listed in this category.';
+      return;
+    }
+    state.modelPreview[category].push(value);
+    state.selectedGuidance[category].push(value);
+    input.value = '';
+    if (status) status.textContent = 'Added and checked. Uncheck it if you do not want it in the report.';
+    renderPredictionDialog();
+    markDirty();
+    renderSideSummary();
+    input.focus();
+  });
+  $('modelSuggestionInput')?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      $('modelSuggestionAdd')?.click();
+    }
   });
 
   // ------------------------------------------------------------------ init ---
