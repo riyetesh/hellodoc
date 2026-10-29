@@ -111,9 +111,12 @@
       statusDisplay.textContent = 'Ended';
 
       const updateStatus = async (status) => {
-        const response = await fetch('/api/appointments/' + encodeURIComponent(context.appointmentId) + '/status', {
+        const demoDoctorId = new URLSearchParams(window.location.search).get('demoDoctor');
+        const headers = { 'Content-Type': 'application/json' };
+        if (demoDoctorId) headers['X-HelloDoc-Demo-Doctor'] = demoDoctorId;
+        const response = await fetch('/api/doctor/appointments/' + encodeURIComponent(context.appointmentId) + '/status', {
           method: 'PATCH', credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ status: status })
         });
         if (!response.ok) {
