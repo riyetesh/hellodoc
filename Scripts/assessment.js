@@ -14,6 +14,12 @@
   if (!form) return;
 
   const $ = (id) => document.getElementById(id);
+  const demoDoctorId = new URLSearchParams(window.location.search).get('demoDoctor');
+  const fetchApi = (url, options = {}) => {
+    const headers = { ...(options.headers || {}) };
+    if (demoDoctorId) headers['X-HelloDoc-Demo-Doctor'] = demoDoctorId;
+    return fetch(url, { ...options, headers });
+  };
   const DRAFT_KEY = 'hellodoc:assessment-draft:v2';
   const MAX_OBSERVATIONS = 20;
 
@@ -552,7 +558,7 @@
   }
 
   async function loadConsultation(appointmentId) {
-    const response = await fetch(`/api/doctor/appointments/${encodeURIComponent(appointmentId)}/consultation`, { credentials: 'same-origin' });
+    const response = await fetchApi(`/api/doctor/appointments/${encodeURIComponent(appointmentId)}/consultation`, { credentials: 'same-origin' });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       throw new Error(body.message || 'That appointment could not be loaded.');
@@ -666,7 +672,7 @@
     button.textContent = 'Predicting…';
     $('modelPanelStatus').textContent = 'Predicting…';
     try {
-      const response = await fetch('/api/doctor/predict', {
+      const response = await fetchApi('/api/doctor/predict', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -1066,7 +1072,7 @@
     const payload = state.revisingId ? shared : { appointmentId: state.appointmentId, ...shared };
 
     try {
-      const response = await fetch(url, {
+      const response = await fetchApi(url, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -1390,8 +1396,8 @@
     const appointmentId = params.get('appointment');
     try {
       const [vocabularyResponse, patientResponse] = await Promise.all([
-        fetch('/api/doctor/symptoms', { credentials: 'same-origin' }),
-        fetch('/api/doctor/patients', { credentials: 'same-origin' }),
+        fetchApi('/api/doctor/symptoms', { credentials: 'same-origin' }),
+        fetchApi('/api/doctor/patients', { credentials: 'same-origin' }),
       ]);
       if (vocabularyResponse.status === 401 || vocabularyResponse.status === 403
         || patientResponse.status === 401 || patientResponse.status === 403) {
@@ -1448,7 +1454,7 @@
           });
         }
         if (consultation.previousAssessmentId) {
-          const source = await fetch(`/api/doctor/assessments/${encodeURIComponent(consultation.previousAssessmentId)}`, { credentials: 'same-origin' });
+          const source = await fetchApi(`/api/doctor/assessments/${encodeURIComponent(consultation.previousAssessmentId)}`, { credentials: 'same-origin' });
           if (!source.ok) throw new Error('The assessment already recorded for this appointment is unavailable.');
           applyRevisionSource(await source.json());
         } else {
@@ -1469,7 +1475,7 @@
         setEditorVisible(true);
         // The stored record wins over any leftover draft: a revision starts from
         // what was actually saved for this consultation.
-        const sourceResponse = await fetch(`/api/doctor/assessments/${encodeURIComponent(reviseId)}`, { credentials: 'same-origin' });
+        const sourceResponse = await fetchApi(`/api/doctor/assessments/${encodeURIComponent(reviseId)}`, { credentials: 'same-origin' });
         if (!sourceResponse.ok) throw new Error('That assessment is not available to your account.');
         applyRevisionSource(await sourceResponse.json());
         clearDraft();
@@ -1516,7 +1522,7 @@
 
   async function loadRecent() {
     try {
-      const response = await fetch('/api/doctor/assessments', { credentials: 'same-origin' });
+      const response = await fetchApi('/api/doctor/assessments', { credentials: 'same-origin' });
       if (!response.ok) return;
       const rows = await response.json();
       if (!Array.isArray(rows) || !rows.length) return;
