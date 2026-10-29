@@ -237,7 +237,7 @@
     $("#bookingReason").value = "";
     $("#bookingFeedback").hidden = true;
     $("#bookingReview").hidden = true;
-    $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
+    $$("#bookingOverlay #dateRow, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
     $("#bookingSuccess").hidden = true;
     $(".modal-body").hidden = false;
     $(".modal-footer").hidden = false;
@@ -279,64 +279,102 @@
     bookingTrigger = null;
   }
 
+  function bookingLocalDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const parts = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+    const part = (type) => parts.find((item) => item.type === type)?.value || "";
+    return part("year") + "-" + part("month") + "-" + part("day");
+  }
+
   function buildDateRow() {
-    const row = $("#dateRow");
-    row.innerHTML = "";
-    const localDate = (value) => {
-      const day = new Date(value);
-      return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-    };
-    const dates = [...new Set(state.booking.slots.filter((slot) => new Date(slot.startsAt).getTime() > Date.now()).map((slot) => localDate(slot.startsAt)))];
-    if (!dates.length) {
-      row.textContent = "No open appointments are listed for this doctor right now.";
+    const select = $("#dateRow");
+    const help = $("#bookingDateHelp");
+    const availability = $("#bookingAvailability");
+    select.replaceChildren();
+    state.booking.date = null;
+    state.booking.time = null;
+    const futureSlots = state.booking.slots
+      .filter((slot) => slot && slot.id && slot.startsAt && Date.parse(slot.startsAt) > Date.now())
+      .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+    const dateKeys = [...new Set(futureSlots.map((slot) => bookingLocalDate(slot.startsAt)).filter(Boolean))];
+
+    if (!dateKeys.length) {
+      select.disabled = true;
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "No dates available";
+      select.appendChild(option);
+      help.textContent = "This doctor has no future appointment times listed. Please check back later.";
+      availability.textContent = "No open appointment times are currently available.";
+      $("#slotGrid").replaceChildren();
+      syncConfirm();
       return;
     }
-    dates.forEach((iso) => {
-      const d = new Date(iso + "T12:00:00");
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "date-chip";
-      chip.dataset.date = iso;
-      chip.innerHTML = `
-        <span class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</span>
-        <span class="dnum">${d.getDate()}</span>
-        <span class="mon">${d.toLocaleDateString(undefined, { month: "short" })}</span>`;
-      chip.setAttribute("aria-pressed", "false");
-      chip.addEventListener("click", () => {
-        row.querySelectorAll(".date-chip").forEach((c) => { c.classList.remove("active"); c.setAttribute("aria-pressed", "false"); });
-        chip.classList.add("active");
-        chip.setAttribute("aria-pressed", "true");
-        state.booking.date = iso;
-        state.booking.time = null;
-        buildSlotGrid();
-        syncConfirm();
-      });
-      row.appendChild(chip);
+
+    select.disabled = false;
+    dateKeys.forEach((iso) => {
+      const daySlots = futureSlots.filter((slot) => bookingLocalDate(slot.startsAt) === iso);
+      const date = new Date(daySlots[0].startsAt);
+      const option = document.createElement("option");
+      option.value = iso;
+      option.textContent = new Intl.DateTimeFormat(undefined, {
+        weekday: "long", month: "long", day: "numeric", year: "numeric"
+      }).format(date) + " · " + daySlots.length + (daySlots.length === 1 ? " time" : " times");
+      select.appendChild(option);
     });
-    // Select the earliest available date immediately so its time slots are
-    // visible as soon as the booking dialog opens; users can still choose another day.
-    const firstDate = row.querySelector(".date-chip");
-    if (firstDate) firstDate.click();
+
+    state.booking.date = dateKeys[0];
+    select.value = state.booking.date;
+    select.onchange = () => {
+      state.booking.date = select.value || null;
+      state.booking.time = null;
+      buildSlotGrid();
+      syncConfirm();
+    };
+    help.textContent = dateKeys.length === 1
+      ? "One date has available appointments. Times are shown in your local time zone."
+      : dateKeys.length + " dates have available appointments. Times are shown in your local time zone.";
+    buildSlotGrid();
+    syncConfirm();
   }
 
   function buildSlotGrid() {
     const grid = $("#slotGrid");
-    grid.innerHTML = "";
-    const slots = state.booking.slots.filter((slot) => {
-      const date = new Date(slot.startsAt);
-      const localDay = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      return localDay === state.booking.date && date.getTime() > Date.now();
-    });
-    if (!slots.length) { grid.textContent = "No times are available on this date."; return; }
+    const availability = $("#bookingAvailability");
+    grid.replaceChildren();
+    if (!state.booking || !state.booking.date) {
+      availability.textContent = "Choose a date to see available times.";
+      return;
+    }
+    const slots = state.booking.slots
+      .filter((slot) => slot && slot.id && slot.startsAt
+        && bookingLocalDate(slot.startsAt) === state.booking.date
+        && Date.parse(slot.startsAt) > Date.now())
+      .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+    if (!slots.length) {
+      availability.textContent = "No times are available on this date. Choose another date.";
+      return;
+    }
+    availability.textContent = slots.length + (slots.length === 1
+      ? " appointment time available. Select a time to continue."
+      : " appointment times available. Select a time to continue.");
+
     slots.forEach((slot) => {
-      const btnTime = new Date(slot.startsAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      const date = new Date(slot.startsAt);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "slot";
-      btn.textContent = btnTime;
+      btn.textContent = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
       btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", "Select " + new Intl.DateTimeFormat(undefined, {
+        weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit"
+      }).format(date));
       btn.addEventListener("click", () => {
-        grid.querySelectorAll(".slot").forEach((s) => { s.classList.remove("active"); s.setAttribute("aria-pressed", "false"); });
+        grid.querySelectorAll(".slot").forEach((item) => {
+          item.classList.remove("active");
+          item.setAttribute("aria-pressed", "false");
+        });
         btn.classList.add("active");
         btn.setAttribute("aria-pressed", "true");
         state.booking.time = slot.id;
@@ -367,7 +405,7 @@
       const reason = $("#bookingReason").value.trim();
       $("#bookingReviewText").textContent = `${b.doctor.name} · ${b.doctor.speciality} · ${new Date(slot.startsAt).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}${reason ? ` · Reason: ${reason}` : ""}`;
       b.review = { slotId: slot.id, reason };
-      $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = true; });
+      $$("#bookingOverlay #dateRow, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = true; });
       review.hidden = false;
       action.textContent = "Confirm appointment request";
       announce("Review the selected doctor and appointment time, then confirm your request.");
@@ -410,7 +448,7 @@
       $("#bookingFeedback").hidden = false;
       $("#bookingFeedback").setAttribute("role", /session/i.test(message) ? "alert" : "status");
       review.hidden = true;
-      $$("#bookingOverlay .date-chip, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
+      $$("#bookingOverlay #dateRow, #bookingOverlay .slot, #bookingReason").forEach((control) => { control.disabled = false; });
       b.review = null;
       action.textContent = "Review request";
       syncConfirm();
