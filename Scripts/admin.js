@@ -73,6 +73,11 @@
       if (kind==='doctors' && row.status==='approved') buttons.push(['update_doctor','Update fee / availability']);
       if (kind==='appointments' && ['pending','confirmed'].includes(row.status) && new Date(row.scheduled_start)>new Date()) buttons.push(['cancel_appointment','Cancel appointment']);
       for (const [name,label] of buttons) { const button=node('button',label); button.type='button'; button.className='btn btn-outline'; button.onclick=() => action(name,(name==='edit_user'||name==='delete_user')?row:(row.applicant_id || row.id),button); card.append(button); }
+      if (kind==='doctors' && row.applicant_id && !row.suspended) {
+        const demo=node('button','Open demo workspace'); demo.type='button'; demo.className='btn btn-primary';
+        demo.onclick=() => { location.href='/doctor.html?demoDoctor='+encodeURIComponent(row.applicant_id); };
+        card.append(demo);
+      }
       $('records').append(card);
     }
     if (!data.items.length) $('records').textContent='No matching records.';
