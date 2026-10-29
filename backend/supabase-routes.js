@@ -795,24 +795,29 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       workout: textList(assessment.workout),
     };
   };
-  router.get('/doctor/patients', ...guard('doctor', async (req, res, { db }) => {
-    const result = await db.rpc('assigned_patients');
+  router.get('/doctor/patients', ...guard('doctor', async (req, res, care) => {
+    const { db } = care;
+    const result = care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patients');
     if (result.error) return res.status(503).json({ message: 'Patient list unavailable' });
     res.json(result.data.map((row) => ({
-      patientId: row.patient_id, fullName: row.full_name, email: row.email,
-      appointmentId: row.appointment_id, appointmentStart: row.appointment_start,
-      appointmentStatus: row.appointment_status, assessmentCount: Number(row.assessment_count || 0),
+      patientId: row.patient_id || row.id, fullName: row.full_name, email: row.email,
+      appointmentId: row.appointment_id || null, appointmentStart: row.appointment_start || null,
+      appointmentStatus: row.appointment_status || null, assessmentCount: Number(row.assessment_count || 0),
     })));
   }));
   // One patient's context for the doctor who attends them: identity, the visits
   // they share and the records already saved. Access is decided by the doctor's
   // own patient lists, so a browser-supplied id can never widen the scope.
-  router.get('/doctor/patients/:id/context', ...guard('doctor', async (req, res, { db, user }) => {
+  router.get('/doctor/patients/:id/context', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid patient' });
     const id = req.params.id;
-    const [people, clinic] = await Promise.all([db.rpc('assigned_patients'), db.rpc('doctor_clinic_patients')]);
+    const [people, clinic] = await Promise.all([
+      care.demoMode ? db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : db.rpc('assigned_patients'),
+      care.demoMode ? db.rpc('admin_demo_clinic_patients', { p_doctor: care.demoDoctorId }) : db.rpc('doctor_clinic_patients')
+    ]);
     if (people.error) return res.status(503).json({ message: 'Patient record unavailable' });
-    const account = (people.data || []).find((row) => row.patient_id === id) || null;
+    const account = (people.data || []).find((row) => (row.patient_id || row.id) === id) || null;
     const walkIn = (Array.isArray(clinic.data) ? clinic.data : []).find((row) => row.id === id) || null;
     if (!account && !walkIn) return res.status(404).json({ message: 'That patient is not one of your records.' });
     // The two patient kinds live in different columns, and only one of them can
@@ -978,26 +983,28 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   }));
   // The consultation context for one appointment the caller attends. The patient
   // identity and appointment come from the database, never from the browser.
-  router.get('/doctor/appointments/:id/consultation', ...guard('doctor', async (req, res, { db }) => {
+  router.get('/doctor/appointments/:id/consultation', ...guard('doctor', async (req, res, care) => {
+    const { db } = care;
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid appointment' });
-    const result = await db.rpc('doctor_consultation', { p_appt: req.params.id });
+    const result = care.demoMode ? await db.rpc('admin_demo_consultation', { p_appt: req.params.id, p_doctor: care.demoDoctorId }) : await db.rpc('doctor_consultation', { p_appt: req.params.id });
     if (result.error) {
       const status = result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503;
       return res.status(status).json({ message: status === 404 ? 'That appointment is not assigned to you.' : status === 403 ? 'Only an approved doctor can open a consultation.' : 'Consultation unavailable' });
     }
     res.json(result.data);
   }));
-  router.get('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
+  router.get('/doctor/assessments', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     const result = await db.from('assessments')
       .select('id,patient_id,clinic_patient_id,predicted_disease,model_status,appointment_id,created_at')
       .eq('doctor_id', user.id).order('created_at', { ascending: false }).limit(20);
     if (result.error) return res.status(503).json({ message: 'Assessments unavailable' });
-    const people = await db.rpc('assigned_patient_names');
+    const people = care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patient_names');
     const names = new Map((people.data || []).map((p) => [p.id, p.full_name]));
     // Walk-in records are not in assigned_patient_names (they have no account), so
     // their display names come from the doctor's own clinic list. Best effort: an
     // older database simply leaves the neutral fallback in place.
-    const clinicPeople = await db.rpc('doctor_clinic_patients');
+    const clinicPeople = care.demoMode ? await db.rpc('admin_demo_clinic_patients', { p_doctor: care.demoDoctorId }) : await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinicPeople.data) ? clinicPeople.data : [];
     for (const row of clinicRows) names.set(row.id, row.full_name);
     // A walk-in record has no account patient_id, so its name comes from the
@@ -1011,14 +1018,15 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       };
     }));
   }));
-  router.post('/doctor/assessments', ...guard('doctor', async (req, res, { db, user }) => {
+  router.post('/doctor/assessments', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     const body = req.body || {};
     const { appointmentId } = body;
     // The browser may only name an appointment. Patient identity, ownership and
     // approval are resolved by the database RPC, so a forged patient id cannot
     // attach this assessment to another patient.
     if (!isUuid(appointmentId)) return res.status(400).json({ message: 'Open the assessment from an appointment assigned to you.' });
-    const context = await db.rpc('doctor_consultation', { p_appt: appointmentId });
+    const context = care.demoMode ? await db.rpc('admin_demo_consultation', { p_appt: appointmentId, p_doctor: care.demoDoctorId }) : await db.rpc('doctor_consultation', { p_appt: appointmentId });
     if (context.error) {
       const status = context.error.code === '42501' ? 403 : context.error.code === 'P0002' ? 404 : 503;
       return res.status(status).json({ message: status === 404 ? 'That appointment is not assigned to you.' : status === 403 ? 'Only an approved doctor can record an assessment.' : 'The appointment could not be verified. Nothing was saved.' });
@@ -1051,7 +1059,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       assessment = selectReportGuidance(assessment, body.includeGuidance);
     }
     const insert = await db.from('assessments').insert({
-      doctor_id: user.id, patient_id: accountPatientId, clinic_patient_id: clinicPatientId,
+      doctor_id: user.id, created_by: care.demoMode ? care.demoActorId : user.id, demo_mode: Boolean(care.demoMode),
+      patient_id: accountPatientId, clinic_patient_id: clinicPatientId,
       appointment_id: consultation.appointmentId,
       model_status: assessment ? 'completed' : 'unavailable',
       patient_reported: cleaned.reported, clinician_added: cleaned.added, observations: cleaned.observations,
@@ -1079,7 +1088,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   // Revising symptoms must not rewrite the stored prediction: the new model run
   // is saved as a new record that points at the one it replaces. Patient and
   // appointment come from the stored row, never from the request body.
-  router.post('/doctor/assessments/:id/revision', ...guard('doctor', async (req, res, { db, user }) => {
+  router.post('/doctor/assessments/:id/revision', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid assessment' });
     const source = await db.from('assessments')
       .select('id,patient_id,clinic_patient_id,appointment_id,observations,symptom_duration,clinical_note,doctor_assessment,plan')
@@ -1104,7 +1114,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       assessment = selectReportGuidance(assessment, body.includeGuidance);
     }
     const insert = await db.from('assessments').insert({
-      doctor_id: user.id, patient_id: source.data.patient_id, clinic_patient_id: source.data.clinic_patient_id,
+      doctor_id: user.id, created_by: care.demoMode ? care.demoActorId : user.id, demo_mode: Boolean(care.demoMode),
+      patient_id: source.data.patient_id, clinic_patient_id: source.data.clinic_patient_id,
       appointment_id: source.data.appointment_id,
       supersedes_id: source.data.id,
       model_status: assessment ? 'completed' : 'unavailable',
@@ -1227,28 +1238,30 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (result.error) return res.status(503).json({message:'Availability unavailable'});
     res.json(result.data);
   }));
-  router.get('/doctor/dashboard', ...guard('doctor', async (req, res, { db, user }) => {
+  router.get('/doctor/dashboard', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     const result = await db.from('appointments').select('id,patient_id,clinic_patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).order('scheduled_start',{ascending:false}).limit(100);
     if (result.error) return res.status(503).json({ message:'Dashboard unavailable' });
     const patientOf = (a) => a.patient_id || a.clinic_patient_id;
     const ids = [...new Set(result.data.map(patientOf).filter(Boolean))];
-    const patients = ids.length ? await db.rpc('assigned_patient_names') : { data:[],error:null };
+    const patients = ids.length ? (care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patient_names')) : { data:[],error:null };
     if (patients.error) return res.status(503).json({ message:'Dashboard unavailable' });
     const names = new Map(patients.data.map((p) => [p.id,p.full_name]));
     // Walk-in records have no account, so their names are not in the accounting
     // list above. Best effort, so an un-migrated database still shows the schedule.
-    const clinic = await db.rpc('doctor_clinic_patients');
+    const clinic = care.demoMode ? await db.rpc('admin_demo_clinic_patients', { p_doctor: care.demoDoctorId }) : await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
     for (const row of clinicRows) names.set(row.id, row.full_name);
     // patientId is the value the workspace uses to open that patient's context;
     // it is always one the server itself resolved for this doctor.
     res.json({ appointments:result.data.map((a) => ({ id:a.id, patientId:patientOf(a) || null, startsAt:a.scheduled_start,status:a.status,reason:a.reason, walkIn:!a.patient_id, firstName:names.get(patientOf(a)) || 'Patient' })) });
   }));
-  router.get('/doctor/appointments/:id', ...guard('doctor', async (req, res, { db, user }) => {
+  router.get('/doctor/appointments/:id', ...guard('doctor', async (req, res, care) => {
+    const { db, user } = care;
     if (!isUuid(req.params.id)) return res.status(400).json({ message:'Invalid appointment' });
     const result = await db.from('appointments').select('id,patient_id,clinic_patient_id,scheduled_start,status,reason').eq('doctor_id',user.id).eq('id',req.params.id).single();
     if (result.error) return res.status(404).json({ message:'Appointment not found' });
-    const people = await db.rpc('assigned_patient_names');
+    const people = care.demoMode ? await db.rpc('admin_demo_patient_names', { p_doctor: care.demoDoctorId }) : await db.rpc('assigned_patient_names');
     if (people.error) return res.status(503).json({message:'Patient unavailable'});
     const clinic = await db.rpc('doctor_clinic_patients');
     const clinicRows = Array.isArray(clinic.data) ? clinic.data : [];
@@ -1256,16 +1269,18 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const patientId = result.data.patient_id || result.data.clinic_patient_id;
     res.json({ appointment: { ...result.data, startsAt:result.data.scheduled_start, firstName:names.get(patientId) || 'Patient', walkIn:!result.data.patient_id } });
   }));
-  router.patch('/doctor/appointments/:id/status', ...guard('doctor', async (req, res, { db }) => {
+  router.patch('/doctor/appointments/:id/status', ...guard('doctor', async (req, res, care) => {
+    const { db } = care;
     if (!isUuid(req.params.id) || !['confirmed','cancelled','completed','no_show'].includes(req.body?.status)) return res.status(400).json({ message:'Invalid status' });
-    const result = await db.rpc('change_appointment_status',{p_id:req.params.id,p_status:req.body.status});
+    const result = care.demoMode ? await db.rpc('admin_demo_change_appointment_status', { p_id:req.params.id, p_status:req.body.status, p_doctor:care.demoDoctorId }) : await db.rpc('change_appointment_status',{p_id:req.params.id,p_status:req.body.status});
     if (result.error) return res.status(409).json({ message:'Invalid status transition' });
     res.json({status:result.data.status});
   }));
-  router.get('/doctor/analytics', ...guard('doctor', async (req, res, { db }) => {
+  router.get('/doctor/analytics', ...guard('doctor', async (req, res, care) => {
+    const { db } = care;
     const since = req.query.since, until = req.query.until;
     if (![since,until].every((v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`))) || since > until) return res.status(400).json({ message:'Valid since and until dates required' });
-    const result = await db.rpc('doctor_activity',{p_since:since,p_until:until});
+    const result = care.demoMode ? await db.rpc('admin_demo_analytics', { p_doctor: care.demoDoctorId, p_since: since, p_until: until }) : await db.rpc('doctor_activity',{p_since:since,p_until:until});
     if (result.error) return res.status(503).json({message:'Analytics unavailable'});
     res.json(result.data);
   }));
