@@ -924,19 +924,19 @@
       return;
     }
     if (!state.patientId) {
-      showError('assessmentError', 'Select the patient this assessment belongs to.');
-      $('areaVisit').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      showError('assessmentError', 'Select a patient to continue.');
+      setWizardStep(0);
       return;
     }
     if (!state.revisingId && !state.appointmentId) {
-      showError('assessmentError', 'Open this assessment from an appointment assigned to you.');
-      $('areaVisit').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      showError('assessmentError', 'Open a visit assigned to you.');
+      setWizardStep(0);
       return;
     }
     if (!modelSymptoms().length && !(state.modelOutage && hasClinicalText())) {
-      showError('assessmentError', 'Add at least one model symptom, or save the consultation as a clinical record without the model.');
-      setWizardStep(3);
-      $('doctorAssessment')?.focus();
+      showError('assessmentError', 'Add at least one symptom to continue.');
+      setWizardStep(1);
+      reportedPicker?.focus();
       return;
     }
     renderReview();
