@@ -113,6 +113,16 @@
           </div>
         </div>`;
       card.querySelector("[data-book]").dataset.book = String(doc.id);
+      const doctorImage = card.querySelector(".doctor-art");
+      if (doc.profile_image_url) {
+        doctorImage.src = doc.profile_image_url;
+        doctorImage.alt = doc.name + " profile photo";
+        doctorImage.removeAttribute("aria-hidden");
+        doctorImage.addEventListener("error", () => {
+          doctorImage.src = "./Asset/Illustrations/doctor.svg";
+          doctorImage.alt = "";
+        }, { once: true });
+      }
       card.querySelector(".description h2").textContent = doc.name;
       card.querySelector(".description .spec").textContent = doc.speciality || "Specialty not listed";
       const bio = card.querySelector(".doctor-bio");
