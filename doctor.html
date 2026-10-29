@@ -517,6 +517,26 @@
       </section>
     </dialog>
 
+
+    <dialog class="model-results-dialog" id="modelResultsDialog" aria-labelledby="modelResultsTitle">
+      <form method="dialog" class="model-results-dialog__close-form"><button class="model-results-dialog__close" aria-label="Close prediction results">×</button></form>
+      <div class="model-results-dialog__head">
+        <p class="dw-eyebrow">Experimental decision support</p>
+        <h2 id="modelResultsTitle">Prediction results</h2>
+        <p>Review each suggestion and select only the items you want included in the consultation report. The prediction is not a diagnosis.</p>
+      </div>
+      <div class="model-results-dialog__disease">
+        <span>Possible disease</span>
+        <h3 id="modelDialogDisease">Waiting for prediction</h3>
+        <p id="modelDialogMeta"></p>
+      </div>
+      <div class="model-results-dialog__categories" id="modelDialogCategories"></div>
+      <p class="model-results-dialog__notice">Medication, diet, exercise and precaution suggestions are dataset guidance for clinician review. Use your professional judgment before including them.</p>
+      <div class="model-results-dialog__actions">
+        <button class="btn btn-outline" type="button" id="modelDialogCancel">Back to symptoms</button>
+        <button class="btn btn-primary" type="button" id="modelDialogApply">Use selected items in report</button>
+      </div>
+    </dialog>
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=workspace5"></script>
     <script src="/Scripts/walkin.js?v=workspace4"></script>
