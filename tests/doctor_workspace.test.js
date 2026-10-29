@@ -42,7 +42,7 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   for (const [id, title] of [
     ['areaVisit', 'Who this record is for'],
     ['areaSymptoms', 'Add symptoms and duration'],
-    ['areaDecision', 'Your assessment and plan'],
+    ['areaDecision', 'Clinical assessment'],
   ]) {
     assert.ok(html.includes(`id="${id}"`), `missing area: ${id}`);
     assert.ok(html.includes(title), `missing area title: ${title}`);
@@ -65,7 +65,12 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   assert.ok(html.includes('id="modelDialogCategories"'));
   assert.ok(html.includes('id="modelSuggestionInput"'));
   assert.ok(html.includes('<option value="observations">Clinical observation</option>'));
-  assert.ok(html.includes('Confirm selected items'));
+  assert.ok(html.includes('id="consultationWizard"'));
+  assert.ok(html.includes('id="guidanceCategorySelect"'));
+  assert.ok(script.includes('function setWizardStep'));
+  assert.ok(script.includes("label.className = 'guidance-checkbox'"));
+  assert.equal(html.includes('Plan and follow-up'), false);
+  assert.equal(html.includes('Write this before you look at the model suggestion'), false);
   assert.ok(script.includes("state.selectedGuidance = { precautions: [], medications: [], diet: [], workout: [] }"));
   assert.ok(html.includes('Duration (days)'));
   assert.ok(html.includes('Generate consultation report'));
