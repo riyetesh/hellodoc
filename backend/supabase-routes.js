@@ -688,6 +688,19 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       doctorAssessment: doctorAssessment.trim(), plan: plan.trim(),
     };
   };
+  const selectReportGuidance = (assessment, requested) => {
+    if (!requested || typeof requested !== 'object' || Array.isArray(requested)) return assessment;
+    const result = { ...assessment };
+    for (const key of ['precautions', 'medications', 'diet', 'workout']) {
+      if (!(key in requested)) continue;
+      const selected = requested[key];
+      if (!Array.isArray(selected) || selected.length > 100
+        || selected.some((item) => typeof item !== 'string' || item.length > 500)) continue;
+      const allowed = new Set(Array.isArray(assessment[key]) ? assessment[key] : []);
+      result[key] = [...new Set(selected.filter((item) => allowed.has(item)))];
+    }
+    return result;
+  };
   const modelFailureMessage = (code) => ({
     MODEL_NOT_CONFIGURED: 'Symptom search is not configured on this server. You can still save the consultation as a clinical record without a model suggestion.',
     MODEL_AUTH: 'The backend cannot authenticate with the private model service. You can still save the consultation as a clinical record without a model suggestion.',
@@ -993,6 +1006,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (!cleaned.modelUnavailable) {
       assessment = await runModelAssessment(cleaned.symptoms, res);
       if (!assessment) return;
+      assessment = selectReportGuidance(assessment, body.includeGuidance);
     }
     const insert = await db.from('assessments').insert({
       doctor_id: user.id, patient_id: accountPatientId, clinic_patient_id: clinicPatientId,
@@ -1045,6 +1059,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     if (!cleaned.modelUnavailable) {
       assessment = await runModelAssessment(cleaned.symptoms, res);
       if (!assessment) return;
+      assessment = selectReportGuidance(assessment, body.includeGuidance);
     }
     const insert = await db.from('assessments').insert({
       doctor_id: user.id, patient_id: source.data.patient_id, clinic_patient_id: source.data.clinic_patient_id,
@@ -1138,14 +1153,22 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.send(pdf);
   }));
   router.post('/doctor/predict', ...guard('doctor', async (req, res) => {
-    if (!validSymptoms(req.body?.symptoms)) return res.status(400).json({ message:'Select valid symptoms' });
+    if (!validSymptoms(req.body?.symptoms)) return res.status(400).json({ message:'Select symptoms from the model vocabulary' });
     try {
-      const result = await modelRequest('/internal/predict', req.body.symptoms);
-      if (typeof result.output !== 'string' || typeof result.modelVersion !== 'string') throw new Error('Invalid model response');
-      res.json({output:result.output,modelVersion:result.modelVersion,label:'Experimental decision support, not a diagnosis'});
+      const result = await modelRequest('/internal/assess', req.body.symptoms);
+      if (typeof result.output !== 'string' || typeof result.modelVersion !== 'string'
+        || !Array.isArray(result.precautions) || !Array.isArray(result.medications)
+        || !Array.isArray(result.diet) || !Array.isArray(result.workout)) throw new Error('Invalid model response');
+      res.json({
+        output: result.output, modelVersion: result.modelVersion,
+        description: typeof result.description === 'string' ? result.description : '',
+        precautions: result.precautions.filter((item) => typeof item === 'string'),
+        medications: result.medications.filter((item) => typeof item === 'string'),
+        diet: result.diet.filter((item) => typeof item === 'string'),
+        workout: result.workout.filter((item) => typeof item === 'string'),
+        label: 'Experimental decision support, not a diagnosis',
+      });
     } catch (error) {
-      // Keep a missing model configuration distinguishable from an outage so a
-      // deployment gap is diagnosable instead of looking like a transient error.
       const code = ['INVALID_SYMPTOMS', 'MODEL_NOT_CONFIGURED'].includes(error.code) ? error.code : 'MODEL_UNAVAILABLE';
       res.status(code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code, message: code === 'MODEL_UNAVAILABLE' ? 'Model service unavailable. Please retry later.' : error.message });
     }
