@@ -22,6 +22,7 @@
     modelAvailable: false,
     modelError: null,
     modelPreview: null,
+    selectedGuidance: { precautions: [], medications: [], diet: [], workout: [] },
     // Set when a model call failed in this session. It is what makes the
     // model-free save path visible, and it is never hidden again by a later
     // successful preview.
@@ -678,7 +679,24 @@
         error.code = 'MODEL_INVALID_RESPONSE';
         throw error;
       }
-      state.modelPreview = { output: body.output.trim(), modelVersion: body.modelVersion.trim() };
+      state.modelPreview = {
+        output: body.output.trim(),
+        modelVersion: body.modelVersion.trim(),
+        description: typeof body.description === 'string' ? body.description : '',
+        precautions: Array.isArray(body.precautions) ? body.precautions.filter((item) => typeof item === 'string') : [],
+        medications: Array.isArray(body.medications) ? body.medications.filter((item) => typeof item === 'string') : [],
+        diet: Array.isArray(body.diet) ? body.diet.filter((item) => typeof item === 'string') : [],
+        workout: Array.isArray(body.workout) ? body.workout.filter((item) => typeof item === 'string') : [],
+      };
+      state.selectedGuidance = {
+        precautions: [...state.modelPreview.precautions],
+        medications: [...state.modelPreview.medications],
+        diet: [...state.modelPreview.diet],
+        workout: [...state.modelPreview.workout],
+      };
+      renderPredictionDialog();
+      const dialog = $('modelResultsDialog');
+      if (dialog && !dialog.open) dialog.showModal();
       showError('assessmentError', '');
       renderModelPanel();
       announce(`Model suggestion: ${state.modelPreview.output}. This is decision support, not a diagnosis.`);
@@ -689,6 +707,78 @@
       if (!state.modelPreview) $('runModel').textContent = 'Run model suggestion';
       renderModelPanel();
     }
+  }
+
+
+  // ------------------------------------------------------ prediction results ---
+  const guidanceGroups = [
+    ['precautions', 'Precautions'],
+    ['medications', 'Medication suggestions'],
+    ['diet', 'Diet suggestions'],
+    ['workout', 'Exercise suggestions'],
+  ];
+
+  function renderPredictionDialog() {
+    const preview = state.modelPreview;
+    const dialog = $('modelResultsDialog');
+    const disease = $('modelDialogDisease');
+    const meta = $('modelDialogMeta');
+    const categories = $('modelDialogCategories');
+    if (!dialog || !disease || !meta || !categories || !preview) return;
+    disease.textContent = preview.output;
+    meta.textContent = `Model version ${preview.modelVersion} · duration recorded: ${state.duration.trim() || 'not provided'}`;
+    categories.replaceChildren();
+    for (const [key, title] of guidanceGroups) {
+      const section = document.createElement('section');
+      section.className = 'model-results-category';
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+      section.append(heading);
+      const items = preview[key] || [];
+      if (!items.length) {
+        const empty = document.createElement('p');
+        empty.className = 'model-results-empty';
+        empty.textContent = 'No suggestions returned.';
+        section.append(empty);
+      } else {
+        const list = document.createElement('ul');
+        for (const value of items) {
+          const row = document.createElement('li');
+          const label = document.createElement('label');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = state.selectedGuidance[key].includes(value);
+          checkbox.addEventListener('change', () => {
+            const selected = state.selectedGuidance[key];
+            if (checkbox.checked && !selected.includes(value)) selected.push(value);
+            else if (!checkbox.checked) state.selectedGuidance[key] = selected.filter((item) => item !== value);
+            markDirty();
+            renderSideSummary();
+          });
+          const text = document.createElement('span');
+          text.textContent = value;
+          label.append(checkbox, text);
+          row.append(label);
+          list.append(row);
+        }
+        section.append(list);
+      }
+      categories.append(section);
+    }
+  }
+
+  function closePredictionDialog() {
+    const dialog = $('modelResultsDialog');
+    if (dialog?.open) dialog.close();
+  }
+
+  function applyPredictionSelection() {
+    closePredictionDialog();
+    const status = $('modelPanelStatus');
+    if (status) status.textContent = 'Prediction reviewed. Selected guidance will be included in the report; unselected items will be left out.';
+    markDirty();
+    renderSideSummary();
+    announce('Selected model guidance will be included in the consultation report.');
   }
 
   // ----------------------------------------------------------------- review ---
@@ -921,6 +1011,7 @@
       clinicalNote: state.note,
       doctorAssessment: state.doctorAssessment,
       plan: state.plan,
+      ...(state.modelPreview && !withoutModel ? { includeGuidance: state.selectedGuidance } : {}),
       ...(withoutModel ? { modelUnavailable: true } : {}),
     };
     const url = state.revisingId
@@ -1049,6 +1140,10 @@
   function syncFields() {
     state.duration = $('symptomDuration').value;
     state.note = $('clinicalNote').value;
+    if (state.modelPreview) {
+      const meta = $('modelDialogMeta');
+      if (meta) meta.textContent = `Model version ${state.modelPreview.modelVersion} · duration recorded: ${state.duration.trim() || 'not provided'}`;
+    }
   }
 
   ['symptomDuration', 'clinicalNote'].forEach((id) => {
@@ -1153,6 +1248,12 @@
       if (state.modelAvailable) reportedPicker?.focus();
       else $('clinicalNote').focus();
     }
+  });
+
+  $('modelDialogCancel')?.addEventListener('click', closePredictionDialog);
+  $('modelDialogApply')?.addEventListener('click', applyPredictionSelection);
+  $('modelResultsDialog')?.addEventListener('click', (event) => {
+    if (event.target === $('modelResultsDialog')) closePredictionDialog();
   });
 
   // ------------------------------------------------------------------ init ---
