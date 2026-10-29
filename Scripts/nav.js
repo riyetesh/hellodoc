@@ -440,6 +440,7 @@
     const opener = root.querySelector(".hd-sos-fab");
     const closeButtons = root.querySelectorAll(".hd-emergency-close, .hd-emergency-dialog__scrim");
     let previousFocus = null;
+    let emergencyCloseTimer = null;
     const numbers = {
       fi:{number:"112",label:"112",tel:"112"}, eu:{number:"112",label:"112",tel:"112"},
       in:{number:"112",label:"112",tel:"112"}, np:{ambulance:{number:"102",label:"Ambulance · 102",tel:"102"},police:{number:"100",label:"Police · 100",tel:"100"}},
@@ -482,12 +483,19 @@
       }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 });
     }
     function openDialog() {
-      previousFocus = document.activeElement; dialog.hidden = false; document.body.classList.add("hd-emergency-open");
+      if (emergencyCloseTimer !== null) { window.clearTimeout(emergencyCloseTimer); emergencyCloseTimer = null; }
+      previousFocus = document.activeElement;
+      dialog.hidden = false;
+      document.body.classList.add("hd-emergency-open");
+      window.requestAnimationFrame(() => dialog.classList.add("is-open"));
       updateNumber(); root.querySelector(".hd-emergency-close").focus();
       detectCountryFromLocation();
     }
     function closeDialog() {
-      dialog.hidden = true; document.body.classList.remove("hd-emergency-open");
+      dialog.classList.remove("is-open");
+      document.body.classList.remove("hd-emergency-open");
+      if (emergencyCloseTimer !== null) window.clearTimeout(emergencyCloseTimer);
+      emergencyCloseTimer = window.setTimeout(() => { dialog.hidden = true; emergencyCloseTimer = null; }, 200);
       if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
     }
     country.value = defaultCountry(); updateNumber();
