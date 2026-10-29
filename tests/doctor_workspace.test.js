@@ -36,12 +36,12 @@ test('the patient record is opened by an id the server resolved, not one typed b
   assert.match(routes, /patientId:patientOf\(a\)/);
 });
 
-test('the consultation is three areas on one page, not a wizard', () => {
+test('the consultation uses a simple symptom-to-prediction-to-report flow', () => {
   const html = read('doctor.html');
   const script = read('Scripts/assessment.js');
   for (const [id, title] of [
     ['areaVisit', 'Who this record is for'],
-    ['areaSymptoms', 'What was reported and what you found'],
+    ['areaSymptoms', 'Add symptoms and duration'],
     ['areaDecision', 'Your assessment and plan'],
   ]) {
     assert.ok(html.includes(`id="${id}"`), `missing area: ${id}`);
@@ -57,20 +57,28 @@ test('the consultation is three areas on one page, not a wizard', () => {
   assert.ok(html.includes('id="saveAssessment"'));
   assert.ok(html.includes('id="saveAssessmentTop"'));
   assert.ok(html.includes('id="sideSummary"'));
-  // The model suggestion is a separate, optional panel inside the decision area.
+  // Prediction results are presented in a focused dialog, with each guidance
+  // category selectable before generating the report.
   assert.ok(html.includes('id="runModel"'));
-  assert.ok(html.includes('Experimental model suggestion'));
-  assert.ok(html.includes('not a diagnosis'));
-  assert.ok(script.includes("/api/doctor/predict"));
+  assert.ok(html.includes('id="modelResultsDialog"'));
+  assert.ok(html.includes('id="modelDialogCategories"'));
+  assert.ok(html.includes('Use selected items in report'));
+  assert.ok(html.includes('Duration (days)'));
+  assert.ok(html.includes('Generate consultation report'));
+  assert.ok(script.includes("'/api/doctor/predict'"));
+  assert.ok(script.includes('includeGuidance: state.selectedGuidance'));
+  assert.ok(script.includes('await runModelPreview()'));
 });
 
-test('patient-reported symptoms and clinician findings stay in separate lists', () => {
+test('the simplified form uses the model vocabulary and keeps clinical observations separate', () => {
   const html = read('doctor.html');
   const script = read('Scripts/assessment.js');
   assert.ok(html.indexOf('id="reportedPicker"') > html.indexOf('id="areaSymptoms"'));
   assert.ok(html.indexOf('id="reportedPicker"') < html.indexOf('id="clinicianPicker"'));
-  assert.ok(html.includes('Reported by the patient'));
-  assert.ok(html.includes('Recorded by you'));
+  assert.ok(html.includes('<legend>Symptoms</legend>'));
+  assert.ok(html.includes('Clinical observations'));
+  assert.match(html, /id="symptomDuration" type="number"/);
+  assert.match(html, /id="clinicianPicker"/);
   assert.ok(script.includes("state.reported = state.reported.filter"));
   assert.ok(script.includes("patientReported: state.reported"));
   assert.ok(script.includes("clinicianAdded: state.clinician"));
