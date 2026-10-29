@@ -416,7 +416,7 @@
     const root = document.createElement("div");
     root.id = "hdEmergencyRoot";
     root.innerHTML = `
-      <button class="hd-sos-fab" type="button" aria-haspopup="dialog" aria-controls="hdEmergencyDialog"><span class="hd-sos-fab__pulse" aria-hidden="true"></span><span class="hd-sos-fab__label">SOS</span><span class="hd-sos-fab__sub">Emergency</span></button>
+      <button class="hd-sos-fab" type="button" aria-haspopup="dialog" aria-controls="hdEmergencyDialog"><span class="hd-sos-fab__label">SOS</span></button>
       <section class="hd-emergency-dialog" id="hdEmergencyDialog" role="dialog" aria-modal="true" aria-labelledby="hdEmergencyTitle" aria-describedby="hdEmergencyDescription" hidden>
         <button class="hd-emergency-dialog__scrim" type="button" aria-label="Close emergency panel"></button>
         <div class="hd-emergency-card" role="document">
@@ -428,7 +428,6 @@
           <div id="hdEmergencyServiceWrap" hidden><label class="hd-emergency-label" for="hdEmergencyService">Which service do you need?</label><select id="hdEmergencyService"><option value="ambulance">Ambulance — 102</option><option value="police">Police — 100</option></select></div>
           <div class="hd-emergency-number" aria-live="polite"><span class="hd-emergency-number__label">Local emergency number</span><strong id="hdEmergencyNumber">Choose your country</strong></div>
           <a class="hd-emergency-call" id="hdEmergencyCall" href="#" hidden>Call emergency services</a>
-          <p class="hd-emergency-footnote">The suggestion uses browser settings, not GPS. Confirm your country and number before calling, especially when travelling. This panel does not contact emergency services automatically.</p>
         </div>
       </section>`;
     document.body.appendChild(root);
@@ -457,9 +456,35 @@
       call.textContent = "Call " + (selected === "np" ? (service.value === "ambulance" ? "ambulance" : "police") : "emergency services") + " · " + item.number;
       call.hidden = false;
     }
+    function countryFromCoordinates(latitude, longitude) {
+      if (latitude >= 59.5 && latitude <= 70.5 && longitude >= 19 && longitude <= 32) return "fi";
+      if (latitude >= 26 && latitude <= 31.5 && longitude >= 80 && longitude <= 89) return "np";
+      if (latitude >= 6 && latitude <= 37.5 && longitude >= 68 && longitude <= 98) return "in";
+      if (latitude >= 24 && latitude <= 50 && longitude >= -125 && longitude <= -66) return "us";
+      if (latitude >= 42 && latitude <= 84 && longitude >= -141 && longitude <= -52) return "ca";
+      if (latitude >= 49 && latitude <= 59 && longitude >= -8.5 && longitude <= 2.5) return "gb";
+      if (latitude >= -44.5 && latitude <= -10 && longitude >= 112 && longitude <= 154) return "au";
+      if (latitude >= -48.5 && latitude <= -33 && longitude >= 166 && longitude <= 179.9) return "nz";
+      if (latitude >= 35 && latitude <= 71 && longitude >= -11 && longitude <= 32) return "eu";
+      return "other";
+    }
+    function detectCountryFromLocation() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition((position) => {
+        const detected = countryFromCoordinates(position.coords.latitude, position.coords.longitude);
+        if (detected !== "other") {
+          country.value = detected;
+          try { localStorage.setItem("hellodoc-emergency-country", detected); } catch {}
+        }
+        updateNumber();
+      }, () => {
+        // Permission denied or location unavailable: keep the browser-locale/manual choice.
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 });
+    }
     function openDialog() {
       previousFocus = document.activeElement; dialog.hidden = false; document.body.classList.add("hd-emergency-open");
       updateNumber(); root.querySelector(".hd-emergency-close").focus();
+      detectCountryFromLocation();
     }
     function closeDialog() {
       dialog.hidden = true; document.body.classList.remove("hd-emergency-open");
