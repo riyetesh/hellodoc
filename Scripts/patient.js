@@ -40,12 +40,16 @@
   function setupState(userId) {
     try {
       const value = JSON.parse(localStorage.getItem(onboardingKey(userId)) || '{}');
-      return { complete: value.complete === true, step: Number.isInteger(value.step) ? Math.max(0, Math.min(2, value.step)) : 0 };
-    } catch { return { complete: false, step: 0 }; }
+      return {
+        complete: value.complete === true,
+        shown: value.shown === true,
+        step: Number.isInteger(value.step) ? Math.max(0, Math.min(2, value.step)) : 0
+      };
+    } catch { return { complete: false, shown: false, step: 0 }; }
   }
-  function persistSetup(step, complete = false) {
+  function persistSetup(step, complete = false, shown = true) {
     if (!state.data?.userId) return;
-    try { localStorage.setItem(onboardingKey(state.data.userId), JSON.stringify({ step, complete })); }
+    try { localStorage.setItem(onboardingKey(state.data.userId), JSON.stringify({ step, complete, shown })); }
     catch { /* Onboarding is optional; the dashboard stays usable without it. */ }
   }
   function markSetupComplete() {
@@ -68,7 +72,10 @@
   }
   function startOnboarding(profile) {
     const saved = setupState(state.data.userId);
-    if (saved.complete) return;
+    // Show the introduction only on the first patient-dashboard visit for this account.
+    // Mark it as shown immediately so reloads/navigation do not reopen it if unfinished.
+    if (saved.complete || saved.shown) return;
+    persistSetup(saved.step, false, true);
     $('#onboarding').hidden = false;
     prefillForm($('#setupProfileForm'), profile);
     setupProgress(saved.step);
