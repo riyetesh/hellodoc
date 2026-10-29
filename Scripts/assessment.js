@@ -986,6 +986,15 @@
   async function saveAssessment({ withoutModel = false } = {}) {
     if (state.saving) return;
     if (withoutModel && !state.modelOutage) return;
+    if (!withoutModel && !state.modelPreview) {
+      if (state.modelAvailable) {
+        showError('assessmentError', 'Run the prediction and choose which suggestions to include before generating the report.');
+        await runModelPreview();
+      } else {
+        showError('assessmentError', 'The model is unavailable. Retry the prediction or use the explicit save-without-model option.');
+      }
+      return;
+    }
     showError('sideError', '');
     if (!state.patientId) { showError('reviewError', 'Select a patient first.'); showError('sideError', 'Select a patient first.'); return; }
     if (!state.revisingId && !state.appointmentId) {
