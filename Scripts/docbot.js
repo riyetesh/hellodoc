@@ -38,7 +38,7 @@
     {k:["what is hellodoc","about hellodoc","how does hellodoc work","platform"],a:"HelloDoc is a clinic and consultation platform prototype. Patients can browse approved doctors and book visits; doctors manage assigned appointments and clinical assessments; administrators review professional verification and platform records.",u:"help.html",l:"About HelloDoc"}
   ];
   function findAnswer(question) {
-    const q = question.toLowerCase().replace(/[^a-z0-9\\s-]/g," ").replace(/\\s+/g," ").trim();
+    const q = question.toLowerCase().replace(/[^a-z0-9\s-]/g," ").replace(/\s+/g," ").trim();
     let best = null, score = 0;
     for (const item of faq) { let n = 0; for (const key of item.k) if (q.includes(key)) n += key.includes(" ") ? 3 : 1; if (n > score) { best=item; score=n; } }
     return best || {a:"I don’t have a reliable answer for that specific question yet. I can help with signing up, login and password recovery, appointments, doctor verification, clinical records, and navigating HelloDoc. Open the Help page for more information.",u:"help.html",l:"Open Help"};
