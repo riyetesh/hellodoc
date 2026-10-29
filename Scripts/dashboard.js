@@ -604,19 +604,63 @@
     window.SPECIALITIES = [];
     $("#statDoctors").textContent = "0";
     $("#noResults").hidden = true;
-    $("#resultsCount").textContent = "Loading doctors…";
-    fetch("/api/doctors").then((response) => {
-      if (!response.ok) throw new Error("Directory unavailable");
-      return response.json();
-    }).then((doctors) => {
-      if (!Array.isArray(doctors)) throw new Error("Directory unavailable");
-      window.DOCTORS = doctors
-        .filter((d) => !/fictional test doctor/i.test(String(d.bio || "")) && !/^TEST ONLY\s*[-:]/i.test(String(d.name || "")))
-        .map((d) => ({ ...d, speciality: d.specialty, hourlyFee: d.fee == null ? null : Number(d.fee), acceptingAppointments: d.accepting_appointments === true, nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null }));
-      window.SPECIALITIES = [...new Set(window.DOCTORS.map((d) => d.speciality))];
-      $("#statDoctors").textContent = window.DOCTORS.length;
-      renderChips(); renderCards();
-    }).catch(() => { $("#resultsCount").textContent = "Unavailable"; $("#noResults").hidden = false; $("#noResults p").textContent = "Doctor directory is unavailable. Please try again later."; });
+
+    // Always request the current directory response. A cached API response can
+    // otherwise make a recently approved/updated directory look empty.
+    async function loadDoctors() {
+      const retryButton = $("#retryDoctors");
+      if (retryButton) {
+        retryButton.disabled = true;
+        retryButton.textContent = "Loading…";
+        retryButton.hidden = true;
+      }
+      $("#resultsCount").textContent = "Loading doctors…";
+      $("#noResults").hidden = true;
+      try {
+        const response = await fetch("/api/doctors", {
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error("Directory request failed");
+        const doctors = await response.json();
+        if (!Array.isArray(doctors)) throw new Error("Directory response was invalid");
+
+        window.DOCTORS = doctors
+          .filter((d) => d && !/fictional test doctor/i.test(String(d.bio || "")) && !/^TEST ONLY\\s*[-:]/i.test(String(d.name || "")))
+          .map((d) => ({
+            ...d,
+            name: String(d.name || "Doctor"),
+            speciality: d.specialty || d.speciality || "General consultation",
+            hourlyFee: d.fee == null && d.hourlyFee == null ? null : Number(d.fee ?? d.hourlyFee),
+            acceptingAppointments: d.accepting_appointments === true || d.acceptingAppointments === true,
+            nextSlot: d.nextSlot ? new Date(d.nextSlot).toLocaleString() : null,
+          }));
+        window.SPECIALITIES = [...new Set(window.DOCTORS.map((d) => d.speciality))];
+        $("#statDoctors").textContent = window.DOCTORS.length;
+        renderChips();
+        renderCards();
+      } catch {
+        $("#resultsCount").textContent = "Could not load doctors";
+        $("#noResults").hidden = false;
+        $("#noResults h3").textContent = "Doctor directory temporarily unavailable";
+        $("#noResults p").textContent = "The approved doctor list could not be loaded. Check your connection and try again.";
+        if (retryButton) {
+          retryButton.hidden = false;
+          retryButton.disabled = false;
+          retryButton.textContent = "Retry";
+        }
+      }
+    }
+
+    const retryButton = document.createElement("button");
+    retryButton.className = "btn btn-outline";
+    retryButton.id = "retryDoctors";
+    retryButton.type = "button";
+    retryButton.hidden = true;
+    retryButton.textContent = "Retry";
+    retryButton.addEventListener("click", loadDoctors);
+    $("#noResults").appendChild(retryButton);
+    loadDoctors();
 
     initToolbar();
     initCards();
