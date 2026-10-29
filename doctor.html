@@ -245,21 +245,6 @@
                     </div>
                   </section>
 
-                  <!-- C. Clinical decision and plan ------------------------- -->
-                  <section class="cw-area" id="areaDecision" aria-labelledby="areaDecisionTitle">
-                    <div class="cw-area__head">
-                      <p class="cw-area__step">Clinical decision and plan</p>
-                      <h3 id="areaDecisionTitle">Your assessment and plan</h3>
-                      <p class="cw-area__lead">Your independent impression, then the optional model suggestion, then the plan you decide. The model never writes into your fields.</p>
-                    </div>
-                    <div class="cw-area__body">
-                      <div class="form-grp">
-                        <label for="doctorAssessment">Your assessment</label>
-                        <textarea id="doctorAssessment" rows="5" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
-                        <p class="dw-field-hint">Write this before you look at the model suggestion if you want an uncontaminated opinion.</p>
-                        <p class="dw-inline-note" id="assessmentHint" hidden></p>
-                      </div>
-
                       <section class="cw-model" aria-labelledby="modelPanelTitle">
                         <div class="cw-model__head">
                           <div>
@@ -319,6 +304,23 @@
                           <span>Any selected model symptoms move into your observations, and no prediction is stored.</span>
                         </p>
                       </section>
+
+
+
+                  <!-- C. Clinical decision and plan ------------------------- -->
+                  <section class="cw-area" id="areaDecision" aria-labelledby="areaDecisionTitle">
+                    <div class="cw-area__head">
+                      <p class="cw-area__step">Clinical decision and plan</p>
+                      <h3 id="areaDecisionTitle">Your assessment and plan</h3>
+                      <p class="cw-area__lead">Your independent impression, then the optional model suggestion, then the plan you decide. The model never writes into your fields.</p>
+                    </div>
+                    <div class="cw-area__body">
+                      <div class="form-grp">
+                        <label for="doctorAssessment">Your assessment</label>
+                        <textarea id="doctorAssessment" rows="5" maxlength="4000" placeholder="Your independent clinical impression"></textarea>
+                        <p class="dw-field-hint">Write this before you look at the model suggestion if you want an uncontaminated opinion.</p>
+                        <p class="dw-inline-note" id="assessmentHint" hidden></p>
+                      </div>
 
                       <div class="form-grp">
                         <label for="plan">Plan and follow-up</label>
