@@ -471,7 +471,15 @@ test('clinical assessments require an approved doctor and validated model sympto
   insertAssessmentError = null;
 
   insertedAssessment = null; modelCalls = [];
-  const created = await send(body);
+  const created = await send({
+    ...body,
+    includeGuidance: {
+      precautions: ['p', 'Doctor-added precaution'],
+      medications: [],
+      diet: ['d'],
+      workout: [],
+    },
+  });
   assert.equal(created.status, 201);
   assert.equal(created.body.id, '33333333-3333-4333-8333-333333333333');
   // Only symptom identifiers reach the model - no patient identifiers or notes.
@@ -486,6 +494,10 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.equal(insertedAssessment.payload.doctor_id, profile.id);
   assert.deepEqual(insertedAssessment.payload.patient_reported, ['itching']);
   assert.deepEqual(insertedAssessment.payload.clinician_added, ['skin_rash']);
+  assert.deepEqual(insertedAssessment.payload.precautions, ['p', 'Doctor-added precaution']);
+  assert.deepEqual(insertedAssessment.payload.medications, []);
+  assert.deepEqual(insertedAssessment.payload.diet, ['d']);
+  assert.deepEqual(insertedAssessment.payload.workout, []);
   assert.equal(JSON.stringify(insertedAssessment.payload).includes('Synthetic Patient'), false);
 
   // A model outage must never store a half-made record: the caller keeps the form.
