@@ -450,7 +450,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
   // outcome is derived from whether a prediction was stored, rather than from
   // the later model_status column, so an older database still answers.
   // ---------------------------------------------------------------------------
-  const PATIENT_ASSESSMENT_COLUMNS = 'id,doctor_id,appointment_id,patient_reported,clinician_added,observations,symptom_duration,clinical_note,predicted_disease,model_version,model_confidence,description,precautions,medications,diet,workout,doctor_assessment,plan,report_generated_at,created_at,updated_at';
+  const PATIENT_ASSESSMENT_COLUMNS = 'id,doctor_id,created_by,demo_mode,appointment_id,patient_reported,clinician_added,observations,symptom_duration,clinical_note,predicted_disease,model_version,model_confidence,description,precautions,medications,diet,workout,doctor_assessment,plan,report_generated_at,created_at,updated_at';
 
   const doctorNames = (directory) => new Map((directory?.data || []).map((d) => [d.id, d.name]));
 
@@ -467,7 +467,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
 
   router.get('/patient/assessments', ...guard('patient', async (req, res, { db, user }) => {
     const result = await db.from('assessments')
-      .select('id,doctor_id,appointment_id,predicted_disease,doctor_assessment,created_at')
+      .select('id,doctor_id,created_by,demo_mode,appointment_id,predicted_disease,doctor_assessment,created_at')
       .eq('patient_id', user.id).order('created_at', { ascending: false }).limit(50);
     if (result.error) { report('patient_assessments', result.error); return res.status(503).json({ message: 'Health records are unavailable right now.' }); }
     const appointments = await ownAppointments(db, user.id, result.data.map((row) => row.appointment_id));
@@ -479,6 +479,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       return {
         id: row.id,
         recordedAt: row.created_at,
+        demoMode: Boolean(row.demo_mode),
         doctorName: names.get(row.doctor_id) || 'Your clinician',
         // A stored null means the model was unavailable for that consultation.
         // It is reported as "unavailable", never as an empty diagnosis.
@@ -510,6 +511,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     res.json({
       id: row.id,
       recordedAt: row.created_at,
+      demoMode: Boolean(row.demo_mode),
+      createdBy: row.created_by,
       updatedAt: row.updated_at,
       reportGeneratedAt: row.report_generated_at,
       doctorName: doctorNames(directory).get(row.doctor_id) || 'Your clinician',
