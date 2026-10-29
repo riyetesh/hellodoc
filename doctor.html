@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/Styles/app.css?v=sos3" />
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css?v=workspace5" />
-    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace4" />
+    <link rel="stylesheet" href="/Styles/assessment.css?v=workspace5" />
   </head>
   <body class="dw-page">
     <nav class="navbar" id="navbar">
@@ -176,9 +176,9 @@
                   <!-- B. Symptoms and findings --------------------------------- -->
                   <section class="cw-area" id="areaSymptoms" aria-labelledby="areaSymptomsTitle">
                     <div class="cw-area__head">
-                      <p class="cw-area__step">2 · Symptoms and findings</p>
-                      <h3 id="areaSymptomsTitle">What was reported and what you found</h3>
-                      <p class="cw-area__lead">The two lists stay separate in the record, and both are the only input the model receives. Free text stays out of the model.</p>
+                      <p class="cw-area__step">2 · Symptoms and duration</p>
+                      <h3 id="areaSymptomsTitle">Add symptoms and duration</h3>
+                      <p class="cw-area__lead">Choose symptoms from the model vocabulary, then enter how long the patient has had them.</p>
                     </div>
                     <div class="cw-area__body">
                       <p class="shortcut-strip" aria-label="Keyboard shortcuts">
@@ -193,8 +193,8 @@
 
                       <div class="cw-split">
                         <fieldset class="symptom-group symptom-group--reported">
-                          <legend>Reported by the patient</legend>
-                          <p class="symptom-hint">Search by name. Matches come from the model's vocabulary; anything else belongs in your observations.</p>
+                          <legend>Symptoms</legend>
+                          <p class="symptom-hint">Search and select symptoms from the model vocabulary. Add any other details as observations below.</p>
                           <div class="symptom-picker" id="reportedPicker"></div>
                         </fieldset>
                         <fieldset class="symptom-group symptom-group--observed">
@@ -206,8 +206,8 @@
 
                       <div class="cw-row">
                         <div class="form-grp">
-                          <label for="symptomDuration">Symptom duration</label>
-                          <input id="symptomDuration" type="text" maxlength="120" placeholder="e.g. 3 days" />
+                          <label for="symptomDuration">Duration (days)</label>
+                          <input id="symptomDuration" type="number" min="0" max="36500" step="1" inputmode="numeric" placeholder="e.g. 3" />
                           <p class="dw-field-hint">Recorded with this consultation. It is not read by the model.</p>
                         </div>
                         <div class="cw-model-state" id="modelState" data-state="unknown">
@@ -291,7 +291,7 @@
                   </section>
 
                   <!-- Review -------------------------------------------------- -->
-                  <section class="cw-area cw-area--review" id="reviewArea" aria-labelledby="reviewTitle">
+                  <section class="cw-area cw-area--review" id="reviewArea" aria-labelledby="reviewTitle" hidden>
                     <div class="assessment-review dw-review" id="reviewPanel" tabindex="-1">
                       <div class="dw-review__head">
                         <h3 id="reviewTitle">Review before saving</h3>
