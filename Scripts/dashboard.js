@@ -18,13 +18,57 @@
     sort: "relevance",
     specialities: new Set(),
     availability: "all",
+    currency: "INR",
     booking: null, // selected real server slot and idempotency key
     submitting: false,
   };
 
   const els = {};
+  const currencyRates = { INR: 1 };
+  let ratesReady = false;
 
   // --- helpers ---
+  function formatFee(amount) {
+    if (amount == null) return "Fee not listed";
+    if (Number(amount) === 0) return "No fee listed";
+    const rate = currencyRates[state.currency];
+    if (!rate) return `₹${Number(amount).toLocaleString("en-IN")} (currency rates unavailable)`;
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: state.currency,
+        maximumFractionDigits: state.currency === "NPR" || state.currency === "INR" ? 0 : 2
+      }).format(Number(amount) * rate);
+    } catch {
+      return `${state.currency} ${(Number(amount) * rate).toFixed(2)}`;
+    }
+  }
+
+  async function loadCurrencyRates() {
+    try {
+      const response = await fetch("https://open.er-api.com/v6/latest/INR", { cache: "no-store" });
+      if (!response.ok) throw new Error("Rates unavailable");
+      const data = await response.json();
+      if (data.result !== "success" || !data.rates) throw new Error("Rates unavailable");
+      Object.assign(currencyRates, data.rates);
+      ratesReady = true;
+    } catch {
+      ratesReady = false;
+    }
+    if (els.currencySelect) {
+      Array.from(els.currencySelect.options).forEach((option) => {
+        option.disabled = option.value !== "INR" && !currencyRates[option.value];
+      });
+      if (!currencyRates[state.currency]) {
+        state.currency = "INR";
+        els.currencySelect.value = "INR";
+      }
+    }
+    renderCards();
+    if (state.booking) {
+      $("#bookingFee").textContent = formatFee(state.booking.doctor.hourlyFee);
+    }
+  }
   const $ = (sel) => document.querySelector(sel);
 
   function toast(message, type = "info") {
@@ -128,7 +172,7 @@
       const bio = card.querySelector(".doctor-bio");
       bio.textContent = doc.bio || "";
       bio.hidden = !doc.bio;
-      card.querySelector(".meta strong").textContent = doc.hourlyFee === null ? "Fee not listed" : doc.hourlyFee === 0 ? "No fee listed" : `Rs. ${doc.hourlyFee.toLocaleString()}`;
+      card.querySelector(".meta strong").textContent = formatFee(doc.hourlyFee);
       card.querySelector(".next-slot span").textContent = doc.nextSlot ? `Next: ${doc.nextSlot}` : doc.acceptingAppointments ? "See available appointment times" : "Appointments currently unavailable";
       frag.appendChild(card);
     });
@@ -189,7 +233,7 @@
     $("#bookingImg").hidden = true;
     $("#bookingSuccessHeading").textContent = "Appointment requested";
     $("#bookingSpeciality").textContent = doc.speciality || "Specialty not listed";
-    $("#bookingFee").textContent = doc.hourlyFee === null || doc.hourlyFee === 0 ? "Not listed" : `Rs. ${doc.hourlyFee.toLocaleString()}`;
+    $("#bookingFee").textContent = formatFee(doc.hourlyFee);
     $("#bookingReason").value = "";
     $("#bookingFeedback").hidden = true;
     $("#bookingReview").hidden = true;
@@ -541,6 +585,20 @@
     els.search = $("#search");
     els.chips = $("#chips");
     els.overlay = $("#bookingOverlay");
+    els.currencySelect = $("#currencySelect");
+    if (els.currencySelect) {
+      const savedCurrency = localStorage.getItem("hellodoc-currency");
+      if (savedCurrency && Array.from(els.currencySelect.options).some((o) => o.value === savedCurrency)) {
+        state.currency = savedCurrency;
+        els.currencySelect.value = savedCurrency;
+      }
+      els.currencySelect.addEventListener("change", () => {
+        state.currency = els.currencySelect.value;
+        localStorage.setItem("hellodoc-currency", state.currency);
+        renderCards();
+        if (state.booking) $("#bookingFee").textContent = formatFee(state.booking.doctor.hourlyFee);
+      });
+    }
 
     window.DOCTORS = [];
     window.SPECIALITIES = [];
@@ -564,6 +622,7 @@
     initCards();
     initModal();
     initGreeting();
+    loadCurrencyRates();
 
     renderChips();
   });
