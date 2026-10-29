@@ -621,7 +621,8 @@
     if (state.modelOutage || !state.modelAvailable) {
       status.textContent = (state.modelOutage?.message || outageMessage(state.modelError?.code))
         + ' No prediction will be stored for this consultation unless you retry the model later.';
-      run.disabled = true;
+      run.disabled = state.saving || !state.modelAvailable;
+      run.textContent = state.modelAvailable ? 'Retry prediction' : 'Model unavailable';
     } else if (!symptoms.length) {
       status.textContent = 'Add at least one symptom to run the model. Saving the assessment runs it as well.';
       run.disabled = true;
@@ -632,7 +633,7 @@
       status.textContent = `${symptoms.length} symptom${symptoms.length === 1 ? '' : 's'} will be sent to the model. Run it to preview the suggestion, or save and let the save run it.`;
       run.disabled = state.saving;
     }
-    run.textContent = state.modelPreview ? 'Run again' : 'Run model suggestion';
+    run.textContent = state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Predict');
 
     if (state.modelPreview) {
       result.hidden = false;
@@ -954,7 +955,7 @@
       const button = $(id);
       if (!button) continue;
       button.disabled = value;
-      button.textContent = value ? 'Saving assessment…' : 'Save assessment';
+      button.textContent = value ? 'Generating report…' : 'Generate consultation report';
     }
     const run = $('runModel');
     if (run) run.disabled = value || !state.modelAvailable || !modelSymptoms().length;
