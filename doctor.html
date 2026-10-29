@@ -9,6 +9,20 @@
     <link rel="stylesheet" href="/Styles/patient.css" />
     <link rel="stylesheet" href="/Styles/doctor.css?v=workspace6" />
     <link rel="stylesheet" href="/Styles/assessment.css?v=workspace6" />
+
+    <style>
+      .consultation-dock{position:fixed;z-index:30;right:1rem;bottom:1rem;width:18rem;max-height:90vh;overflow:auto;padding:1rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 14px 42px rgba(20,35,60,.22)}
+      .consultation-dock__doctor{font-weight:700;margin:.25rem 0 .75rem}
+      .consultation-video{position:relative;height:10rem;overflow:hidden;border-radius:10px;background:#e9edf4}
+      .consultation-video img{width:100%;height:100%;object-fit:cover}
+      .consultation-video span{position:absolute;bottom:.4rem;left:.4rem;background:#222;color:white;padding:.25rem;font-size:.65rem}
+      .consultation-timer{border-top:1px solid var(--border);margin-top:.75rem;padding-top:.5rem}
+      #consultationTimerDisplay{display:block;font-size:1.8rem;font-variant-numeric:tabular-nums;margin:.3rem 0}
+      .consultation-timer button{padding:.5rem}
+      @media(max-width:760px){.consultation-dock{right:.5rem;bottom:.5rem;width:15rem}.consultation-video{height:8rem}.dw-page .dw-main{padding-bottom:20rem}}
+      @media(min-width:761px){.dw-page .dw-main{padding-right:20rem}}
+    </style>
+
   </head>
   <body class="dw-page">
     <nav class="navbar" id="navbar">
@@ -568,5 +582,30 @@
     <script src="/Scripts/walkin.js?v=workspace4"></script>
     <script src="/Scripts/assessment.js?v=workspace7"></script>
     <script src="/Scripts/nav.js?v=sos3"></script>
+
+    <script>
+      (() => {
+        const display = document.getElementById('consultationTimerDisplay');
+        const toggle = document.getElementById('consultationTimerStart');
+        const reset = document.getElementById('consultationTimerReset');
+        const identity = document.getElementById('doctorIdentity');
+        const dockName = document.getElementById('dockDoctorName');
+        const syncName = () => {
+          const value = identity?.textContent?.trim() || '';
+          if (dockName && value && !value.startsWith('Checking')) {
+            dockName.textContent = value.split(' · ')[0];
+          }
+        };
+        syncName();
+        if (identity && window.MutationObserver) new MutationObserver(syncName).observe(identity,{childList:true,characterData:true,subtree:true});
+        if (!display || !toggle || !reset) return;
+        let elapsed=0, started=null, interval=null;
+        const paint=()=>{const n=elapsed+(started===null?0:Math.floor((Date.now()-started)/1000));display.textContent=[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');};
+        toggle.addEventListener('click',()=>{if(started===null){started=Date.now();toggle.textContent='Pause';interval=window.setInterval(paint,1000);}else{elapsed+=Math.floor((Date.now()-started)/1000);started=null;window.clearInterval(interval);interval=null;toggle.textContent='Resume';paint();}});
+        reset.addEventListener('click',()=>{elapsed=0;started=null;if(interval!==null)window.clearInterval(interval);interval=null;toggle.textContent='Start';paint();});
+        paint();
+      })();
+    </script>
+
   </body>
 </html>
