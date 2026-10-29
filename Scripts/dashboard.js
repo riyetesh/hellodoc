@@ -626,7 +626,7 @@
         if (!Array.isArray(doctors)) throw new Error("Directory response was invalid");
 
         window.DOCTORS = doctors
-          .filter((d) => d && !/fictional test doctor/i.test(String(d.bio || "")) && !/^TEST ONLY\\s*[-:]/i.test(String(d.name || "")))
+          .filter((d) => d && !/fictional test doctor/i.test(String(d.bio || "")) && !/^TEST ONLY\s*[-:]/i.test(String(d.name || "")))
           .map((d) => ({
             ...d,
             name: String(d.name || "Doctor"),
