@@ -684,3 +684,7 @@
 .guidance-modal .model-suggestion-add__controls input{width:100%}
 .dw-page #areaVisit .assessment-context{margin-top:.65rem;white-space:pre-wrap;line-height:1.55}
 @media(max-width:600px){.guidance-category-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.guidance-category-button{height:6.5rem;min-height:6.5rem}.guidance-modal{padding:1rem}.guidance-modal .model-suggestion-add__controls{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Keep native guidance dialogs centred regardless of page layout */
+dialog.guidance-modal{position:fixed;inset:0;margin:auto;left:0;right:0;top:0;bottom:0}
