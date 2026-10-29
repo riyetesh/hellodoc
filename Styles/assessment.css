@@ -709,3 +709,5 @@ dialog.guidance-modal{position:fixed;inset:0;margin:auto;left:0;right:0;top:0;bo
 .dw-review-model h4{margin:0 0 .35rem;font-size:.85rem}.dw-review-model p{margin:.25rem 0;line-height:1.5}
 .dw-actions--review{justify-content:flex-end;border-top:1px solid #e4eaf2;padding-top:1rem;margin-top:1.25rem}
 @media(max-width:760px){.dw-review__grid{grid-template-columns:1fr}.dw-review{padding:.9rem}}
+
+.dw-review__checks{display:none!important}
