@@ -623,3 +623,37 @@
   .model-results-inline .model-results-dialog__disease { margin-inline: 0; }
   .model-suggestion-add__controls { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Compact consultation wizard */
+.consultation-wizard{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.4rem;margin:0 0 1rem;padding:.45rem;border:1px solid var(--border,#dce5f3);border-radius:14px;background:var(--surface,#fff)}
+.consultation-wizard__step{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:3rem;padding:.5rem .35rem;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-soft,#41536d);font:inherit;font-size:.82rem;font-weight:650;cursor:pointer}
+.consultation-wizard__step svg{width:1.15rem;height:1.15rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.consultation-wizard__step.is-active{background:var(--brand-soft,#edf4ff);border-color:var(--border-strong,#c8d8f0);color:var(--brand,#1b5f9e)}
+.consultation-wizard__controls{display:flex;justify-content:space-between;gap:.75rem;padding:1rem 0}
+.consultation-wizard__controls[hidden]{display:none!important}
+.dw-page .cw-layout{display:block}
+.dw-page .cw-side{display:none!important}
+.dw-page .cw-main{width:100%;max-width:100%}
+.dw-page .cw-main>.cw-area,.dw-page .cw-main>.cw-model{margin-bottom:0}
+.dw-page .cw-area__head{padding:1rem 1.2rem .65rem}
+.dw-page .cw-area__head .cw-area__lead{display:none}
+.dw-page .cw-area__body{padding:1rem 1.2rem 1.2rem}
+.dw-page .cw-model{padding:1rem 1.2rem;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.dw-page .cw-model__note,.dw-page .cw-model__result{display:none!important}
+.guidance-filter{display:grid;gap:.4rem;max-width:22rem;margin:1rem 0 .75rem;font-size:.85rem;font-weight:650}
+.guidance-filter select{width:100%;padding:.7rem .8rem;border:1px solid var(--border,#dce5f3);border-radius:9px;background:var(--surface,#fff);color:var(--text,#233650);font:inherit}
+.model-results-inline .model-results-dialog__head{padding:0}
+.model-results-inline .model-results-dialog__head .dw-eyebrow{display:none}
+.model-results-inline .model-results-dialog__head h4{margin:0 0 .75rem;font-size:1.25rem}
+.model-results-inline .model-results-dialog__disease{margin:0 0 .75rem}
+.model-results-inline .model-results-dialog__categories{display:block;padding:0}
+.model-results-category{padding:.8rem;margin:0}
+.model-results-category h3{margin:0 0 .65rem}
+.model-results-category ul{gap:.45rem}
+.model-results-category li label.guidance-checkbox{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem .6rem;border:1px solid var(--border,#dce5f3);border-radius:9px;background:var(--surface,#fff);cursor:pointer;line-height:1.4}
+.model-results-category li label.guidance-checkbox:has(input:checked){border-color:var(--brand,#1b5f9e);background:var(--brand-soft,#edf4ff)}
+.model-results-category input[type="checkbox"]{appearance:auto!important;-webkit-appearance:checkbox!important;position:static!important;opacity:1!important;display:inline-block!important;visibility:visible!important;width:1.05rem!important;height:1.05rem!important;min-width:1.05rem;margin:.1rem 0 0!important;accent-color:var(--brand,#1b5f9e);flex:0 0 auto}
+.model-results-inline .model-suggestion-add{margin-top:.75rem;padding:.8rem}
+.model-results-inline .model-suggestion-add>p{display:none}
+.model-results-inline .model-results-dialog__actions{display:none}
+@media(max-width:650px){.consultation-wizard{gap:.2rem;padding:.25rem}.consultation-wizard__step{flex-direction:column;gap:.2rem;padding:.45rem .1rem;font-size:.68rem}.consultation-wizard__step svg{width:1.2rem;height:1.2rem}.dw-page .cw-area__body{padding:.8rem}.consultation-wizard__controls{position:sticky;bottom:.5rem;background:var(--surface,#fff);border-radius:10px;z-index:5}}
