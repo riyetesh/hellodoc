@@ -917,7 +917,7 @@
       control.value = value || ''; control.setAttribute('aria-label', label);
       if (multiline) { control.rows = 2; control.maxLength = 4000; } else { control.type = 'text'; control.maxLength = 200; }
       control.addEventListener('input', () => {
-        if (key === 'reported') { state.reported = []; state.clinician = []; state.observations = control.value.split(/\n|,/).map(x => x.trim()).filter(Boolean).slice(0, MAX_OBSERVATIONS); state.modelPreview = null; }
+        if (key === 'reported') { const entries = control.value.split(/\n|,/).map(x => x.trim()).filter(Boolean); const ids = Object.keys(state.vocabulary.labels).filter(id => entries.some(entry => entry.toLowerCase() === labelFor(id).toLowerCase())); state.reported = ids; state.clinician = []; const custom = entries.filter(entry => !ids.some(id => labelFor(id).toLowerCase() === entry.toLowerCase())); state.observations = [...new Set([...state.observations, ...custom])].slice(0, MAX_OBSERVATIONS); state.modelPreview = null; }
         else if (key === 'observations') state.observations = control.value.split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, MAX_OBSERVATIONS);
         else if (key === 'duration') state.duration = control.value;
         else if (key === 'note') state.note = control.value;
