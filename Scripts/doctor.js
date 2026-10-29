@@ -9,6 +9,8 @@
   'use strict';
 
   const $ = (selector) => document.querySelector(selector);
+  const demoDoctorId = new URLSearchParams(window.location.search).get('demoDoctor');
+  const demoHeaders = (headers = {}) => demoDoctorId ? { ...headers, 'X-HelloDoc-Demo-Doctor': demoDoctorId } : headers;
 
   const STATUS_LABEL = {
     pending: 'Pending',
@@ -32,7 +34,7 @@
     const response = await fetch('/api' + path, {
       credentials: 'same-origin',
       ...options,
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers: demoHeaders({ 'Content-Type': 'application/json', ...options.headers }),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -977,8 +979,21 @@
   // ------------------------------------------------------------------ init ---
   (async () => {
     try {
-      // The overview itself is doctor-only and carries the role check, so the
-      // page does not spend an extra round trip on /auth/current-user first.
+      if (demoDoctorId) {
+        const response = await fetch('/api/admin/demo/start', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctorId: demoDoctorId }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.message || 'Admin demo access could not be started.');
+        const banner = $('#demoBanner');
+        if (banner) {
+          banner.hidden = false;
+          banner.textContent = `ADMIN DEMO MODE — Workspace: ${result.doctor.fullName}. You are signed in as an administrator; consultation and report actions are audited as admin demo actions.`;
+        }
+      }
+      // The overview itself validates either doctor access or the explicit admin demo context.
       const overview = await request('/overview');
       const approved = showVerification(overview);
       $('#workspace').hidden = false;
