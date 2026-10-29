@@ -18,3 +18,15 @@
 @media(max-width:520px){#hdDocBotRoot{right:max(.65rem,env(safe-area-inset-right));bottom:max(.65rem,env(safe-area-inset-bottom))}.hd-docbot-panel{position:fixed;right:.65rem;bottom:4.8rem;width:calc(100vw - 1.3rem);height:min(70dvh,580px)}.hd-docbot-launcher{padding:.55rem .7rem}.hd-docbot-mark{width:34px;height:34px}}
 .dw-page #hdDocBotRoot.hd-docbot-with-dock{bottom:calc(1rem + 18rem)}
 @media(max-width:760px){.dw-page #hdDocBotRoot.hd-docbot-with-dock{bottom:calc(1rem + 15rem)}}
+
+
+/* Icon-only round launcher with a softly expanding chat panel */
+.hd-docbot-launcher{width:60px;height:60px;min-width:60px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid #c7d7f5;background:#fff;color:#2459a9;box-shadow:0 8px 28px rgba(22,45,85,.18);transition:transform .2s ease,box-shadow .2s ease}
+.hd-docbot-launcher:hover{transform:scale(1.06);box-shadow:0 12px 32px rgba(22,45,85,.24)}
+.hd-docbot-launcher-copy,.hd-docbot-online{display:none!important}
+.hd-docbot-launcher-icon{display:block;width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hd-docbot-panel{opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;transition:opacity .2s ease,transform .2s ease;pointer-events:none}
+.hd-docbot-panel.is-open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.hd-docbot-panel.is-closing{opacity:0;transform:translateY(10px) scale(.97);pointer-events:none}
+@media(max-width:520px){.hd-docbot-launcher{width:54px;height:54px;min-width:54px;padding:0}.hd-docbot-panel{transform-origin:bottom right}}
+@media(prefers-reduced-motion:reduce){.hd-docbot-panel,.hd-docbot-launcher{transition:none}}
