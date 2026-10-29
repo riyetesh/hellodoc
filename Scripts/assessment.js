@@ -624,13 +624,13 @@
       run.disabled = state.saving || !state.modelAvailable;
       run.textContent = state.modelAvailable ? 'Retry prediction' : 'Model unavailable';
     } else if (!symptoms.length) {
-      status.textContent = 'Add at least one symptom before running Predict.';
+      status.textContent = 'Add symptoms first.';
       run.disabled = true;
     } else if (state.modelPreview) {
-      status.textContent = `Prediction ready · model version ${state.modelPreview.modelVersion}. Selected guidance will be included in the report.`;
+      status.textContent = 'Prediction ready.';
       run.disabled = state.saving;
     } else {
-      status.textContent = `${symptoms.length} symptom${symptoms.length === 1 ? '' : 's'} selected. Choose Predict to view the possible disease and guidance.`;
+      status.textContent = 'Ready to predict.';
       run.disabled = state.saving;
     }
     run.textContent = state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Predict');
@@ -663,8 +663,8 @@
     if (!symptoms.length) { renderModelPanel(); return; }
     const button = $('runModel');
     button.disabled = true;
-    button.textContent = 'Running model…';
-    $('modelPanelStatus').textContent = 'Sending the selected symptoms to the model.';
+    button.textContent = 'Predicting…';
+    $('modelPanelStatus').textContent = 'Predicting…';
     try {
       const response = await fetch('/api/doctor/predict', {
         method: 'POST',
@@ -721,50 +721,52 @@
     const disease = $('modelDialogDisease');
     const meta = $('modelDialogMeta');
     const categories = $('modelDialogCategories');
+    const filter = $('guidanceCategorySelect');
     if (!panel || !disease || !meta || !categories || !preview) return;
     panel.hidden = false;
     disease.textContent = preview.output;
-    meta.textContent = `Model version ${preview.modelVersion} · duration recorded: ${state.duration.trim() || 'not provided'}`;
+    meta.textContent = `Model ${preview.modelVersion} · Duration: ${state.duration.trim() || "not provided"} days`;
     categories.replaceChildren();
-    for (const [key, title] of guidanceGroups) {
-      const section = document.createElement('section');
-      section.className = 'model-results-category';
-      const heading = document.createElement('h3');
-      heading.textContent = title;
-      section.append(heading);
-      const items = preview[key] || [];
-      if (!items.length) {
-        const empty = document.createElement('p');
-        empty.className = 'model-results-empty';
-        empty.textContent = 'No suggestions returned.';
-        section.append(empty);
-      } else {
-        const list = document.createElement('ul');
-        for (const value of items) {
-          const row = document.createElement('li');
-          const label = document.createElement('label');
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.checked = state.selectedGuidance[key].includes(value);
-          checkbox.addEventListener('change', () => {
-            const selected = state.selectedGuidance[key];
-            if (checkbox.checked && !selected.includes(value)) selected.push(value);
-            else if (!checkbox.checked) state.selectedGuidance[key] = selected.filter((item) => item !== value);
-            markDirty();
-            renderSideSummary();
-          });
-          const text = document.createElement('span');
-          text.textContent = value;
-          label.append(checkbox, text);
-          row.append(label);
-          list.append(row);
-        }
-        section.append(list);
+    const key = ['precautions', 'medications', 'diet', 'workout'].includes(filter?.value) ? filter.value : 'precautions';
+    const title = guidanceGroups.find(([group]) => group === key)?.[1] || 'Precautions';
+    const section = document.createElement('section');
+    section.className = 'model-results-category';
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    section.append(heading);
+    const items = preview[key] || [];
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'model-results-empty';
+      empty.textContent = 'No items available.';
+      section.append(empty);
+    } else {
+      const list = document.createElement('ul');
+      for (const value of items) {
+        const row = document.createElement('li');
+        const label = document.createElement('label');
+        label.className = 'guidance-checkbox';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = state.selectedGuidance[key].includes(value);
+        checkbox.setAttribute('aria-label', value);
+        checkbox.addEventListener('change', () => {
+          const selected = state.selectedGuidance[key];
+          if (checkbox.checked && !selected.includes(value)) selected.push(value);
+          else if (!checkbox.checked) state.selectedGuidance[key] = selected.filter((item) => item !== value);
+          markDirty();
+          renderSideSummary();
+        });
+        const text = document.createElement('span');
+        text.textContent = value;
+        label.append(checkbox, text);
+        row.append(label);
+        list.append(row);
       }
-      categories.append(section);
+      section.append(list);
     }
+    categories.append(section);
   }
-
   function closePredictionDialog() {
     const target = $('areaSymptoms');
     if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -933,13 +935,13 @@
     }
     if (!modelSymptoms().length && !(state.modelOutage && hasClinicalText())) {
       showError('assessmentError', 'Add at least one model symptom, or save the consultation as a clinical record without the model.');
-      $('areaSymptoms').scrollIntoView({ block: 'start', behavior: 'smooth' });
-      reportedPicker?.focus();
+      setWizardStep(3);
+      $('doctorAssessment')?.focus();
       return;
     }
     renderReview();
+    setWizardStep(4);
     $('reviewArea').hidden = false;
-    $('reviewArea').scrollIntoView({ block: 'start', behavior: 'smooth' });
     $('reviewPanel').focus({ preventScroll: true });
     announce('Review the assessment before saving.');
   }
@@ -1173,8 +1175,8 @@
   $('saveWithoutModel').addEventListener('click', saveWithoutModel);
   $('reviewButton').addEventListener('click', openReview);
   $('backToEdit').addEventListener('click', () => {
-    $('areaSymptoms').scrollIntoView({ block: 'start', behavior: 'smooth' });
-    reportedPicker?.focus();
+    setWizardStep(3);
+    $('doctorAssessment')?.focus();
   });
   $('saveAssessment').addEventListener('click', () => saveAssessment());
   $('saveAssessmentTop').addEventListener('click', () => saveAssessment());
@@ -1256,9 +1258,6 @@
     }
   });
 
-  $('modelDialogCancel')?.addEventListener('click', closePredictionDialog);
-  $('modelDialogApply')?.addEventListener('click', applyPredictionSelection);
-  $('modelDialogCancel')?.addEventListener('click', closePredictionDialog);
   $('modelSuggestionAdd')?.addEventListener('click', () => {
     const input = $('modelSuggestionInput');
     const category = $('modelSuggestionCategory')?.value;
@@ -1315,6 +1314,44 @@
       $('modelSuggestionAdd')?.click();
     }
   });
+
+  // Keep the consultation focused on one step at a time.
+  const wizardSteps = ['#areaVisit', '#areaSymptoms', '.cw-model', '#areaDecision', '#reviewArea'];
+  let activeWizardStep = 0;
+  function setWizardStep(index) {
+    activeWizardStep = Math.max(0, Math.min(4, index));
+    wizardSteps.forEach((selector, step) => {
+      const panel = document.querySelector(selector);
+      if (panel) panel.hidden = step !== activeWizardStep;
+    });
+    document.querySelectorAll('[data-wizard-go]').forEach((button) => {
+      const active = Number(button.dataset.wizardGo) === activeWizardStep;
+      button.classList.toggle('is-active', active);
+      if (active) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    const controls = $('wizardControls');
+    const back = $('wizardBack');
+    const next = $('wizardNext');
+    if (controls) controls.hidden = activeWizardStep === 4;
+    if (back) back.disabled = activeWizardStep === 0;
+    if (next) next.textContent = activeWizardStep === 3 ? 'Review →' : 'Continue →';
+    $('assessmentSection')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  function advanceWizard() {
+    if (activeWizardStep === 0 && !state.patientId) { showError("assessmentError", "Select a patient to continue."); return; }
+    if (activeWizardStep === 1 && !modelSymptoms().length) { showError("assessmentError", "Add at least one symptom to continue."); return; }
+    if (activeWizardStep === 2 && !state.modelPreview && !state.modelOutage && state.modelAvailable) { showError("assessmentError", "Run the prediction before continuing."); return; }
+    if (activeWizardStep === 3) { openReview(); return; }
+    showError("assessmentError", "");
+    setWizardStep(activeWizardStep + 1);
+  }
+  $('wizardBack')?.addEventListener('click', () => setWizardStep(activeWizardStep - 1));
+  $('wizardNext')?.addEventListener('click', advanceWizard);
+  document.querySelectorAll('[data-wizard-go]').forEach((button) => {
+    button.addEventListener('click', () => { const target = Number(button.dataset.wizardGo); if (target <= activeWizardStep) setWizardStep(target); });
+  });
+  $('guidanceCategorySelect')?.addEventListener('change', renderPredictionDialog);
 
   // ------------------------------------------------------------------ init ---
   async function load() {
@@ -1472,6 +1509,7 @@
     } catch { /* recent list is optional */ }
   }
 
+  setWizardStep(0);
   load();
   window.HelloDocAssessment = { openReview, saveAssessment, saveWithoutModel };
 })();
