@@ -1544,3 +1544,11 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 .hd-sos-fab__label{font-size:.88rem;font-weight:900;letter-spacing:.04em}
 .hd-sos-fab__sub,.hd-sos-fab__pulse{display:none!important}
 @media(max-width:520px){.hd-sos-fab{width:54px;height:54px;min-width:54px;padding:0}}
+
+
+/* Smooth SOS panel expansion */
+.hd-emergency-dialog{opacity:0;transition:opacity .2s ease}
+.hd-emergency-dialog.is-open{opacity:1}
+.hd-emergency-card{transform:translateY(10px) scale(.97);transition:transform .2s ease}
+.hd-emergency-dialog.is-open .hd-emergency-card{transform:translateY(0) scale(1)}
+@media(prefers-reduced-motion:reduce){.hd-emergency-dialog,.hd-emergency-card{transition:none}}
