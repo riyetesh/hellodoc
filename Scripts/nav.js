@@ -383,13 +383,13 @@
     if (!document.querySelector('link[data-docbot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "/Styles/docbot.css?v=1";
+      style.href = "/Styles/docbot.css?v=2";
       style.dataset.docbotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-docbot-script]')) {
       const script = document.createElement("script");
-      script.src = "/Scripts/docbot.js?v=1";
+      script.src = "/Scripts/docbot.js?v=2";
       script.dataset.docbotScript = "true";
       script.defer = true;
       document.body.appendChild(script);
