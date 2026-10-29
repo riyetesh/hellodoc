@@ -11,15 +11,27 @@
     <link rel="stylesheet" href="/Styles/assessment.css?v=guidance2" />
 
     <style>
-      .consultation-dock{position:fixed;z-index:30;right:1rem;bottom:1rem;width:18rem;max-height:90vh;overflow:auto;padding:1rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 14px 42px rgba(20,35,60,.22)}
+      #consultationDock{position:fixed;z-index:30;right:1rem;bottom:1rem;width:min(19rem,calc(100vw - 2rem));padding:1rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 14px 42px rgba(20,35,60,.22)}
       .consultation-dock__doctor{font-weight:700;margin:.25rem 0 .75rem}
-      .consultation-video{position:relative;height:10rem;overflow:hidden;border-radius:10px;background:#e9edf4}
-      .consultation-video img{width:100%;height:100%;object-fit:cover}
-      .consultation-video span{position:absolute;bottom:.4rem;left:.4rem;background:#222;color:white;padding:.25rem;font-size:.65rem}
-      .consultation-timer{border-top:1px solid var(--border);margin-top:.75rem;padding-top:.5rem}
-      #consultationTimerDisplay{display:block;font-size:1.8rem;font-variant-numeric:tabular-nums;margin:.3rem 0}
-      .consultation-timer button{padding:.5rem}
-      @media(max-width:760px){.consultation-dock{right:.5rem;bottom:.5rem;width:15rem}.consultation-video{height:8rem}.dw-page .dw-main{padding-bottom:20rem}}
+      .consultation-dock__meta{margin:0 0 .8rem;color:var(--text-soft);font-size:.82rem;line-height:1.5}
+      .consultation-dock__start{width:100%}
+      #consultationModal{width:min(52rem,calc(100vw - 2rem));max-width:none;max-height:calc(100dvh - 2rem);padding:0;border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);box-shadow:0 24px 80px rgba(10,25,50,.3)}
+      #consultationModal::backdrop{background:rgba(12,24,42,.62);backdrop-filter:blur(3px)}
+      .consultation-modal__head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.1rem 1.25rem;border-bottom:1px solid var(--border)}
+      .consultation-modal__head h2{margin:0;font-size:1.2rem}
+      .consultation-modal__head p{margin:.25rem 0 0;color:var(--text-soft);font-size:.88rem}
+      .consultation-modal__body{padding:1.1rem 1.25rem;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(14rem,.8fr);gap:1rem}
+      .consultation-video{position:relative;min-height:18rem;overflow:hidden;border-radius:13px;background:#e9edf4}
+      .consultation-video img{width:100%;height:100%;min-height:18rem;object-fit:cover}
+      .consultation-video span{position:absolute;bottom:.65rem;left:.65rem;background:#222;color:white;padding:.35rem .55rem;border-radius:6px;font-size:.72rem}
+      .consultation-clock{display:grid;align-content:start;gap:.75rem;padding:1rem;border:1px solid var(--border);border-radius:13px;background:var(--surface-2)}
+      .consultation-clock__elapsed{font-size:2rem;line-height:1.1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+      .consultation-time-row{display:grid;gap:.2rem;padding:.6rem 0;border-top:1px solid var(--border)}
+      .consultation-time-row span{font-size:.75rem;color:var(--text-soft)}
+      .consultation-time-row strong{font-size:.92rem;font-variant-numeric:tabular-nums}
+      .consultation-modal__actions{display:flex;justify-content:flex-end;gap:.6rem;flex-wrap:wrap;padding:1rem 1.25rem;border-top:1px solid var(--border)}
+      .consultation-ended{margin:0 1.25rem 1rem;padding:.85rem 1rem;border:1px solid #a8d9bf;border-radius:10px;background:#f0fbf4;color:#175c37}
+      @media(max-width:650px){.consultation-modal__body{grid-template-columns:1fr}.consultation-video,.consultation-video img{min-height:12rem}.consultation-clock__elapsed{font-size:1.7rem}.consultation-modal__actions>*{flex:1}.dw-page .dw-main{padding-bottom:8rem}}
       @media(min-width:761px){.dw-page .dw-main{padding-right:20rem}}
     </style>
 
@@ -586,44 +598,40 @@
     </dialog>
 
 
-    <aside id="consultationDock" class="consultation-dock" aria-label="Patient video and consultation timer" hidden>
+    <aside id="consultationDock" class="consultation-dock" aria-label="Consultation controls" hidden>
       <p class="consultation-dock__doctor" id="dockPatientName">Select a patient</p>
-      <div class="consultation-video"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=720&amp;q=80" alt="Patient preview placeholder" loading="lazy"><span>DEMO FEED · NOT CONNECTED</span></div>
-      <div class="consultation-timer"><p>Consultation timer</p><strong id="consultationTimerDisplay">00:00:00</strong><div><button class="btn btn-primary" type="button" id="consultationTimerStart">Start</button> <button class="btn btn-outline" type="button" id="consultationTimerReset">Reset</button></div></div>
+      <p class="consultation-dock__meta">Start the consultation when you are ready. The timer and start/end times appear in the consultation window.</p>
+      <button class="btn btn-primary consultation-dock__start" type="button" id="consultationTimerStart">Start consultation</button>
     </aside>
+    <dialog id="consultationModal" aria-labelledby="consultationModalTitle">
+      <div class="consultation-modal__head">
+        <div><h2 id="consultationModalTitle">Video consultation</h2><p id="consultationModalPatient">Patient consultation</p></div>
+        <button class="btn btn-outline" type="button" id="consultationModalClose" aria-label="Close consultation window" hidden>Close</button>
+      </div>
+      <div class="consultation-modal__body" id="consultationActiveView">
+        <div class="consultation-video"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=1000&amp;q=80" alt="Illustrative patient preview, not a live video feed" loading="lazy"><span>PREVIEW ONLY · VIDEO NOT CONNECTED</span></div>
+        <div class="consultation-clock">
+          <div><span>Time elapsed</span><div class="consultation-clock__elapsed" id="consultationTimerDisplay">00:00:00</div></div>
+          <div class="consultation-time-row"><span>Start time</span><strong id="consultationStartTime">Not started</strong></div>
+          <div class="consultation-time-row"><span>End time</span><strong id="consultationEndTime">In progress</strong></div>
+          <div class="consultation-time-row"><span>Status</span><strong id="consultationSessionStatus">Ready to start</strong></div>
+        </div>
+      </div>
+      <p class="consultation-ended" id="consultationEndedSummary" hidden></p>
+      <div class="consultation-modal__actions">
+        <button class="btn btn-outline" type="button" id="consultationCancel" hidden>Cancel</button>
+        <button class="btn btn-primary" type="button" id="consultationEnd" disabled>End consultation &amp; save report</button>
+        <button class="btn btn-primary" type="button" id="consultationFinishClose" hidden>Close consultation</button>
+      </div>
+    </dialog>
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=slots2"></script>
     <script src="/Scripts/walkin.js?v=queue1"></script>
     <script src="/Scripts/doctor-walkin-queue.js?v=1"></script>
-    <script src="/Scripts/assessment.js?v=workspace11"></script>
+    <script src="/Scripts/assessment.js?v=consult-end1"></script>
     <script src="/Scripts/nav.js?v=docbot3"></script>
 
-    <script>
-      (() => {
-        const display = document.getElementById('consultationTimerDisplay');
-        const toggle = document.getElementById('consultationTimerStart');
-        const reset = document.getElementById('consultationTimerReset');
-        const patientSelect = document.getElementById('assessmentPatient');
-        const consultationPatient = document.getElementById('consultationPatient');
-        const dockName = document.getElementById('dockPatientName');
-        const syncName = () => {
-          const fromConsultation = consultationPatient?.textContent?.trim() || '';
-          const selected = patientSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
-          const value = fromConsultation || (selected && !/loading|select a patient/i.test(selected) ? selected : '');
-          if (dockName) dockName.textContent = value || 'Select a patient';
-        };
-        syncName();
-        patientSelect?.addEventListener('change', syncName);
-        if (consultationPatient && window.MutationObserver) new MutationObserver(syncName).observe(consultationPatient,{childList:true,characterData:true,subtree:true});
-        if (patientSelect && window.MutationObserver) new MutationObserver(syncName).observe(patientSelect,{childList:true,subtree:true});
-        if (!display || !toggle || !reset) return;
-        let elapsed=0, started=null, interval=null;
-        const paint=()=>{const n=elapsed+(started===null?0:Math.floor((Date.now()-started)/1000));display.textContent=[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');};
-        toggle.addEventListener('click',()=>{if(started===null){started=Date.now();toggle.textContent='Pause';interval=window.setInterval(paint,1000);}else{elapsed+=Math.floor((Date.now()-started)/1000);started=null;window.clearInterval(interval);interval=null;toggle.textContent='Resume';paint();}});
-        reset.addEventListener('click',()=>{elapsed=0;started=null;if(interval!==null)window.clearInterval(interval);interval=null;toggle.textContent='Start';paint();});
-        paint();
-      })();
-    </script>
+    <script src="/Scripts/consultation.js?v=1"></script>
 
   </body>
 </html>
