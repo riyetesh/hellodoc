@@ -40,7 +40,7 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   const html = read('doctor.html');
   const script = read('Scripts/assessment.js');
   for (const [id, title] of [
-    ['areaVisit', 'Patient details'],
+    ['areaVisit', 'Patient name and history'],
     ['areaSymptoms', 'Add symptoms and duration'],
     ['areaDecision', 'Clinical assessment'],
   ]) {
@@ -66,7 +66,13 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   assert.ok(html.includes('id="modelSuggestionInput"'));
   assert.ok(html.includes('<option value="observations">Clinical observation</option>'));
   assert.ok(html.includes('id="consultationWizard"'));
-  assert.ok(html.includes('id="guidanceCategorySelect"'));
+  assert.ok(html.includes('data-guidance-category="precautions"'));
+  assert.ok(html.includes('data-guidance-category="medications"'));
+  assert.ok(html.includes('data-guidance-category="diet"'));
+  assert.ok(html.includes('data-guidance-category="workout"'));
+  assert.ok(html.includes('id="guidanceModal"'));
+  assert.equal(html.includes('id="guidanceCategorySelect"'), false);
+  assert.equal(script.includes('Model suggestion loaded'), false);
   assert.ok(script.includes('function setWizardStep'));
   assert.ok(script.includes("label.className = 'guidance-checkbox'"));
   assert.equal(html.includes('Plan and follow-up'), false);
