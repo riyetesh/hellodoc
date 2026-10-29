@@ -90,24 +90,52 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       next();
     } catch (error) { report('identity', error); res.status(503).json({ message: 'Authentication unavailable' }); }
   }
-  // Doctors hold the `doctor` role from the moment they register; verification
-  // status decides what they may do. `session` guards the pending-verification
-  // dashboard, `guard('doctor')` guards clinical work and therefore re-checks
-  // approval on every request.
+  // Admin demo access is explicit: the authenticated actor remains the admin,
+  // while the selected doctor is the workspace scope. Database RPCs validate the
+  // actor and target; demo-created clinical records store both identities.
+  async function demoCare(req, care) {
+    const target = req.get('x-hellodoc-demo-doctor');
+    if (care.profile.role !== 'admin' || !isUuid(target)) return null;
+    const result = await care.db.rpc('admin_demo_doctor_profile', { p_doctor: target });
+    if (result.error || !result.data) return null;
+    return {
+      ...care,
+      user: { ...care.user, id: target, email: result.data.email || '', user_metadata: { ...(care.user.user_metadata || {}), full_name: result.data.fullName || '' } },
+      profile: { ...care.profile, id: target, role: 'doctor', full_name: result.data.fullName || 'Doctor', suspended: false },
+      demoMode: true,
+      demoDoctorId: target,
+      demoActorId: care.user.id,
+      demoDoctor: result.data,
+    };
+  }
   const session = (roles, handler) => [identity, async (req, res) => {
-    if (roles && !roles.includes(req.care.profile.role)) return res.status(403).json({ message: 'Access denied' });
     try {
-      await handler(req, res, req.care);
+      let care = req.care;
+      if (roles?.some((role) => role === 'doctor' || role === 'doctor_applicant') && care.profile.role === 'admin') {
+        care = await demoCare(req, care);
+      }
+      if (care?.demoMode) {
+        await handler(req, res, care);
+        return;
+      }
+      if (roles && !roles.includes(care.profile.role)) return res.status(403).json({ message: 'Access denied' });
+      await handler(req, res, care);
     } catch { res.status(503).json({ message: 'Service unavailable' }); }
   }];
   const guard = (role, handler) => [identity, async (req, res) => {
-    if (role && req.care.profile.role !== role) return res.status(403).json({ message: 'Access denied' });
     try {
+      let care = req.care;
+      if (role === 'doctor' && care.profile.role === 'admin') care = await demoCare(req, care);
+      if (care?.demoMode && role === 'doctor') {
+        await handler(req, res, care);
+        return;
+      }
+      if (role && care.profile.role !== role) return res.status(403).json({ message: 'Access denied' });
       if (role === 'doctor') {
-        const approval = await req.care.db.from('doctor_profiles').select('verification_status').eq('user_id',req.care.user.id).single();
+        const approval = await care.db.from('doctor_profiles').select('verification_status').eq('user_id',care.user.id).single();
         if (approval.error || approval.data?.verification_status !== 'approved') return res.status(403).json({ code:'DOCTOR_NOT_VERIFIED', message: 'Doctor verification required for clinical features' });
       }
-      await handler(req, res, req.care);
+      await handler(req, res, care);
     } catch { res.status(503).json({ message: 'Service unavailable' }); }
   }];
   const verificationOf = async (db, userId) => {
