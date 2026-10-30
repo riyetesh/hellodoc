@@ -241,7 +241,7 @@
         index += 1;
         // Keep each step visible long enough to read; reduced-motion settings
         // disable visual transitions, not the playback reading interval.
-        timer = window.setTimeout(advance, 6500);
+        timer = window.setTimeout(advance, 2400);
       }
 
       advance();
@@ -290,13 +290,20 @@
       stages.forEach(function (stage, i) {
         stage.classList.toggle("is-active", i === current);
       });
-      if (status) status.textContent = "Step " + (current + 1) + " of " + stages.length;
-      if (next) next.disabled = current === stages.length - 1;
+      if (status) {
+        var labels = ["Symptoms", "Feature vector", "Model comparison", "Guidance lookup"];
+        status.textContent = "Step " + (current + 1) + " of " + stages.length + " · " + labels[current];
+      }
+      if (next) {\n        next.disabled = false;\n        next.textContent = current === stages.length - 1 ? "Start again" : "Next step";\n      }
     }
 
     if (next) {
       next.addEventListener("click", function () {
-        if (current < stages.length - 1) current += 1;
+        if (current < stages.length - 1) {
+          current += 1;
+        } else {
+          current = 0;
+        }
         render();
       });
     }
