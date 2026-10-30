@@ -240,7 +240,7 @@
         }
         index += 1;
         // Reduced motion: step through instantly instead of animating.
-        timer = window.setTimeout(advance, reduceMotion ? 0 : 1450);
+        timer = window.setTimeout(advance, reduceMotion ? 0 : 2400);
       }
 
       advance();
