@@ -46,8 +46,10 @@ body.hellodoc-story-page{background:var(--paper);color:var(--ink)}.hellodoc-stor
 .hs-tech-marquee__track{
   display:flex;
   width:max-content;
+  min-width:max-content;
+  flex:0 0 max-content;
   flex-wrap:nowrap;
-  animation:hs-tech-marquee-scroll 32s linear infinite;
+  animation:hs-tech-marquee-scroll 42s linear infinite;
   animation-play-state:running;
   will-change:transform;
 }
@@ -70,8 +72,6 @@ body.hellodoc-story-page{background:var(--paper);color:var(--ink)}.hellodoc-stor
   transition:transform .2s ease;
 }
 .hs-tech-marquee img:hover{transform:translateY(-4px)}
-.hs-tech-marquee:hover .hs-tech-marquee__track,
-.hs-tech-marquee:focus-within .hs-tech-marquee__track{animation-play-state:paused}
 @keyframes hs-tech-marquee-scroll{
   from{transform:translate3d(0,0,0)}
   to{transform:translate3d(-50%,0,0)}
