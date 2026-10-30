@@ -304,3 +304,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .lp-hero__title { font-size: clamp(2.6rem, 11vw, 3.8rem); }
   .lp-section__title { font-size: clamp(1.9rem, 8vw, 2.7rem); }
 }
+
+
+/* Homepage trust cards: stronger hierarchy, cleaner icon/number treatment. */
+.lp-trust__head { max-width: 54rem; }
+.lp-trust__list { gap: 1.15rem; margin-top: 2rem; }
+.lp-trust__list > div {
+  position: relative;
+  gap: 1rem;
+  padding: clamp(1.4rem, 2.4vw, 2rem);
+  border-color: #e1e7f0;
+  border-radius: 1.15rem;
+  box-shadow: 0 8px 26px rgba(24, 45, 78, .055);
+}
+.lp-trust__list > div:hover {
+  transform: translateY(-3px);
+  border-color: #f5a6b6;
+  box-shadow: 0 16px 34px rgba(24, 45, 78, .09);
+}
+.lp-trust__list dt {
+  align-items: center;
+  gap: .75rem;
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+.lp-trust__list dt::before { display: none; }
+.lp-trust__index {
+  display: inline-grid;
+  flex: 0 0 2.35rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: .75rem;
+  background: #fff0f3;
+  color: #d90e35;
+  box-shadow: inset 0 0 0 1px #ffc5d0;
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+.lp-trust__list dd {
+  max-width: 38ch;
+  padding-left: 3.1rem;
+  color: #53647b;
+  line-height: 1.72;
+}
+@media (max-width: 900px) {
+  .lp-trust__list { grid-template-columns: 1fr; }
+  .lp-trust__list > div { min-height: 0; }
+  .lp-trust__list dd { max-width: 68ch; }
+}
