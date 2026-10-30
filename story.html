@@ -86,39 +86,40 @@
 
     <main id="story-main" class="hellodoc-story">
       <!-- ========================= 1. Cinematic hero ========================= -->
-      <section class="hs-hero" id="top" aria-labelledby="hs-hero-title">
+      <section class="hs-hero hs-founder-hero" id="top" aria-labelledby="hs-hero-title">
         <div class="hs-wrap hs-hero__grid">
-          <div class="hs-hero__copy">
-            <p class="hs-eyebrow">My Story ,  why I built HelloDoc</p>
-            <h1 class="hs-display" id="hs-hero-title">Why I built HelloDoc</h1>
-            <p class="hs-lede">
-              An idea shaped by growing up around gaps in healthcare access, and a journey to explore
-              how technology could help bridge them.
-            </p>
-
-            <div class="hs-cta-row">
-              <a class="hs-btn hs-btn--primary" href="#origin">Discover the story</a>
-              <a class="hs-btn hs-btn--ghost" href="#technology">Explore the technology</a>
-            </div>
-
-          </div>
-
-          <figure class="hs-hero__figure" data-parallax>
+          <figure class="hs-hero__figure hs-founder-portrait">
             <img
               class="hs-hero__img"
-              src="./Asset/Story/nepal-village-hero-1920.jpg"
-              srcset="
-                ./Asset/Story/nepal-village-hero-960.jpg   960w,
-                ./Asset/Story/nepal-village-hero-1920.jpg 1920w
-              "
-              sizes="(max-width: 900px) 100vw, 46vw"
-              width="1920"
-              height="1280"
+              src="./Asset/Team/Ritesh.jpg"
+              width="430"
+              height="510"
               fetchpriority="high"
               decoding="async"
-              alt="A village of low, flat-roofed houses below bare Himalayan ridges in Mustang, Nepal."
+              alt="Ritesh Yadav, founder and lead developer of HelloDoc."
             />
+            <figcaption>Ritesh Yadav <span>Founder · HelloDoc</span></figcaption>
           </figure>
+          <div class="hs-hero__copy">
+            <p class="hs-eyebrow">The person behind the project</p>
+            <h1 class="hs-display" id="hs-hero-title">Hi, I’m Ritesh.</h1>
+            <p class="hs-lede">
+              I’m a software developer interested in using technology to solve problems that matter.
+              HelloDoc is a project I started to explore one question that has stayed with me:
+              how could digital tools make the first step towards healthcare easier?
+            </p>
+            <p class="hs-founder-context">
+              I grew up in Nepal, where access to a doctor was not always straightforward.
+              That experience shaped the idea behind HelloDoc and continues to guide the way I think
+              about its design, limitations and future.
+            </p>
+            <nav class="hs-builder__links hs-founder-links" aria-label="Find Ritesh online">
+              <a href="https://www.linkedin.com/in/theriteshyadav/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a href="https://github.com/riyetesh" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="https://www.instagram.com/riye_tesh" target="_blank" rel="noopener noreferrer">Instagram</a>
+            </nav>
+            <a class="hs-founder-next" href="#origin">The story behind HelloDoc <span aria-hidden="true">↓</span></a>
+          </div>
         </div>
       </section>
 
@@ -193,7 +194,7 @@
           <h2 class="hs-h2" id="hs-build-title">Building the idea</h2>
           <p class="hs-lede hs-lede--tight">
             I wanted to explore how software could bring symptom guidance, doctor discovery, and
-            appointment related experiences together in one place. HelloDoc became a way to turn that
+            appointment-related experiences together in one place. HelloDoc became a way to turn that
             question into an engineering project.
           </p>
 
@@ -278,7 +279,7 @@
               <div class="hs-panel" role="tabpanel" id="hs-panel-3" aria-labelledby="hs-tab-3" tabindex="0">
                 <h3 class="hs-h3">The engineering</h3>
                 <p>
-                  Building a web interface, backend services, and a machine learning based symptom
+                  Building a web interface, backend services, and a machine-learning based symptom
                   prediction pipeline.
                 </p>
                 <p class="hs-note">
@@ -291,7 +292,7 @@
                 <h3 class="hs-h3">The next chapter</h3>
                 <p>
                   Improving the experience through better validation, accessibility, and potential
-                  real world collaboration.
+                  real-world collaboration.
                 </p>
                 <p class="hs-note">
                   These are intentions, not finished work. The honest next steps are evaluation on
@@ -334,7 +335,7 @@
                   <path d="M8 8h7M8 12h5" />
                 </svg>
               </span>
-              <h3 class="hs-h3">Designed for real world constraints</h3>
+              <h3 class="hs-h3">Designed for real-world constraints</h3>
               <p>
                 Connectivity, device limitations, affordability, and the needs of underserved
                 communities have to be considered from the beginning ,  not retrofitted at the end.
@@ -350,7 +351,7 @@
               </span>
               <h3 class="hs-h3">Built to support, not replace, professionals</h3>
               <p>
-                Machine learning can help organise information and offer preliminary guidance, but
+                machine-learning can help organise information and offer preliminary guidance, but
                 responsible healthcare requires clinical expertise, appropriate validation, and clear
                 limits.
               </p>
@@ -367,7 +368,7 @@
           <h2 class="hs-h2" id="hs-tech-title">How it works</h2>
           <p class="hs-lede hs-lede--tight">
             Behind the interface is a combination of web technologies, backend services, structured
-            health related datasets, and a machine learning classifier.
+            health-related datasets, and a machine-learning classifier.
           </p>
 
           <!-- 5.0 Verified stack -->
@@ -389,7 +390,7 @@
           </ul>
           <p class="hs-note">
             Accounts are handled by Supabase Auth. The Express API verifies the session and keeps
-            tokens in HTTP only cookies, so no database key or password hash is exposed to browser
+            tokens in HTTP-only cookies, so no database key or password hash is exposed to browser
             JavaScript. A separate React + Vite chatbot app lives in the repository and talks to a
             generative API endpoint configured through an environment variable.
           </p>
@@ -409,7 +410,7 @@
           <div class="hs-subsection" id="architecture">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-arch-title">How a symptom check travels through the system</h3>
             <p class="hs-prose__intro">
-              Select a step to read what it does, or play the flow to watch the sequence.
+              This diagram describes the intended assessment flow in local development. The Flask model is not deployed with the current Vercel production build, so live prediction requires a separately configured model service.
             </p>
 
             <div class="hs-diagram" data-diagram>
@@ -515,7 +516,7 @@
                   <h5>Binary feature vector</h5>
                   <p>
                     A dictionary maps each known symptom name to a position. The service builds a
-                    zero filled array of 132 positions and sets a 1 for every recognised symptom, so
+                    zero-filled array of 132 positions and sets a 1 for every recognised symptom, so
                     the model receives a sparse binary vector. Unknown names are rejected before
                     prediction rather than silently ignored.
                   </p>
@@ -560,7 +561,7 @@
                   <h5>Express authentication</h5>
                   <p>
                     <code>/api/auth/signup</code>, <code>/login</code>, <code>/recover</code> and
-                    <code>/logout</code> call Supabase Auth with the public key, then set HTTP only
+                    <code>/logout</code> call Supabase Auth with the public key, then set HTTP-only
                     session cookies. State changing requests also require the trusted application
                     origin. The browser never receives a Supabase key or a service role secret.
                   </p>
@@ -666,7 +667,7 @@
               </p>
               <p class="hs-note">
                 One detail worth stating plainly: the training notebook records a held out accuracy of
-                1.0 on its own 30% test split, and re running that protocol reproduces both the score
+                1.0 on its own 30% test split, and re-running that protocol reproduces both the score
                 and the model's 267 support vectors. A perfect score on a small, highly separable
                 dataset is a sign that the benchmark is easy ,  not evidence that the tool is
                 clinically accurate. No external or clinical validation has been performed.
@@ -821,85 +822,6 @@
               </details>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- ==================== 6. The builder ==================== -->
-      <section class="hs-section hs-section--tint" id="builder" aria-labelledby="hs-builder-title">
-        <div class="hs-wrap">
-          <p class="hs-eyebrow">05 / The builder</p>
-          <h2 class="hs-h2" id="hs-builder-title">Meet the builder</h2>
-
-          <div class="hs-builder">
-            <figure class="hs-builder__photo">
-              <img
-                src="./Asset/Team/Ritesh.jpg"
-                width="430"
-                height="510"
-                loading="lazy"
-                decoding="async"
-                alt="Ritesh Yadav, the creator and lead developer of HelloDoc."
-              />
-            </figure>
-
-            <div class="hs-builder__bio">
-              <p class="hs-builder__role">Ritesh Yadav, Creator &amp; Lead Developer</p>
-              <p class="hs-builder__lead">
-                HelloDoc is designed, built, and maintained by one developer today. What started as a
-                simple idea to make healthcare accessible from home grew into a full featured web app
-                with doctor search, appointment booking, a doctor led symptom assessment and user
-                authentication.
-              </p>
-              <p>
-                I designed the interface from scratch and implemented the login and signup flows with
-                form validation and session management. The frontend uses HTML5, CSS3, JavaScript
-                (ES6+), the Inter typeface, Font Awesome icons, and responsive design.
-              </p>
-              <nav class="hs-builder__links" aria-label="Follow Ritesh Yadav">
-                <a href="https://www.instagram.com/riye_tesh" target="_blank" rel="noopener noreferrer">Instagram</a>
-                <a href="https://www.linkedin.com/in/theriteshyadav/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <a href="https://github.com/riyetesh" target="_blank" rel="noopener noreferrer">GitHub</a>
-              </nav>
-            </div>
-          </div>
-
-          <details class="hs-details hs-details--wide">
-            <summary>What still needs work</summary>
-            <div class="hs-details__body">
-              <ul class="hs-list">
-                <li>
-                  <strong>Patient facing results.</strong> Assessments are stored and a doctor can
-                  download a PDF, but a patient cannot open a clinical result in the portal yet.
-                </li>
-                <li>
-                  <strong>Public symptom checks.</strong> The public checker is withdrawn. Reopening
-                  it would need validation, safety review and a clear path into care, not only a
-                  working model.
-                </li>
-                <li>
-                  <strong>Model validation.</strong> Evaluate the classifier on data that reflects
-                  real presentation, not only the dataset it was trained on, and report honest
-                  metrics including failure cases.
-                </li>
-                <li>
-                  <strong>Usability testing.</strong> Watch people who are not developers attempt the
-                  symptom flow, and fix what confuses them.
-                </li>
-                <li>
-                  <strong>Clinical collaboration.</strong> Any clinically meaningful guidance needs to
-                  be reviewed by people qualified to give it.
-                </li>
-                <li>
-                  <strong>Privacy and security review.</strong> Confirm how symptom data is handled,
-                  minimised, and protected before it is collected from real users.
-                </li>
-                <li>
-                  <strong>Evaluation with representative users.</strong> Test with the people the
-                  project is meant for, on the devices and connections they actually have.
-                </li>
-              </ul>
-            </div>
-          </details>
         </div>
       </section>
 
