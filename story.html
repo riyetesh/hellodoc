@@ -409,9 +409,7 @@
           <div class="hs-subsection" id="architecture">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-arch-title">How a symptom check travels through the system</h3>
             <p class="hs-prose__intro">
-              Select a step to read what it does, or play the flow to watch the sequence. An
-              assessment requires an approved doctor and an appointment, so the account lane is shown
-              separately from the model path.
+              Select a step to read what it does, or play the flow to watch the sequence.
             </p>
 
             <div class="hs-diagram" data-diagram>
@@ -475,28 +473,6 @@
                     </button>
                   </li>
                 </ol>
-              </div>
-
-              <div class="hs-lane hs-lane--account">
-                <h4 class="hs-lane__title">Account lane <span>/api/auth/*</span></h4>
-                <ol class="hs-flow hs-flow--short">
-                  <li>
-                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-express">
-                      <span class="hs-node__tag">Express</span>
-                      <span class="hs-node__name">Signup / login / session</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node hs-node--account" type="button" data-node data-detail="auth-supabase">
-                      <span class="hs-node__tag">Supabase</span>
-                      <span class="hs-node__name">Auth and profiles</span>
-                    </button>
-                  </li>
-                </ol>
-                <p class="hs-note hs-note--tight">
-                  This lane controls who may open an assessment. The model service never sees an
-                  account, a patient name or a clinical note.
-                </p>
               </div>
 
               <section class="hs-node-detail" data-node-detail aria-label="Selected step detail" aria-live="polite">
@@ -934,10 +910,23 @@
           <h2 class="hs-h2" id="hs-future-title">
             What comes next
           </h2>
-          <p class="hs-lede hs-lede--tight">
-            I want to keep exploring how responsible technology could make the first step toward
-            healthcare easier for people who are often overlooked by conventional digital services.
-          </p>
+          <div class="hs-feature-strip" aria-label="HelloDoc features">
+            <article class="hs-feature">
+              <span class="hs-feature__number">01</span>
+              <h3 class="hs-h3">Find a doctor</h3>
+              <p>Explore clinician profiles and find care that fits your needs.</p>
+            </article>
+            <article class="hs-feature">
+              <span class="hs-feature__number">02</span>
+              <h3 class="hs-h3">Book appointments</h3>
+              <p>Choose an available time and keep appointment details in one place.</p>
+            </article>
+            <article class="hs-feature">
+              <span class="hs-feature__number">03</span>
+              <h3 class="hs-h3">Doctor-led assessment</h3>
+              <p>Support consultations with structured symptom assessment and saved records.</p>
+            </article>
+          </div>
 
           <p class="hs-roadmap-key">
             <span class="hs-key hs-key--now">Current project foundations</span>
