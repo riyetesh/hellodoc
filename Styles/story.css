@@ -1834,3 +1834,19 @@ body.hellodoc-story-page {
   .hellodoc-story .hs-founder-next span,
   .hellodoc-story .hs-builder__links a { transition: none; }
 }
+
+/* Reveal state is attached to the document root by story.js. */
+html.hs-anim .hellodoc-story [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+html.hs-anim .hellodoc-story [data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.hs-anim .hellodoc-story [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
