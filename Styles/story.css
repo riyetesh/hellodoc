@@ -1438,3 +1438,50 @@ body.hellodoc-story-page {
 .hellodoc-story .hs-hero__figure.is-parallax .hs-hero__img {
   transform: none;
 }
+
+
+/* Story page refinements: more breathing room and a clearer, slower architecture flow. */
+.hellodoc-story .hs-hero__copy > .hs-lede {
+  margin-bottom: clamp(2.75rem, 5vw, 4.25rem);
+}
+
+.hellodoc-story .hs-flow > li.is-current::after {
+  background: #F71941;
+  border-color: #F71941;
+  box-shadow: 0 0 0 6px rgba(247, 25, 65, 0.18), 0 0 18px rgba(247, 25, 65, 0.3);
+}
+
+.hellodoc-story .hs-flow > li.is-done::after {
+  background: var(--hs-sage);
+  border-color: var(--hs-sage);
+  box-shadow: 0 0 0 3px rgba(28, 74, 58, 0.08);
+}
+
+.hellodoc-story .hs-node.is-active {
+  border-color: #F71941;
+  background: rgba(247, 25, 65, 0.07);
+  box-shadow: inset 4px 0 0 #F71941, 0 0 0 3px rgba(247, 25, 65, 0.12);
+  transform: translateY(-2px);
+}
+
+.hellodoc-story .hs-node-detail {
+  min-height: 156px;
+  border-left-color: #F71941;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hellodoc-story .hs-node-detail h5 {
+  color: var(--hs-ink);
+  font-size: 1.08rem;
+}
+
+.hellodoc-story .hs-diagram__controls [data-flow-play] {
+  background: #F71941;
+  border-color: #F71941;
+  color: #fff;
+}
+
+.hellodoc-story .hs-diagram__controls [data-flow-play]:hover {
+  background: #d91439;
+  border-color: #d91439;
+}
