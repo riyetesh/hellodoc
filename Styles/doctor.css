@@ -2504,3 +2504,81 @@
 .dw-slot-list__head>span{font-size:.76rem;color:var(--text-soft)}
 .dw-slot{padding:.8rem .25rem}
 @media(max-width:480px){.dw-slot-form__fields{grid-template-columns:1fr}.dw-slot-form__submit{width:100%}.dw-slot-list__head{align-items:flex-start;flex-direction:column}}
+
+
+/* Review editor: the review step contains editable controls, not definition-list rows. */
+.dw-review .review-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dw-review-edit {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0.65rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.dw-review-edit input,
+.dw-review-edit textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.dw-review-edit textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.dw-review-guidance {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.dw-review-guidance h4 {
+  margin: 0 0 0.25rem;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.dw-review-model {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.dw-review-model h4,
+.dw-review-model p {
+  margin: 0;
+}
+
+.dw-review-model > p + p {
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 760px) {
+  .dw-review__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
