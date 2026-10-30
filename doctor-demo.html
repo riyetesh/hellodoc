@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <title>HelloDoc | Doctor demo workspace</title>
+  <link rel="icon" href="/Asset/favicon.svg">
+  <link rel="stylesheet" href="/Styles/app.css?v=sos5">
+  <link rel="stylesheet" href="/Styles/doctor-demo.css?v=demo-20261030">
+</head>
+<body class="demo-workspace">
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="/index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo"></a>
+      <div class="navbar-actions"><span class="demo-nav-label">PUBLIC DEMO · SANDBOX</span><a class="btn btn-outline" href="/index.html">Exit demo</a></div>
+    </div>
+  </nav>
+
+  <header class="demo-header">
+    <div class="container demo-header__inner">
+      <div><p class="demo-eyebrow">Doctor workspace · interactive preview</p><h1>Good morning, Dr. Demo</h1><p>Explore a simulated clinic day using fictional patient records. No account required.</p></div>
+      <div class="demo-header__actions"><span class="demo-live"><i></i> Demo environment</span><button type="button" class="btn btn-outline" id="resetDemo">Reset demo</button></div>
+    </div>
+  </header>
+
+  <main class="container demo-main">
+    <div class="demo-notice" role="note"><strong>Safe demo environment.</strong> All patients and clinical details are fictional. Changes stay in this browser session; nothing is sent to HelloDoc's production database. The assessment is illustrative and is not a real diagnosis or medical advice.</div>
+
+    <section class="demo-metrics" aria-label="Clinic overview">
+      <article><span>Patients in queue</span><strong id="waitingCount">4</strong><small>Waiting for review</small></article>
+      <article><span>In consultation</span><strong id="activeCount">1</strong><small>Current demo visit</small></article>
+      <article><span>Completed today</span><strong id="completedCount">0</strong><small>In this session</small></article>
+      <article><span>Average wait</span><strong>12 min</strong><small>Illustrative clinic data</small></article>
+    </section>
+
+    <div class="demo-layout">
+      <aside class="demo-queue" aria-labelledby="queueTitle">
+        <div class="demo-panel-head"><div><p class="demo-kicker">Your schedule</p><h2 id="queueTitle">Patient queue</h2></div><span class="demo-count" id="queueTotal">5 visits</span></div>
+        <label class="demo-search"><span class="sr-only">Search patients</span><input id="patientSearch" type="search" placeholder="Search patients…" autocomplete="off"></label>
+        <div class="demo-queue-list" id="patientQueue" aria-live="polite"></div>
+        <p class="demo-queue-foot">Select a patient to open their visit.</p>
+      </aside>
+
+      <section class="demo-clinical" aria-labelledby="patientHeading">
+        <div class="demo-empty" id="emptyPatient" hidden><h2>No patient selected</h2><p>Choose a patient from the queue to begin.</p></div>
+        <div id="patientWorkspace">
+          <div class="demo-patient-head">
+            <div><p class="demo-kicker">Selected patient · fictional record</p><h2 id="patientHeading">Patient name</h2><p id="patientMeta" class="demo-muted"></p></div>
+            <span class="demo-status" id="patientStatus">Waiting</span>
+          </div>
+
+          <div class="demo-patient-facts" id="patientFacts"></div>
+          <div class="demo-visit-reason"><span>Reason for visit</span><p id="visitReason"></p></div>
+
+          <div class="demo-section-head"><div><p class="demo-kicker">Consultation</p><h3>Clinical assessment</h3></div><span id="consultationClock" class="demo-clock">Not started</span></div>
+          <div class="demo-actions-row"><button class="btn btn-primary" type="button" id="startConsultation">Start consultation</button><button class="btn btn-outline" type="button" id="endConsultation" disabled>End consultation</button></div>
+
+          <div class="demo-form-grid">
+            <fieldset class="demo-fieldset">
+              <legend>Symptoms reported by patient</legend>
+              <p class="demo-help">Select the symptoms described during the visit.</p>
+              <div class="demo-symptoms" id="symptomChoices"></div>
+              <label class="demo-field"><span>How long have symptoms been present?</span><select id="symptomDuration"><option value="1 day">1 day</option><option value="2–3 days" selected>2–3 days</option><option value="4–7 days">4–7 days</option><option value="1–2 weeks">1–2 weeks</option><option value="More than 2 weeks">More than 2 weeks</option></select></label>
+              <label class="demo-field"><span>Clinical observations</span><textarea id="clinicalNotes" rows="3" placeholder="Add observations from the consultation…"></textarea></label>
+            </fieldset>
+
+            <section class="demo-model-card" aria-labelledby="modelTitle">
+              <div><p class="demo-kicker">Decision support · simulated</p><h3 id="modelTitle">Illustrative assessment</h3></div>
+              <p class="demo-help">Use the sample assessment to see how a model result and general reference guidance would appear. It does not analyse the selected symptoms.</p>
+              <button class="btn btn-primary" id="runAssessment" type="button">Run sample assessment</button>
+              <div id="assessmentResult" class="demo-result" hidden aria-live="polite"></div>
+            </section>
+          </div>
+
+          <div class="demo-section-head demo-plan-head"><div><p class="demo-kicker">Doctor's decision</p><h3>Assessment and care plan</h3></div></div>
+          <div class="demo-plan-grid">
+            <label class="demo-field"><span>Doctor's assessment</span><textarea id="doctorAssessment" rows="3" placeholder="Write your clinical assessment…"></textarea></label>
+            <label class="demo-field"><span>Care plan and follow-up</span><textarea id="carePlan" rows="3" placeholder="Document advice, follow-up and next steps…"></textarea></label>
+          </div>
+          <div class="demo-footer-actions"><p id="saveStatus" role="status">Demo changes are held in this browser session.</p><div><button class="btn btn-outline" id="printReport" type="button">Print sample report</button><button class="btn btn-primary" id="completeVisit" type="button">Complete visit</button></div></div>
+        </div>
+      </section>
+    </div>
+    <p class="demo-back"><a href="/index.html">← Back to HelloDoc</a></p>
+  </main>
+  <script src="/Scripts/doctor-demo.js?v=demo-20261030" defer></script>
+</body>
+</html>
