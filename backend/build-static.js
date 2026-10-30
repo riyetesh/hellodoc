@@ -16,7 +16,6 @@ if (output === root || root.startsWith(output + path.sep)) {
 // or half-finished page must never become public just because of where it lives.
 const PAGES = [
   'index.html',
-  'doctor-demo.html',
   'login.html',
   'signup.html',
   'recover.html',
