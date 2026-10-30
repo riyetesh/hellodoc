@@ -294,7 +294,10 @@
         var labels = ["Symptoms", "Feature vector", "Model comparison", "Guidance lookup"];
         status.textContent = "Step " + (current + 1) + " of " + stages.length + " · " + labels[current];
       }
-      if (next) {\n        next.disabled = false;\n        next.textContent = current === stages.length - 1 ? "Start again" : "Next step";\n      }
+      if (next) {
+        next.disabled = false;
+        next.textContent = current === stages.length - 1 ? "Start again" : "Next step";
+      }
     }
 
     if (next) {
