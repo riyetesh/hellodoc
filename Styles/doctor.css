@@ -2506,7 +2506,7 @@
 @media(max-width:480px){.dw-slot-form__fields{grid-template-columns:1fr}.dw-slot-form__submit{width:100%}.dw-slot-list__head{align-items:flex-start;flex-direction:column}}
 
 
-/* Review editor: the review step contains editable controls, not definition-list rows. */
+/* Review editor layout: editable fields use semantic containers and real line breaks. */
 .dw-review .review-summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
