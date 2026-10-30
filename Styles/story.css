@@ -74,3 +74,12 @@ body.hellodoc-story-page{background:var(--paper);color:var(--ink)}.hellodoc-stor
 @media(max-width:900px){.hs-diagram__layout{grid-template-columns:1fr}.hs-node-detail--card{position:static;min-height:0}.hs-flow--cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.hs-flow--cards li:after,.hs-flow--cards li:before{display:none}.hs-demo__visual-grid{grid-template-columns:1fr}.hs-demo__step-rail ol{grid-template-columns:repeat(4,minmax(0,1fr))}.hs-demo__step-rail li{font-size:.7rem}}
 @media(max-width:560px){.hs-diagram--interactive,.hs-demo--visual{padding:16px;border-radius:17px}.hs-flow--cards{gap:11px}.hs-node{min-height:147px;padding:11px}.hs-node__name{font-size:.79rem}.hs-node__hint{font-size:.67rem}.hs-demo--visual .hs-demo__head{align-items:flex-start;flex-direction:column}.hs-demo__stage{min-height:250px}.hs-demo__stage-item{padding-left:52px}.hs-demo__stage-number{width:38px;height:38px}.hs-demo__step-rail ol{grid-template-columns:repeat(2,minmax(0,1fr))}.hs-demo__controls{display:grid;grid-template-columns:1fr 1fr}.hs-demo__controls [data-demo-status]{grid-column:1/-1}.hs-demo__lookup{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){.hs-node,.hs-demo__progress span{transition:none}}
+
+/* Playback speed control */
+.hs-playback{display:grid;grid-template-columns:auto minmax(110px,180px) auto;align-items:center;gap:10px;padding:7px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.hs-playback__label{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:.76rem;font-weight:700;white-space:nowrap}
+.hs-playback__label i{color:var(--accent-dark)}
+.hs-playback input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
+.hs-playback__value{min-width:34px;color:var(--accent-dark);font-size:.78rem;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.hs-playback input[type="range"]:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:5px}
+@media(max-width:560px){.hs-playback{grid-column:1/-1;grid-template-columns:auto minmax(90px,1fr) auto;width:100%;order:3}}
