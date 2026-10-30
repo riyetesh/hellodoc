@@ -148,73 +148,77 @@
     var nodes = $$("[data-node]", diagram);
     var flowNodes = $$("[data-flow-step]", diagram);
     var detail = $("[data-node-detail]", diagram);
+    var source = $("[data-detail-source]", diagram);
     var status = $("[data-flow-status]", diagram);
     var playButton = $("[data-flow-play]", diagram);
     var resetButton = $("[data-flow-reset]", diagram);
-    var source = $("[data-detail-source]", diagram);
-    var initialDetail = detail ? detail.cloneNode(true) : null;
-    var defaultStatus = status ? status.textContent.trim() : "";
-    var timer = null, index = 0, completed = false;
+    var initialDetail = detail ? detail.innerHTML : "";
+    var initialStatus = status ? status.textContent : "";
+    var timer = null, index = 0, complete = false;
 
-    function label(node) { var n = $(".hs-node__name", node); return n ? n.textContent.trim() : "step"; }
-    function showDetail(node) {
-      var id = node && node.getAttribute("data-detail");
-      var copy = id && source ? source.querySelector("#" + id) : null;
-      if (!detail || !copy) return;
-      detail.replaceChildren(copy.cloneNode(true));
-    }
     function stop() { if (timer !== null) { window.clearTimeout(timer); timer = null; } }
     function clear() {
       nodes.forEach(function (node) {
         node.classList.remove("is-active");
-        var item = node.closest("li");
-        if (item) item.classList.remove("is-current", "is-done");
+        var li = node.closest("li");
+        if (li) li.classList.remove("is-current", "is-done");
       });
     }
-    function select(node, announce) {
-      stop(); clear(); completed = false;
-      var i = flowNodes.indexOf(node);
-      index = i >= 0 ? i + 1 : 0;
-      node.classList.add("is-active");
-      var li = node.closest("li"); if (li) li.classList.add("is-current");
-      showDetail(node);
-      if (status && announce !== false) status.textContent = "Selected: " + label(node);
+    function detailFor(node) {
+      var id = node && node.getAttribute("data-detail");
+      var item = id && source ? source.querySelector("#" + id) : null;
+      if (detail && item) {
+        detail.innerHTML = '<span class="hs-detail-kicker">STEP DETAILS</span>' + item.innerHTML;
+      }
     }
-    function renderStep(i) {
+    function mark(i) {
       clear();
       flowNodes.forEach(function (node, n) {
         var li = node.closest("li");
-        if (li) { li.classList.toggle("is-done", n < i); li.classList.toggle("is-current", n === i); }
+        if (li) {
+          li.classList.toggle("is-done", n < i);
+          li.classList.toggle("is-current", n === i);
+        }
       });
-      if (flowNodes[i]) { flowNodes[i].classList.add("is-active"); showDetail(flowNodes[i]); }
+      var active = flowNodes[i];
+      if (!active) return;
+      active.classList.add("is-active");
+      detailFor(active);
+      if (status) status.textContent = "Step " + (i + 1) + " of " + flowNodes.length + ": " + ($(".hs-node__name", active) || active).textContent.trim();
       index = i + 1;
-      if (status && flowNodes[i]) status.textContent = "Step " + (i + 1) + " of " + flowNodes.length + ": " + label(flowNodes[i]);
+    }
+    function choose(node) {
+      stop(); complete = false; clear();
+      var n = flowNodes.indexOf(node);
+      index = n >= 0 ? n + 1 : 0;
+      node.classList.add("is-active");
+      var li = node.closest("li");
+      if (li) li.classList.add("is-current");
+      detailFor(node);
+      if (status) status.textContent = "Selected: " + ($(".hs-node__name", node) || node).textContent.trim();
     }
     function play() {
       if (!flowNodes.length) return;
       stop();
-      if (completed || index >= flowNodes.length) { index = 0; completed = false; }
+      if (complete || index >= flowNodes.length) index = 0;
       function advance() {
         if (index >= flowNodes.length) {
-          timer = null; completed = true;
-          if (status) status.textContent = "Flow complete: " + flowNodes.length + " steps from symptom input to the assessment record.";
+          timer = null; complete = true;
+          if (status) status.textContent = "Flow complete: 8 steps from symptom input to the assessment record.";
           return;
         }
-        renderStep(index);
+        mark(index);
         timer = window.setTimeout(advance, reduceMotion ? 100 : 2400);
       }
       advance();
     }
     function reset() {
-      stop(); clear(); index = 0; completed = false;
-      if (initialDetail && detail) detail.replaceChildren.apply(detail, Array.prototype.slice.call(initialDetail.cloneNode(true).childNodes));
-      if (status) status.textContent = defaultStatus;
+      stop(); clear(); index = 0; complete = false;
+      if (detail) detail.innerHTML = initialDetail;
+      if (status) status.textContent = initialStatus;
     }
     nodes.forEach(function (node) {
-      node.addEventListener("click", function () { select(node); });
-      node.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(node); }
-      });
+      node.addEventListener("click", function () { choose(node); });
     });
     if (playButton) playButton.addEventListener("click", play);
     if (resetButton) resetButton.addEventListener("click", reset);
@@ -231,6 +235,8 @@
     var next = $("[data-demo-next]", demo);
     var reset = $("[data-demo-reset]", demo);
     var status = $("[data-demo-status]", demo);
+    var progress = $("[data-demo-progress]", demo);
+    var indicators = $$("[data-demo-indicator]", demo);
     var labels = ["Symptoms", "Feature vector", "Model comparison", "Guidance lookup"];
     var current = 0;
     function render() {
@@ -240,8 +246,13 @@
         stage.hidden = !active;
         stage.setAttribute("aria-hidden", active ? "false" : "true");
       });
+      indicators.forEach(function (item, i) {
+        item.classList.toggle("is-current", i === current);
+        item.classList.toggle("is-done", i < current);
+      });
+      if (progress) progress.style.width = ((current + 1) / stages.length * 100) + "%";
       if (status) status.textContent = "Step " + (current + 1) + " of " + stages.length + " · " + (labels[current] || "Step");
-      if (next) next.textContent = current === stages.length - 1 ? "Start again" : "Next step";
+      if (next) next.innerHTML = current === stages.length - 1 ? '<i class="fa-solid fa-rotate" aria-hidden="true"></i> Start again' : '<i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Next step';
     }
     if (next) next.addEventListener("click", function () { current = current === stages.length - 1 ? 0 : current + 1; render(); });
     if (reset) reset.addEventListener("click", function () { current = 0; render(); });
