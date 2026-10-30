@@ -1850,3 +1850,160 @@ html.hs-anim .hellodoc-story [data-reveal].is-visible {
     transform: none;
   }
 }
+
+
+/* Story page personality pass: readable widths, pastel panels and technology marks. */
+.hellodoc-story .hs-founder-next {
+  display: block;
+  width: 100%;
+  margin: clamp(2.4rem, 5vw, 4rem) 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid #d8e1eb;
+  color: var(--story-ink);
+  font-size: clamp(1.65rem, 3.3vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -.035em;
+  font-weight: 800;
+}
+.hellodoc-story .hs-founder-next::after {
+  content: "↓";
+  display: inline-flex;
+  margin-left: .75rem;
+  color: var(--story-coral-dark);
+  font-size: .72em;
+  vertical-align: .12em;
+}
+.hellodoc-story .hs-pullquote {
+  max-width: min(100%, 76rem);
+  width: 100%;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 0;
+  border-left: 5px solid #e46c8b;
+  border-radius: 0 20px 20px 0;
+  background: #fff0f3;
+}
+.hellodoc-story .hs-pullquote p {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.55rem);
+  line-height: 1.24;
+  letter-spacing: -.025em;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: pretty;
+}
+.hellodoc-story .hs-prose,
+.hellodoc-story .hs-prose p,
+.hellodoc-story .hs-note,
+.hellodoc-story .hs-details__body,
+.hellodoc-story .hs-facts dd {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+.hellodoc-story .hs-tech--logos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: .85rem;
+  padding: 0;
+  margin: 1.25rem 0 2rem;
+  list-style: none;
+}
+.hellodoc-story .hs-tech--logos li {
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: .55rem;
+  padding: 1rem;
+  border: 1px solid #dce4ef;
+  border-radius: 15px;
+  background: #fff;
+  color: #233754;
+  font-size: .84rem;
+  font-weight: 700;
+  text-align: center;
+}
+.hellodoc-story .hs-tech--logos img {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+.hellodoc-story .hs-tech--logos span { line-height: 1.2; }
+.hellodoc-story .hs-details {
+  overflow: hidden;
+  border: 1px solid #d7e0ed;
+  background: #fff;
+}
+.hellodoc-story .hs-details > summary {
+  position: relative;
+  padding: 1rem 1.25rem 1rem 3.1rem;
+  cursor: pointer;
+  font-weight: 750;
+  line-height: 1.4;
+  list-style: none;
+}
+.hellodoc-story .hs-details > summary::-webkit-details-marker { display: none; }
+.hellodoc-story .hs-details > summary::before {
+  content: "+";
+  position: absolute;
+  left: 1.15rem;
+  top: 50%;
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: #e8efff;
+  color: #254f9b;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.hellodoc-story .hs-details[open] > summary::before { content: "−"; }
+.hellodoc-story .hs-details__body { padding: 0 1.25rem 1.15rem; }
+.hellodoc-story .hs-milestone:nth-child(4n + 1) .hs-details { background: #fff4f1; border-color: #f4d6ce; }
+.hellodoc-story .hs-milestone:nth-child(4n + 1) .hs-details > summary::before { background: #ffe0d8; color: #963f33; }
+.hellodoc-story .hs-milestone:nth-child(4n + 2) .hs-details { background: #eff8ff; border-color: #cfe5f4; }
+.hellodoc-story .hs-milestone:nth-child(4n + 2) .hs-details > summary::before { background: #d9efff; color: #245783; }
+.hellodoc-story .hs-milestone:nth-child(4n + 3) .hs-details { background: #f1f7ed; border-color: #d6e8ca; }
+.hellodoc-story .hs-milestone:nth-child(4n + 3) .hs-details > summary::before { background: #deefd3; color: #35613c; }
+.hellodoc-story .hs-milestone:nth-child(4n) .hs-details { background: #f6f1ff; border-color: #dfd3f4; }
+.hellodoc-story .hs-milestone:nth-child(4n) .hs-details > summary::before { background: #e9ddff; color: #62468c; }
+.hellodoc-story .hs-demo__stage-item {
+  border: 1px solid #d8e3f1;
+  border-radius: 14px;
+  background: #f7faff;
+}
+.hellodoc-story .hs-demo__stage-item:nth-child(1).is-active { background: #fff0f3; border-color: #e68ca0; }
+.hellodoc-story .hs-demo__stage-item:nth-child(2).is-active { background: #eaf5ff; border-color: #70a9d8; }
+.hellodoc-story .hs-demo__stage-item:nth-child(3).is-active { background: #f0f7e9; border-color: #8ebd7c; }
+.hellodoc-story .hs-demo__stage-item:nth-child(4).is-active { background: #f5efff; border-color: #ae91dd; }
+.hellodoc-story .hs-chip { background: #ffe0e7; color: #8f2441; border-color: #f2b6c5; }
+.hellodoc-story .hs-cell { background: #dfe8f4; color: #243a58; border-color: #bdccdf; }
+.hellodoc-story .hs-cell.is-on { background: #2775bf; color: #fff; border-color: #1e65a8; }
+.hellodoc-story .hs-dot--a { fill: #2476ba; }
+.hellodoc-story .hs-dot--b { fill: #d65b78; }
+.hellodoc-story .hs-boundary__line { stroke: #354b69; stroke-width: 2.5; }
+.hellodoc-story .hs-demo__lookup span { background: #e8defa; border: 1px solid #c9b8eb; color: #4b3675; }
+.hellodoc-story .hs-demo__controls { align-items: center; }
+.hellodoc-story .hs-demo__controls [data-demo-next] { min-width: 145px; }
+.hellodoc-story .hs-demo__controls [data-demo-next]:disabled { opacity: .55; cursor: default; }
+.hellodoc-story .hs-demo__stage-item.is-active { animation: hs-stage-in .28s ease both; }
+@keyframes hs-stage-in { from { opacity: .55; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+.hellodoc-story .hs-principle:nth-child(1) { background: #fff1f3; border-color: #f1d2db; border-top-color: #d96e87; }
+.hellodoc-story .hs-principle:nth-child(2) { background: #eef7ff; border-color: #d0e2f1; border-top-color: #5c9ac9; }
+.hellodoc-story .hs-principle:nth-child(3) { background: #f0f7ed; border-color: #d9e8d2; border-top-color: #83a875; }
+.hellodoc-story .hs-principle:nth-child(1) .hs-principle__icon { color: #9b3650; background: #ffdde5; }
+.hellodoc-story .hs-principle:nth-child(2) .hs-principle__icon { color: #245b88; background: #d9edff; }
+.hellodoc-story .hs-principle:nth-child(3) .hs-principle__icon { color: #3f6d3a; background: #deefd5; }
+@media (max-width: 680px) {
+  .hellodoc-story .hs-tech--logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hellodoc-story .hs-tech--logos li { min-height: 94px; }
+  .hellodoc-story .hs-pullquote { padding: 1.25rem; }
+  .hellodoc-story .hs-pullquote p { font-size: clamp(1.25rem, 6vw, 1.8rem); }
+}
