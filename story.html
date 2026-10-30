@@ -435,74 +435,24 @@
               How does HelloDoc turn symptoms into a prediction?
             </h3>
 
-            <div class="hs-demo" data-svc-demo>
-              <div class="hs-demo__head">
-                <h4 class="hs-h4">Illustrative pipeline</h4>
-                <p class="hs-badge">Example only · not a prediction</p>
-              </div>
-              <p class="hs-note">
-                A simplified example of how symptoms move through the classifier. This is not a real or clinically validated prediction.
-              </p>
-
-              <div class="hs-demo__stage">
-                <ol class="hs-demo__stages">
-                  <li class="hs-demo__stage-item is-active" data-demo-stage="0">
-                    <span class="hs-demo__stage-label">Symptoms</span>
-                    <span class="hs-demo__chips">
-                      <span class="hs-chip">itching</span>
-                      <span class="hs-chip">skin_rash</span>
-                      <span class="hs-chip">nodal_skin_eruptions</span>
-                    </span>
-                  </li>
-                  <li class="hs-demo__stage-item" data-demo-stage="1">
-                    <span class="hs-demo__stage-label">Convert to a 132-value vector</span>
-                    <span class="hs-demo__vector" aria-hidden="true">
-                      <span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span
-                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span
-                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span
-                      ><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span>
-                    </span>
-                    <span class="hs-sr-only"
-                      >Three of the first twelve positions are set to one; the remaining positions are
-                      zero. The real model receives 132 positions.</span
-                    >
-                  </li>
-                  <li class="hs-demo__stage-item" data-demo-stage="2">
-                    <span class="hs-demo__stage-label">Compare with learned patterns</span>
-                    <svg class="hs-boundary" viewBox="0 0 240 120" role="img" aria-label="Illustrative scatter plot of two classes separated by a straight decision boundary, with the closest points marked as support vectors.">
-                      <line x1="0" y1="0" x2="240" y2="120" class="hs-boundary__grid" />
-                      <line x1="0" y1="120" x2="240" y2="0" class="hs-boundary__grid" />
-                      <line x1="16" y1="104" x2="224" y2="16" class="hs-boundary__line" />
-                      <circle cx="34" cy="96" r="5" class="hs-dot hs-dot--a" />
-                      <circle cx="58" cy="84" r="5" class="hs-dot hs-dot--a" />
-                      <circle cx="46" cy="112" r="5" class="hs-dot hs-dot--a is-sv" />
-                      <circle cx="86" cy="70" r="5" class="hs-dot hs-dot--a" />
-                      <circle cx="70" cy="66" r="5" class="hs-dot hs-dot--a is-sv" />
-                      <circle cx="196" cy="20" r="5" class="hs-dot hs-dot--b" />
-                      <circle cx="172" cy="34" r="5" class="hs-dot hs-dot--b" />
-                      <circle cx="206" cy="44" r="5" class="hs-dot hs-dot--b" />
-                      <circle cx="158" cy="22" r="5" class="hs-dot hs-dot--b is-sv" />
-                      <circle cx="182" cy="54" r="5" class="hs-dot hs-dot--b is-sv" />
-                    </svg>
-                    <span class="hs-sr-only"
-                      >Points of two classes are separated by a straight line; the circled points
-                      nearest the line are the support vectors.</span
-                    >
-                  </li>
-                  <li class="hs-demo__stage-item" data-demo-stage="3">
-                    <span class="hs-demo__stage-label">Prepare guidance</span>
-                    <span class="hs-demo__lookup">
-                      <span>description</span><span>precautions</span><span>medications</span
-                      ><span>diet</span><span>workout</span>
-                    </span>
-                  </li>
-                </ol>
-
-                <div class="hs-demo__controls">
-                  <button class="hs-btn hs-btn--small" type="button" data-demo-next>Next step</button>
-                  <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-demo-reset>Reset</button>
-                  <p class="hs-status" data-demo-status role="status" aria-live="polite">Step 1 of 4 · Symptoms</p>
+            <div class="hs-demo hs-demo--visual" data-svc-demo>
+              <div class="hs-demo__head"><h4 class="hs-h4">Illustrative pipeline</h4><p class="hs-badge">Example only · not a prediction</p></div>
+              <p class="hs-note">A simplified example of how symptoms move through the classifier. This is not a real or clinically validated prediction.</p>
+              <div class="hs-demo__progress" aria-hidden="true"><span data-demo-progress></span></div>
+              <div class="hs-demo__visual-grid">
+                <div class="hs-demo__stage">
+                  <ol class="hs-demo__stages">
+                    <li class="hs-demo__stage-item is-active" data-demo-stage="0"><span class="hs-demo__stage-number">01</span><span class="hs-demo__stage-label">Symptoms selected</span><p class="hs-demo__stage-copy">The doctor selects the recognised symptoms reported or observed.</p><span class="hs-demo__chips"><span class="hs-chip">itching</span><span class="hs-chip">skin_rash</span><span class="hs-chip">nodal_skin_eruptions</span></span></li>
+                    <li class="hs-demo__stage-item" data-demo-stage="1"><span class="hs-demo__stage-number">02</span><span class="hs-demo__stage-label">Encoded as features</span><p class="hs-demo__stage-copy">Each known symptom maps to a position in a 132-value binary vector.</p><div class="hs-demo__vector-wrap"><span class="hs-demo__vector" aria-hidden="true"><span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span><span class="hs-cell is-on">1</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span><span class="hs-cell">0</span></span><span class="hs-vector-caption">3 active positions shown · 132 total features</span></div></li>
+                    <li class="hs-demo__stage-item" data-demo-stage="2"><span class="hs-demo__stage-number">03</span><span class="hs-demo__stage-label">Compared with learned patterns</span><p class="hs-demo__stage-copy">The linear SVC evaluates the feature vector against its learned class boundaries.</p><svg class="hs-boundary" viewBox="0 0 320 160" role="img" aria-label="Illustrative two-class scatter plot. A decision boundary separates classes and circled points are support vectors."><path d="M8 145H312M8 8V145" class="hs-boundary__axis"/><path d="M12 135L305 20" class="hs-boundary__line"/><circle cx="35" cy="118" r="6" class="hs-dot hs-dot--a"/><circle cx="68" cy="105" r="6" class="hs-dot hs-dot--a"/><circle cx="82" cy="126" r="6" class="hs-dot hs-dot--a is-sv"/><circle cx="115" cy="88" r="6" class="hs-dot hs-dot--a is-sv"/><circle cx="147" cy="83" r="6" class="hs-dot hs-dot--a"/><circle cx="190" cy="52" r="6" class="hs-dot hs-dot--b is-sv"/><circle cx="219" cy="48" r="6" class="hs-dot hs-dot--b"/><circle cx="249" cy="34" r="6" class="hs-dot hs-dot--b is-sv"/><circle cx="280" cy="26" r="6" class="hs-dot hs-dot--b"/></svg><span class="hs-vector-caption">Illustration only · not a live model plot</span></li>
+                    <li class="hs-demo__stage-item" data-demo-stage="3"><span class="hs-demo__stage-number">04</span><span class="hs-demo__stage-label">Reference guidance is assembled</span><p class="hs-demo__stage-copy">The predicted category is used to retrieve general reference information for clinician review.</p><div class="hs-demo__lookup"><span><i class="fa-regular fa-file-lines" aria-hidden="true"></i> Description</span><span><i class="fa-solid fa-shield-heart" aria-hidden="true"></i> Precautions</span><span><i class="fa-solid fa-pills" aria-hidden="true"></i> Medications</span><span><i class="fa-solid fa-apple-whole" aria-hidden="true"></i> Diet</span><span><i class="fa-solid fa-person-walking" aria-hidden="true"></i> Workout</span></div></li>
+                  </ol>
+                  <div class="hs-demo__controls"><button class="hs-btn hs-btn--small" type="button" data-demo-next><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Next step</button><button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-demo-reset><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset</button><p class="hs-status" data-demo-status role="status" aria-live="polite">Step 1 of 4 · Symptoms</p></div>
                 </div>
+                <aside class="hs-demo__step-rail" aria-label="Pipeline progress">
+                  <span class="hs-demo__rail-heading">THE PROCESS</span>
+                  <ol><li class="is-current" data-demo-indicator>Symptoms</li><li data-demo-indicator>Feature vector</li><li data-demo-indicator>Model comparison</li><li data-demo-indicator>Guidance lookup</li></ol>
+                </aside>
               </div>
             </div>
 
