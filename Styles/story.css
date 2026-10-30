@@ -1485,3 +1485,54 @@ body.hellodoc-story-page {
   background: #d91439;
   border-color: #d91439;
 }
+
+
+/* More separation between the architecture explanation and its controls. */
+.hellodoc-story #architecture > .hs-prose__intro {
+  margin-bottom: clamp(2.25rem, 4.5vw, 3.5rem);
+}
+
+.hellodoc-story .hs-diagram__controls {
+  margin-bottom: 2rem;
+}
+
+.hellodoc-story .hs-feature-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+  margin: 1.5rem 0 2.75rem;
+}
+
+.hellodoc-story .hs-feature {
+  padding: 1.25rem 1.35rem 1.4rem;
+  border: 1px solid var(--hs-line);
+  border-top: 3px solid #F71941;
+  border-radius: var(--radius);
+  background: var(--hs-surface);
+}
+
+.hellodoc-story .hs-feature__number {
+  display: inline-block;
+  margin-bottom: 0.8rem;
+  color: #F71941;
+  font-family: var(--hs-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.hellodoc-story .hs-feature .hs-h3 {
+  margin-bottom: 0.45rem;
+  font-size: 1.05rem;
+}
+
+.hellodoc-story .hs-feature p {
+  margin: 0;
+  color: var(--hs-body);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 760px) {
+  .hellodoc-story .hs-feature-strip {
+    grid-template-columns: 1fr;
+  }
+}
