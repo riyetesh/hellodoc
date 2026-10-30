@@ -154,7 +154,7 @@
     var resetButton = $("[data-flow-reset]", diagram);
     var speedInput = $("[data-flow-speed]", diagram);
     var speedValue = $("[data-flow-speed-value]", diagram);
-    var playbackRate = 1;
+    var playbackRate = 0.75;
     var initialDetail = detail ? detail.innerHTML : "";
     var initialStatus = status ? status.textContent : "";
     var timer = null, index = 0, complete = false;
@@ -211,7 +211,7 @@
           return;
         }
         mark(index);
-        timer = window.setTimeout(advance, reduceMotion ? 100 : 2400 / playbackRate);
+        timer = window.setTimeout(advance, reduceMotion ? 100 : 4000 / playbackRate);
       }
       advance();
     }
