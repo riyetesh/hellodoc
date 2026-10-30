@@ -7,7 +7,7 @@
     <title>HelloDoc | Home</title>
     <meta
       name="description"
-      content="HelloDoc is a digital front door to everyday healthcare: find an approved doctor, book and manage appointments, and see a doctor who can record an experimental model assisted assessment during the visit."
+      content="HelloDoc helps patients discover approved doctors, arrange appointments and keep consultation information organized."
     />
     <link rel="stylesheet" href="./Styles/app.css?v=sos5" />
     <link rel="stylesheet" href="./Styles/login.css?v=blue2" />
@@ -79,10 +79,6 @@
               <a class="btn btn-primary btn-lg" href="dashboard.html">Find a doctor</a>
               <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">For doctors</a>
             </div>
-            <p class="lp-hero__note">
-              <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
-              <span>Not for emergencies. HelloDoc is a prototype and does not replace a qualified healthcare professional.</span>
-            </p>
           </div>
 
           <div class="lp-hero__visual">
@@ -301,94 +297,6 @@
             </div>
           </div>
 
-          <p class="lp-callout">
-            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-            <span>
-              The model suggests candidate conditions from reported symptoms. It is not a
-              diagnosis, no calibrated confidence is shown, and every clinical decision
-              belongs to the doctor.
-            </span>
-          </p>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           Consultation demonstration: local only, no prediction
-           ============================================================ -->
-      <section class="lp-section" aria-labelledby="consult-title">
-        <div class="container">
-          <header class="lp-section__head">
-            <p class="lp-eyebrow">One consultation, separate sources</p>
-            <h2 class="lp-section__title" id="consult-title">Patient reported, clinician observed, model assisted</h2>
-            <p class="lp-section__lead">
-              The record keeps these apart on purpose. Select a few example symptoms:
-              they stay in the patient list, while the doctor's findings are recorded
-              separately.
-            </p>
-          </header>
-
-          <div class="lp-consult">
-            <div class="lp-consult__col">
-              <p class="lp-consult__label">Patient reported symptoms</p>
-              <p class="lp-consult__text">
-                Reported in the patient's own words during the visit, then mapped to
-                the fixed symptom vocabulary the model understands.
-              </p>
-              <div class="lp-chipset" data-symptoms>
-                <button type="button" class="lp-chip" aria-pressed="false">Itching</button>
-                <button type="button" class="lp-chip" aria-pressed="false">Skin rash</button>
-                <button type="button" class="lp-chip" aria-pressed="false">Headache</button>
-                <button type="button" class="lp-chip" aria-pressed="false">Fatigue</button>
-                <button type="button" class="lp-chip" aria-pressed="false">Joint pain</button>
-                <button type="button" class="lp-chip" aria-pressed="false">Nausea</button>
-              </div>
-              <p class="lp-consult__count" data-symptom-count role="status">No symptoms selected.</p>
-            </div>
-
-            <div class="lp-consult__col lp-consult__col--quiet">
-              <p class="lp-consult__label">Clinician observed findings</p>
-              <p class="lp-consult__text">
-                Recorded by the doctor, not the patient, and kept in their own list.
-                A free text note can be added for context.
-              </p>
-              <ul class="lp-observed">
-                <li>
-                  <span class="lp-observed__tag">Separate list</span>
-                  Findings are entered by the doctor during the consultation.
-                </li>
-                <li>
-                  <span class="lp-observed__tag">Not sent to the model</span>
-                  Free text observations stay in the clinical record.
-                </li>
-                <li>
-                  <span class="lp-observed__tag">Kept together</span>
-                  Both lists are stored against the same appointment.
-                </li>
-              </ul>
-            </div>
-
-            <div class="lp-consult__panel">
-              <p class="lp-consult__label">Experimental model assistance</p>
-              <p>
-                In a real consultation, the model receives only symptom identifiers and
-                returns candidate conditions for the doctor to weigh against their own
-                findings. It never sees a name, a note or an appointment detail, and it
-                does not decide anything.
-              </p>
-              <p class="lp-consult__quiet">
-                This demonstration never contacts the model and never shows a
-                prediction. It exists to explain the separation of responsibilities.
-              </p>
-            </div>
-          </div>
-
-          <p class="lp-demo-note">
-            <i class="fa-solid fa-lock" aria-hidden="true"></i>
-            <span>
-              Example symptoms only. Nothing selected here is saved, stored or sent
-              anywhere, and the page cannot produce a diagnosis.
-            </span>
-          </p>
         </div>
       </section>
 
@@ -525,9 +433,6 @@
               <a class="btn btn-outline btn-lg" href="signup.html?role=doctor">Join as a doctor</a>
             </div>
           </div>
-          <p class="lp-final__note">
-            HelloDoc is a prototype. Please do not enter real patient information.
-          </p>
         </div>
       </section>
     </main>
