@@ -152,6 +152,9 @@
     var status = $("[data-flow-status]", diagram);
     var playButton = $("[data-flow-play]", diagram);
     var resetButton = $("[data-flow-reset]", diagram);
+    var speedInput = $("[data-flow-speed]", diagram);
+    var speedValue = $("[data-flow-speed-value]", diagram);
+    var playbackRate = 1;
     var initialDetail = detail ? detail.innerHTML : "";
     var initialStatus = status ? status.textContent : "";
     var timer = null, index = 0, complete = false;
@@ -208,7 +211,7 @@
           return;
         }
         mark(index);
-        timer = window.setTimeout(advance, reduceMotion ? 100 : 2400);
+        timer = window.setTimeout(advance, reduceMotion ? 100 : 2400 / playbackRate);
       }
       advance();
     }
@@ -220,6 +223,14 @@
     nodes.forEach(function (node) {
       node.addEventListener("click", function () { choose(node); });
     });
+    if (speedInput) {
+      function updateSpeed() {
+        playbackRate = Number(speedInput.value) || 1;
+        if (speedValue) speedValue.textContent = playbackRate.toFixed(2).replace(/0+$/, "").replace(/\\.$/, "") + "×";
+      }
+      speedInput.addEventListener("input", updateSpeed);
+      updateSpeed();
+    }
     if (playButton) playButton.addEventListener("click", play);
     if (resetButton) resetButton.addEventListener("click", reset);
   }
