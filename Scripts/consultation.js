@@ -3,7 +3,7 @@
   const $ = (id) => document.getElementById(id);
   const dock = $('consultationDock');
   const startButton = $('consultationTimerStart');
-  const modal = $('consultationModal');
+  const panel = $('consultationModal');
   const endButton = $('consultationEnd');
   const finishClose = $('consultationFinishClose');
   const elapsedDisplay = $('consultationTimerDisplay');
@@ -69,8 +69,7 @@
     paintElapsed();
     if (interval) window.clearInterval(interval);
     interval = window.setInterval(paintElapsed, 1000);
-    if (modal.showModal) modal.showModal();
-    else modal.setAttribute('open', '');
+    panel.dataset.open = 'true';
   };
 
   const endConsultation = async () => {
@@ -154,8 +153,7 @@
     const wasEnded = Boolean(endedAt);
     if (interval) window.clearInterval(interval);
     interval = null;
-    if (modal.close && modal.open) modal.close();
-    else modal.removeAttribute('open');
+    panel.dataset.open = 'false';
     if (endedAt) {
       startedAt = null;
       endedAt = null;
@@ -174,12 +172,7 @@
   finishClose && finishClose.addEventListener('click', closeModal);
   $('consultationModalClose') && $('consultationModalClose').addEventListener('click', closeModal);
   $('consultationCancel') && $('consultationCancel').addEventListener('click', closeModal);
-  modal && modal.addEventListener('cancel', (event) => {
-    if (startedAt && !endedAt) event.preventDefault();
-  });
-  modal && modal.addEventListener('click', (event) => {
-    if (event.target === modal && (!startedAt || endedAt)) closeModal();
-  });
+
 
   const patientSelect = $('assessmentPatient');
   const syncDock = () => {
