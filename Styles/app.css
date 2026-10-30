@@ -1552,3 +1552,154 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 .hd-emergency-card{transform:translateY(10px) scale(.97);transition:transform .2s ease}
 .hd-emergency-dialog.is-open .hd-emergency-card{transform:translateY(0) scale(1)}
 @media(prefers-reduced-motion:reduce){.hd-emergency-dialog,.hd-emergency-card{transition:none}}
+
+
+/* ============================================================
+   HelloDoc visual refresh — shared across every app page
+   Blue remains the trust/primary colour; coral is the secondary
+   brand accent. Semantic danger/success/warning colours stay separate.
+   ============================================================ */
+:root {
+  --accent: #F71941;
+  --accent-strong: #D90E35;
+  --accent-soft: #FFF0F3;
+  --accent-border: #FFC5D0;
+  --accent-glow: rgba(247, 25, 65, .16);
+  --bg: #F8FAFD;
+  --surface-2: #F2F5FA;
+  --surface-3: #FFF0F3;
+  --text: #202B3C;
+  --text-soft: #46556B;
+  --muted: #68778D;
+  --border: #E2E8F0;
+  --border-strong: #C7D2E1;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 20px;
+  --shadow-xs: 0 1px 3px rgba(20, 35, 60, .045);
+  --shadow-sm: 0 5px 16px rgba(20, 35, 60, .06);
+  --shadow-md: 0 14px 34px rgba(20, 35, 60, .09);
+}
+
+::selection {
+  color: #7D1028;
+  background: #FFD8E0;
+}
+
+/* Coral is a recognisable accent, not a replacement for clinical status colours. */
+.eyebrow {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+}
+.nav-link.active,
+.nav-link:hover,
+.account-menu .user-chip[aria-expanded="true"] {
+  color: var(--accent-strong);
+}
+.nav-link.active::after { background: var(--accent); }
+.nav-link:hover { background: var(--accent-soft); }
+.nav-badge {
+  background: var(--accent);
+  color: #fff;
+}
+.card .spec { color: var(--accent-strong); }
+.card .next-slot i { color: var(--accent); }
+.chip:hover,
+.chip.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+.chip.active {
+  background: var(--accent-soft);
+}
+.account-menu__item:hover,
+.account-menu__item:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* Clear, consistent interaction feedback and keyboard accessibility. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.checkbox-group input[type="checkbox"]:checked,
+.radio-group input[type="radio"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.radio-group input[type="radio"]:checked {
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft), inset 0 0 0 2px var(--accent);
+}
+.checkbox-group input[type="checkbox"]:focus-visible,
+.radio-group input[type="radio"]:focus-visible {
+  outline-color: var(--accent);
+}
+.accordion:hover,
+.details-trigger:hover {
+  color: var(--accent-strong);
+}
+.accordion[aria-expanded="true"],
+.details-trigger[aria-expanded="true"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* Slightly friendlier surfaces, consistent spacing and restrained hover motion. */
+.card,
+.account-card,
+.guide-block,
+.prose-block,
+.record-hero,
+.walkin-hero,
+.setup-panel {
+  border-color: var(--border);
+  border-radius: var(--radius);
+}
+.btn { min-height: 44px; }
+.btn-primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+.btn-accent {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #fff;
+}
+.btn-accent:hover {
+  background: #B90B2C;
+  border-color: #B90B2C;
+  color: #fff;
+}
+.btn-accent:focus-visible {
+  outline-color: var(--accent);
+}
+.btn-outline:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* Keep long content and data-heavy views usable on narrow screens. */
+:where(table, .table-wrap, .data-table) { max-width: 100%; }
+@media (max-width: 640px) {
+  .container { padding-inline: 1rem; }
+  .btn { white-space: normal; }
+  .card .card-actions { flex-wrap: wrap; }
+  .card .card-actions .btn { min-width: min(100%, 130px); }
+  .navbar .navbar-inner { padding-inline: 1rem; }
+}
