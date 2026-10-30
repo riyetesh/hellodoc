@@ -392,172 +392,43 @@
               This diagram describes the intended assessment flow in local development. The Flask model is not deployed with the current Vercel production build, so live prediction requires a separately configured model service.
             </p>
 
-            <div class="hs-diagram" data-diagram>
+            <div class="hs-diagram hs-diagram--interactive" data-diagram>
               <div class="hs-diagram__controls">
-                <button class="hs-btn hs-btn--small" type="button" data-flow-play>Play data flow</button>
-                <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-flow-reset>Reset</button>
-                <p class="hs-status" data-flow-status role="status" aria-live="polite">
-                  Showing the full path. Select any step for detail.
-                </p>
+                <button class="hs-btn hs-btn--small" type="button" data-flow-play><i class="fa-solid fa-play" aria-hidden="true"></i> Play data flow</button>
+                <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-flow-reset><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset</button>
+                <p class="hs-status" data-flow-status role="status" aria-live="polite">Select a step to explore the assessment path, or play the complete flow.</p>
               </div>
-
-              <div class="hs-lane">
-                <h4 class="hs-lane__title">Assessment path <span>/api/doctor/assessments</span></h4>
-                <ol class="hs-flow">
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-browser">
-                      <span class="hs-node__tag">Browser</span>
-                      <span class="hs-node__name">Doctor assessment form</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-routing">
-                      <span class="hs-node__tag">Routing</span>
-                      <span class="hs-node__name">Express API</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-flask">
-                      <span class="hs-node__tag">Python</span>
-                      <span class="hs-node__name">Private model service</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-vector">
-                      <span class="hs-node__tag">Encoding</span>
-                      <span class="hs-node__name">Binary feature vector</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-model">
-                      <span class="hs-node__tag">Model</span>
-                      <span class="hs-node__name">Saved linear SVC</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-class">
-                      <span class="hs-node__tag">Output</span>
-                      <span class="hs-node__name">Predicted category</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-lookup">
-                      <span class="hs-node__tag">Lookup</span>
-                      <span class="hs-node__name">Dataset rows</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="hs-node" type="button" data-node data-flow-step data-detail="flow-results">
-                      <span class="hs-node__tag">Response</span>
-                      <span class="hs-node__name">Assessment record and PDF</span>
-                    </button>
-                  </li>
-                </ol>
+              <div class="hs-diagram__layout">
+                <div class="hs-lane">
+                  <div class="hs-lane__heading"><span>ASSESSMENT PIPELINE</span><span>8 connected steps</span></div>
+                  <ol class="hs-flow hs-flow--cards">
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-browser"><span class="hs-node__index">01</span><span class="hs-node__icon"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span><span class="hs-node__tag">BROWSER</span><span class="hs-node__name">Doctor assessment form</span><span class="hs-node__hint">Symptoms entered</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-routing"><span class="hs-node__index">02</span><span class="hs-node__icon"><i class="fa-solid fa-route" aria-hidden="true"></i></span><span class="hs-node__tag">ROUTING</span><span class="hs-node__name">Express API</span><span class="hs-node__hint">Secure request</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-flask"><span class="hs-node__index">03</span><span class="hs-node__icon"><i class="fa-brands fa-python" aria-hidden="true"></i></span><span class="hs-node__tag">PYTHON</span><span class="hs-node__name">Private model service</span><span class="hs-node__hint">Internal endpoint</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-vector"><span class="hs-node__index">04</span><span class="hs-node__icon"><i class="fa-solid fa-table-cells" aria-hidden="true"></i></span><span class="hs-node__tag">ENCODING</span><span class="hs-node__name">Binary feature vector</span><span class="hs-node__hint">132 symptom features</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-model"><span class="hs-node__index">05</span><span class="hs-node__icon"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></span><span class="hs-node__tag">MODEL</span><span class="hs-node__name">Saved linear SVC</span><span class="hs-node__hint">41 categories</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-class"><span class="hs-node__index">06</span><span class="hs-node__icon"><i class="fa-solid fa-tag" aria-hidden="true"></i></span><span class="hs-node__tag">OUTPUT</span><span class="hs-node__name">Predicted category</span><span class="hs-node__hint">One class label</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-lookup"><span class="hs-node__index">07</span><span class="hs-node__icon"><i class="fa-solid fa-book-medical" aria-hidden="true"></i></span><span class="hs-node__tag">LOOKUP</span><span class="hs-node__name">Dataset rows</span><span class="hs-node__hint">General reference data</span></button></li>
+                    <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-results"><span class="hs-node__index">08</span><span class="hs-node__icon"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i></span><span class="hs-node__tag">RESPONSE</span><span class="hs-node__name">Assessment record and PDF</span><span class="hs-node__hint">Stored for clinician review</span></button></li>
+                  </ol>
+                </div>
+                <section class="hs-node-detail hs-node-detail--card" data-node-detail aria-label="Selected step detail" aria-live="polite">
+                  <span class="hs-detail-kicker">STEP DETAILS</span><h5>Explore the assessment path</h5><p>Select any step in the diagram to see what happens at that point in the current implementation.</p>
+                </section>
               </div>
-
-              <section class="hs-node-detail" data-node-detail aria-label="Selected step detail" aria-live="polite">
-                <p>
-                  Select a step above to see what it does in the current implementation.
-                </p>
-              </section>
-
-              <!-- Detail copy kept in the document so nothing depends on JS-generated text -->
               <div hidden data-detail-source>
-                <div id="flow-browser">
-                  <h5>Doctor assessment form</h5>
-                  <p>
-                    An approved doctor opens an appointment, then records patient reported symptoms,
-                    doctor observed symptoms and free text observations. Only the exact 132 symptom
-                    identifiers are sent for prediction; free text stays out of the model and stays in
-                    the clinical record.
-                  </p>
-                </div>
-                <div id="flow-routing">
-                  <h5>Routing</h5>
-                  <p>
-                    Locally, <code>backend/server.js</code> serves the static site and the API, and
-                    starts the private Flask service on <code>127.0.0.1:5001</code>. The Vercel
-                    configuration routes <code>/api/*</code> to the Express service and
-                    everything else to a static build, but no Python model is deployed there, so
-                    prediction routes fail closed until an external model origin is configured.
-                  </p>
-                </div>
-                <div id="flow-flask">
-                  <h5>Private model service</h5>
-                  <p>
-                    <code>Algo/main.py</code> accepts token protected <code>/internal/assess</code>
-                    requests. Its public <code>/predict</code> route returns 403, so the classifier is
-                    reachable only from the Express backend. The shared token is read from the
-                    environment and never reaches the browser.
-                  </p>
-                </div>
-                <div id="flow-vector">
-                  <h5>Binary feature vector</h5>
-                  <p>
-                    A dictionary maps each known symptom name to a position. The service builds a
-                    zero-filled array of 132 positions and sets a 1 for every recognised symptom, so
-                    the model receives a sparse binary vector. Unknown names are rejected before
-                    prediction rather than silently ignored.
-                  </p>
-                </div>
-                <div id="flow-model">
-                  <h5>Saved linear SVC</h5>
-                  <p>
-                    The vector is handed to a scikit learn Support Vector Classifier loaded from
-                    <code>Algo/models/svc.pkl</code>. The shipped model was trained with
-                    <code>kernel="linear"</code> and <code>C=1.0</code>, classifies 41 categories,
-                    and contains 267 support vectors.
-                  </p>
-                </div>
-                <div id="flow-class">
-                  <h5>Predicted category</h5>
-                  <p>
-                    <code>predict()</code> returns the index of one class, which is mapped back to a
-                    disease name through a lookup table. Because the model was fitted with
-                    <code>probability=False</code>, the service can only report a single label ,  it
-                    has no calibrated confidence score to show.
-                  </p>
-                </div>
-                <div id="flow-lookup">
-                  <h5>Dataset rows</h5>
-                  <p>
-                    The predicted name is used to filter pandas data frames for a description,
-                    precautions, medications, diet, and workout guidance. These rows are general
-                    reference content, not a prescription or a plan for this patient, and the page
-                    labels them as requiring clinician review.
-                  </p>
-                </div>
-                <div id="flow-results">
-                  <h5>Assessment record and PDF</h5>
-                  <p>
-                    Express stores the prediction beside the doctor's own assessment and plan. The
-                    assessment page reloads that stored record, and the PDF is generated from the
-                    same row. The model output cannot be edited; editing symptoms creates a new
-                    revision and leaves the earlier prediction unchanged.
-                  </p>
-                </div>
-                <div id="auth-express">
-                  <h5>Express authentication</h5>
-                  <p>
-                    <code>/api/auth/signup</code>, <code>/login</code>, <code>/recover</code> and
-                    <code>/logout</code> call Supabase Auth with the public key, then set HTTP-only
-                    session cookies. State changing requests also require the trusted application
-                    origin. The browser never receives a Supabase key or a service role secret.
-                  </p>
-                </div>
-                <div id="auth-supabase">
-                  <h5>Supabase Auth and profiles</h5>
-                  <p>
-                    Supabase stores credentials and the <code>profiles</code> table, which carries the
-                    role, suspension flag and doctor verification status. Row level security scopes
-                    appointments, assessments and notes to the signed in patient, doctor or
-                    administrator.
-                  </p>
-                </div>
+                <div id="flow-browser"><h5>Doctor assessment form</h5><p>An approved doctor opens an appointment, then records patient reported symptoms, doctor observed symptoms and free text observations. Only the exact 132 symptom identifiers are sent for prediction; free text stays out of the model and stays in the clinical record.</p></div>
+                <div id="flow-routing"><h5>Routing · Express API</h5><p>Locally, <code>backend/server.js</code> serves the static site and the API, and starts the private Flask service on <code>127.0.0.1:5001</code>. The Vercel configuration routes <code>/api/*</code> to the Express service and everything else to a static build, but no Python model is deployed there, so prediction routes fail closed until an external model origin is configured.</p></div>
+                <div id="flow-flask"><h5>Private model service</h5><p><code>Algo/main.py</code> accepts token protected <code>/internal/assess</code> requests. Its public <code>/predict</code> route returns 403, so the classifier is reachable only from the Express backend. The shared token is read from the environment and never reaches the browser.</p></div>
+                <div id="flow-vector"><h5>Binary feature vector</h5><p>A dictionary maps each known symptom name to a position. The service builds a zero-filled array of 132 positions and sets a 1 for every recognised symptom, so the model receives a sparse binary vector. Unknown names are rejected before prediction rather than silently ignored.</p></div>
+                <div id="flow-model"><h5>Saved linear SVC</h5><p>The vector is handed to a scikit learn Support Vector Classifier loaded from <code>Algo/models/svc.pkl</code>. The shipped model was trained with <code>kernel="linear"</code> and <code>C=1.0</code>, classifies 41 categories, and contains 267 support vectors.</p></div>
+                <div id="flow-class"><h5>Predicted category</h5><p><code>predict()</code> returns the index of one class, which is mapped back to a disease name through a lookup table. Because the model was fitted with <code>probability=False</code>, the service can only report a single label; it has no calibrated confidence score to show.</p></div>
+                <div id="flow-lookup"><h5>Dataset rows</h5><p>The predicted name is used to filter pandas data frames for a description, precautions, medications, diet, and workout guidance. These rows are general reference content, not a prescription or a plan for this patient, and the page labels them as requiring clinician review.</p></div>
+                <div id="flow-results"><h5>Assessment record and PDF</h5><p>Express stores the prediction beside the doctor's own assessment and plan. The assessment page reloads that stored record, and the PDF is generated from the same row. The model output cannot be edited; editing symptoms creates a new revision and leaves the earlier prediction unchanged.</p></div>
+                <div id="auth-express"><h5>Express authentication</h5><p><code>/api/auth/signup</code>, <code>/login</code>, <code>/recover</code> and <code>/logout</code> call Supabase Auth with the public key, then set HTTP-only session cookies. State changing requests also require the trusted application origin. The browser never receives a Supabase key or a service role secret.</p></div>
+                <div id="auth-supabase"><h5>Supabase Auth and profiles</h5><p>Supabase stores credentials and the <code>profiles</code> table, which carries the role, suspension flag and doctor verification status. Row level security scopes appointments, assessments and notes to the signed in patient, doctor or administrator.</p></div>
               </div>
             </div>
-          </div>
-
           <!-- ------------------- 5B. The algorithm, explained ------------------- -->
           <div class="hs-subsection" id="algorithm">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-algo-title">
