@@ -28,7 +28,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./Styles/app.css?v=sos5" />
-    <link rel="stylesheet" href="./Styles/story.css?v=blue2" />
+    <link rel="stylesheet" href="./Styles/story.css?v=flow3" />
 
     <!-- Progressive enhancement: story.js adds .hs-tabs and .hs-anim only after the
          timeline and scroll reveals are wired up, so without JavaScript nothing is
@@ -101,26 +101,6 @@
               <a class="hs-btn hs-btn--ghost" href="#technology">Explore the technology</a>
             </div>
 
-            <!-- The story is personal; About describes the product. -->
-            <p class="hs-crosslink">
-              This page is the personal account. What the platform does is on
-              <a href="index.html#about">About HelloDoc</a>.
-            </p>
-
-            <dl class="hs-meta">
-              <div class="hs-meta__item">
-                <dt>Project</dt>
-                <dd>HelloDoc</dd>
-              </div>
-              <div class="hs-meta__item">
-                <dt>Focus</dt>
-                <dd>Digital healthcare and machine learning</dd>
-              </div>
-              <div class="hs-meta__item">
-                <dt>Built with</dt>
-                <dd>JavaScript, Node.js, Python, Flask and scikit learn</dd>
-              </div>
-            </dl>
           </div>
 
           <figure class="hs-hero__figure" data-parallax>
@@ -377,41 +357,6 @@
             </article>
           </div>
 
-          <details class="hs-details hs-details--wide">
-            <summary>The trade offs behind the design</summary>
-            <div class="hs-details__body">
-              <p>
-                Accessibility, privacy, reliability, and medical safety are engineering requirements
-                here, not optional enhancements ,  and each one costs something.
-              </p>
-              <ul class="hs-list">
-                <li>
-                  <strong>Accessibility versus density.</strong> Larger text, generous spacing, and
-                  plain wording reduce how much can be shown at once. That trade is worth making when
-                  the alternative is an interface someone cannot use.
-                </li>
-                <li>
-                  <strong>Privacy versus usefulness.</strong> Symptom information is sensitive. The
-                  safer default is to collect less, store less, and be explicit about what happens to
-                  what is entered.
-                </li>
-                <li>
-                  <strong>Reliability versus ambition.</strong> A feature that fails silently in a
-                  low connectivity setting is worse than a smaller feature that behaves predictably.
-                  Graceful error states matter more than extra capability.
-                </li>
-                <li>
-                  <strong>Safety versus simplicity.</strong> Communicating uncertainty makes an
-                  interface less decisive and less satisfying ,  and it is still the honest thing to
-                  do when the output is a preliminary signal rather than a diagnosis.
-                </li>
-              </ul>
-              <p class="hs-note">
-                Being explicit about this: the current build does not yet claim to have solved all of
-                these. Several are directions, not finished work.
-              </p>
-            </div>
-          </details>
         </div>
       </section>
 
@@ -662,35 +607,6 @@
             <h3 class="hs-h3 hs-h3--spaced" id="hs-algo-title">
               How does HelloDoc turn symptoms into a prediction?
             </h3>
-
-            <ol class="hs-steps">
-              <li class="hs-step-card" data-reveal>
-                <h4 class="hs-h4"><span>Step 1</span> Encode the symptoms</h4>
-                <p>
-                  The Python service keeps a mapping between symptom names and feature positions.
-                  Selected symptoms are written into a binary vector: a 1 marks a selected symptom,
-                  and a 0 marks an absent or unselected one. The current implementation defines
-                  <strong>132</strong> symptom features.
-                </p>
-              </li>
-              <li class="hs-step-card" data-reveal>
-                <h4 class="hs-h4"><span>Step 2</span> Classify the feature vector</h4>
-                <p>
-                  The service loads a saved model from <code>Algo/models/svc.pkl</code> and calls its
-                  <code>predict()</code> method. The classifier is a scikit learn Support Vector
-                  Classifier (SVC) with a linear kernel, fitted with <code>C=1.0</code> over
-                  <strong>41</strong> categories.
-                </p>
-              </li>
-              <li class="hs-step-card" data-reveal>
-                <h4 class="hs-h4"><span>Step 3</span> Retrieve associated information</h4>
-                <p>
-                  The predicted category is used to pull matching records from datasets holding
-                  descriptions, precautions, medications, diets, and workouts. Those rows are
-                  reference data retrieved after classification ,  not additional model predictions.
-                </p>
-              </li>
-            </ol>
 
             <div class="hs-demo" data-svc-demo>
               <div class="hs-demo__head">
