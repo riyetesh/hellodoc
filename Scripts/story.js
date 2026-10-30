@@ -239,8 +239,9 @@
             "Step " + (current + 1) + " of " + flowNodes.length + ": " + nodeName(flowNodes[current]);
         }
         index += 1;
-        // Reduced motion: step through instantly instead of animating.
-        timer = window.setTimeout(advance, reduceMotion ? 0 : 2400);
+        // Keep each step visible long enough to read; reduced-motion settings
+        // disable visual transitions, not the playback reading interval.
+        timer = window.setTimeout(advance, 6500);
       }
 
       advance();
