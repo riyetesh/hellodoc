@@ -282,10 +282,10 @@
               <div class="lp-journey__copy">
                 <h3>Record the assessment</h3>
                 <p>
-                  The doctor reviews the experimental candidate conditions, writes
-                  their own assessment and plan, and saves the record against that
-                  appointment. A later correction is stored as a new revision, so the
-                  original model output is never rewritten.
+                  The doctor reviews the consultation information, writes their own
+                  assessment and plan, and saves the record against that appointment.
+                  A later correction is stored as a new revision, preserving the
+                  original assessment history.
                 </p>
               </div>
               <div class="lp-figure" aria-hidden="true">
@@ -391,27 +391,26 @@
 
           <dl class="lp-trust__list">
             <div>
-              <dt>Approved clinicians only</dt>
+              <dt><span class="lp-trust__index">01</span> Approved clinicians only</dt>
               <dd>
-                Doctor accounts start pending. Only an administrator can approve one,
-                and every protected request checks the role, the approval and any
-                suspension again before it answers.
+                Doctor applications are reviewed by an administrator before access to
+                clinical tools is granted. Protected requests recheck the account
+                role, approval status and suspension state.
               </dd>
             </div>
             <div>
-              <dt>Your identity stays out of the model</dt>
+              <dt><span class="lp-trust__index">02</span> Your identity stays out of the model</dt>
               <dd>
-                The model receives symptom identifiers only: no name, note or
-                appointment detail. It runs as a private service behind a server side
-                token.
+                Patient identity and appointment details are kept separate from
+                model processing. Only the minimum required clinical inputs are used
+                by the private service.
               </dd>
             </div>
             <div>
-              <dt>Records that keep their history</dt>
+              <dt><span class="lp-trust__index">03</span> Records that keep their history</dt>
               <dd>
-                A symptom list can be revised, but the original prediction is kept. The
-                model output is frozen once stored, and the full lineage stays with the
-                assessment.
+                Assessments retain their revision history. When a record is corrected,
+                the earlier version remains available so changes can be traced over time.
               </dd>
             </div>
           </dl>
