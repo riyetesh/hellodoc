@@ -33,6 +33,21 @@
       .consultation-ended{margin:0 1.25rem 1rem;padding:.85rem 1rem;border:1px solid #a8d9bf;border-radius:10px;background:#f0fbf4;color:#175c37}
       @media(max-width:650px){.consultation-modal__body{grid-template-columns:1fr}.consultation-video,.consultation-video img{min-height:12rem}.consultation-clock__elapsed{font-size:1.7rem}.consultation-modal__actions>*{flex:1}.dw-page .dw-main{padding-bottom:8rem}}
       @media(min-width:761px){.dw-page .dw-main{padding-right:20rem}}
+
+      /* Non-modal consultation timer: stays visible without blocking the workspace or video call. */
+      #consultationModal.consultation-float{display:none;position:fixed;z-index:120;right:1rem;bottom:1rem;width:min(22rem,calc(100vw - 2rem));max-height:min(70vh,34rem);overflow:auto;padding:0;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:0 16px 48px rgba(10,25,50,.25)}
+      #consultationModal.consultation-float[data-open="true"]{display:block}
+      #consultationModal .consultation-modal__head{padding:.85rem 1rem}
+      #consultationModal .consultation-modal__head h2{font-size:1rem}
+      #consultationModal .consultation-modal__body{display:block;padding:.75rem 1rem}
+      #consultationModal .consultation-video{display:none}
+      #consultationModal .consultation-clock{gap:.45rem;padding:.75rem}
+      #consultationModal .consultation-clock__elapsed{font-size:1.8rem}
+      #consultationModal .consultation-time-row{padding:.35rem 0}
+      #consultationModal .consultation-modal__actions{padding:.75rem 1rem;display:grid;grid-template-columns:1fr}
+      #consultationModal .consultation-modal__actions button{width:100%}
+      #consultationModal .consultation-ended{margin:.5rem 1rem;padding:.65rem .75rem;font-size:.82rem}
+      @media(max-width:650px){#consultationModal.consultation-float{right:.5rem;bottom:.5rem;width:min(21rem,calc(100vw - 1rem));max-height:55vh}}
     </style>
 
   </head>
@@ -601,10 +616,10 @@
 
     <aside id="consultationDock" class="consultation-dock" aria-label="Consultation controls" hidden>
       <p class="consultation-dock__doctor" id="dockPatientName">Select a patient</p>
-      <p class="consultation-dock__meta">Start the consultation when you are ready. The timer and start/end times appear in the consultation window.</p>
+      <p class="consultation-dock__meta">Start the timer when you begin. It stays in a small floating panel while you continue the assessment or video call.</p>
       <button class="btn btn-primary consultation-dock__start" type="button" id="consultationTimerStart">Start consultation</button>
     </aside>
-    <dialog id="consultationModal" aria-labelledby="consultationModalTitle">
+    <aside id="consultationModal" class="consultation-float" aria-labelledby="consultationModalTitle" aria-live="polite">
       <div class="consultation-modal__head">
         <div><h2 id="consultationModalTitle">Video consultation</h2><p id="consultationModalPatient">Patient consultation</p></div>
         <button class="btn btn-outline" type="button" id="consultationModalClose" aria-label="Close consultation window" hidden>Close</button>
@@ -624,7 +639,7 @@
         <button class="btn btn-primary" type="button" id="consultationEnd" disabled>End consultation &amp; save report</button>
         <button class="btn btn-primary" type="button" id="consultationFinishClose" hidden>Close consultation</button>
       </div>
-    </dialog>
+    </aside>
     <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
     <script src="/Scripts/doctor.js?v=admin-demo1"></script>
     <script src="/Scripts/walkin.js?v=queue1"></script>
