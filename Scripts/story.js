@@ -59,30 +59,28 @@
   function initTimeline() {
     var timeline = $("[data-timeline]");
     if (!timeline) return false;
-
     var tabs = $$("[data-timeline-tab]", timeline);
     if (!tabs.length) return false;
-
     var panels = tabs.map(function (tab) {
-      return document.getElementById(tab.getAttribute("aria-controls"));
+      var id = tab.getAttribute("aria-controls");
+      return id ? document.getElementById(id) : null;
     });
+    if (panels.some(function (panel) { return !panel; })) return false;
 
+    // Hide all but the selected panel only after every matching panel is found.
     function select(index, moveFocus) {
       tabs.forEach(function (tab, i) {
-        var on = i === index;
-        tab.setAttribute("aria-selected", on ? "true" : "false");
-        tab.tabIndex = on ? 0 : -1;
-        tab.classList.toggle("is-selected", on);
-        if (panels[i]) panels[i].classList.toggle("is-active", on);
+        var active = i === index;
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+        tab.tabIndex = active ? 0 : -1;
+        tab.classList.toggle("is-selected", active);
+        panels[i].classList.toggle("is-active", active);
+        panels[i].hidden = !active;
       });
       if (moveFocus) tabs[index].focus();
     }
-
     tabs.forEach(function (tab, index) {
-      tab.addEventListener("click", function () {
-        select(index, false);
-      });
-
+      tab.addEventListener("click", function () { select(index, false); });
       tab.addEventListener("keydown", function (event) {
         var next = null;
         if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % tabs.length;
@@ -94,11 +92,8 @@
         select(next, true);
       });
     });
-
-    // Start from whatever the markup says is selected, defaulting to the first step.
-    var initial = tabs.findIndex(function (tab) {
-      return tab.getAttribute("aria-selected") === "true";
-    });
+    var initial = tabs.findIndex(function (tab) { return tab.getAttribute("aria-selected") === "true"; });
+    timeline.classList.add("hs-tabs");
     select(initial < 0 ? 0 : initial, false);
     return true;
   }
@@ -150,123 +145,77 @@
   function initDiagram() {
     var diagram = $("[data-diagram]");
     if (!diagram) return;
-
     var nodes = $$("[data-node]", diagram);
-    if (!nodes.length) return;
-
-    // The animated flow covers the prediction path only: the account lane is a
-    // separate concern, and animating both in one sequence would imply a single
-    // synchronous chain that does not exist.
     var flowNodes = $$("[data-flow-step]", diagram);
-    if (!flowNodes.length) flowNodes = nodes;
-
     var detail = $("[data-node-detail]", diagram);
     var status = $("[data-flow-status]", diagram);
     var playButton = $("[data-flow-play]", diagram);
     var resetButton = $("[data-flow-reset]", diagram);
     var source = $("[data-detail-source]", diagram);
-    var timer = null;
-    var index = 0;
     var initialDetail = detail ? detail.cloneNode(true) : null;
-    var defaultStatus = status ? status.textContent : "";
+    var defaultStatus = status ? status.textContent.trim() : "";
+    var timer = null, index = 0, completed = false;
 
-    function nodeName(node) {
-      var name = $(".hs-node__name", node);
-      return name ? name.textContent.trim() : "step";
+    function label(node) { var n = $(".hs-node__name", node); return n ? n.textContent.trim() : "step"; }
+    function showDetail(node) {
+      var id = node && node.getAttribute("data-detail");
+      var copy = id && source ? source.querySelector("#" + id) : null;
+      if (!detail || !copy) return;
+      detail.replaceChildren(copy.cloneNode(true));
     }
-
-    function showDetail(id) {
-      if (!detail || !source || !id) return;
-      var copy = source.querySelector("#" + id);
-      if (!copy) return;
-      var clone = copy.cloneNode(true);
-      clone.removeAttribute("id");
-      detail.replaceChildren.apply(detail, Array.prototype.slice.call(clone.childNodes));
-    }
-
-    function restoreDetail() {
-      if (!detail || !initialDetail) return;
-      var clone = initialDetail.cloneNode(true);
-      detail.replaceChildren.apply(detail, Array.prototype.slice.call(clone.childNodes));
-    }
-
-    function clearMarks() {
+    function stop() { if (timer !== null) { window.clearTimeout(timer); timer = null; } }
+    function clear() {
       nodes.forEach(function (node) {
         node.classList.remove("is-active");
         var item = node.closest("li");
         if (item) item.classList.remove("is-current", "is-done");
       });
     }
-
-    function stopPlayback() {
-      if (timer) {
-        window.clearTimeout(timer);
-        timer = null;
-      }
+    function select(node, announce) {
+      stop(); clear(); completed = false;
+      var i = flowNodes.indexOf(node);
+      index = i >= 0 ? i + 1 : 0;
+      node.classList.add("is-active");
+      var li = node.closest("li"); if (li) li.classList.add("is-current");
+      showDetail(node);
+      if (status && announce !== false) status.textContent = "Selected: " + label(node);
     }
-
-    function markStep(currentIndex) {
-      flowNodes.forEach(function (node, i) {
-        var item = node.closest("li");
-        if (!item) return;
-        item.classList.toggle("is-current", i === currentIndex);
-        item.classList.toggle("is-done", i < currentIndex);
+    function renderStep(i) {
+      clear();
+      flowNodes.forEach(function (node, n) {
+        var li = node.closest("li");
+        if (li) { li.classList.toggle("is-done", n < i); li.classList.toggle("is-current", n === i); }
       });
-      flowNodes[currentIndex].classList.add("is-active");
+      if (flowNodes[i]) { flowNodes[i].classList.add("is-active"); showDetail(flowNodes[i]); }
+      index = i + 1;
+      if (status && flowNodes[i]) status.textContent = "Step " + (i + 1) + " of " + flowNodes.length + ": " + label(flowNodes[i]);
     }
-
     function play() {
-      stopPlayback();
-      clearMarks();
-      index = 0;
-
+      if (!flowNodes.length) return;
+      stop();
+      if (completed || index >= flowNodes.length) { index = 0; completed = false; }
       function advance() {
         if (index >= flowNodes.length) {
-          timer = null;
-          if (status) {
-            status.textContent =
-              "Flow complete: the prediction path, " +
-              flowNodes.length +
-              " steps from symptom input to the results page. The account lane is separate and not part of this sequence.";
-          }
+          timer = null; completed = true;
+          if (status) status.textContent = "Flow complete: " + flowNodes.length + " steps from symptom input to the assessment record.";
           return;
         }
-        var current = index;
-        markStep(current);
-        showDetail(flowNodes[current].getAttribute("data-detail"));
-        if (status) {
-          status.textContent =
-            "Step " + (current + 1) + " of " + flowNodes.length + ": " + nodeName(flowNodes[current]);
-        }
-        index += 1;
-        // Keep each step visible long enough to read; reduced-motion settings
-        // disable visual transitions, not the playback reading interval.
-        timer = window.setTimeout(advance, 2400);
+        renderStep(index);
+        timer = window.setTimeout(advance, reduceMotion ? 100 : 2400);
       }
-
       advance();
     }
-
     function reset() {
-      stopPlayback();
-      clearMarks();
-      index = 0;
-      restoreDetail();
+      stop(); clear(); index = 0; completed = false;
+      if (initialDetail && detail) detail.replaceChildren.apply(detail, Array.prototype.slice.call(initialDetail.cloneNode(true).childNodes));
       if (status) status.textContent = defaultStatus;
     }
-
     nodes.forEach(function (node) {
-      node.addEventListener("click", function () {
-        stopPlayback();
-        clearMarks();
-        node.classList.add("is-active");
-        showDetail(node.getAttribute("data-detail"));
-        var item = node.closest("li");
-        if (item) item.classList.add("is-current");
-        if (status) status.textContent = "Selected: " + nodeName(node);
+      node.addEventListener("click", function () { select(node); });
+      node.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(node); }
       });
     });
-
     if (playButton) playButton.addEventListener("click", play);
     if (resetButton) resetButton.addEventListener("click", reset);
   }
@@ -277,47 +226,25 @@
   function initDemo() {
     var demo = $("[data-svc-demo]");
     if (!demo) return;
-
     var stages = $$("[data-demo-stage]", demo);
     if (!stages.length) return;
-
     var next = $("[data-demo-next]", demo);
     var reset = $("[data-demo-reset]", demo);
     var status = $("[data-demo-status]", demo);
+    var labels = ["Symptoms", "Feature vector", "Model comparison", "Guidance lookup"];
     var current = 0;
-
     function render() {
       stages.forEach(function (stage, i) {
-        stage.classList.toggle("is-active", i === current);
+        var active = i === current;
+        stage.classList.toggle("is-active", active);
+        stage.hidden = !active;
+        stage.setAttribute("aria-hidden", active ? "false" : "true");
       });
-      if (status) {
-        var labels = ["Symptoms", "Feature vector", "Model comparison", "Guidance lookup"];
-        status.textContent = "Step " + (current + 1) + " of " + stages.length + " · " + labels[current];
-      }
-      if (next) {
-        next.disabled = false;
-        next.textContent = current === stages.length - 1 ? "Start again" : "Next step";
-      }
+      if (status) status.textContent = "Step " + (current + 1) + " of " + stages.length + " · " + (labels[current] || "Step");
+      if (next) next.textContent = current === stages.length - 1 ? "Start again" : "Next step";
     }
-
-    if (next) {
-      next.addEventListener("click", function () {
-        if (current < stages.length - 1) {
-          current += 1;
-        } else {
-          current = 0;
-        }
-        render();
-      });
-    }
-
-    if (reset) {
-      reset.addEventListener("click", function () {
-        current = 0;
-        render();
-      });
-    }
-
+    if (next) next.addEventListener("click", function () { current = current === stages.length - 1 ? 0 : current + 1; render(); });
+    if (reset) reset.addEventListener("click", function () { current = 0; render(); });
     render();
   }
 
