@@ -929,7 +929,7 @@
         else if (key === 'note') state.note = control.value;
         else if (key === 'doctorAssessment') state.doctorAssessment = control.value;
         else if (key === 'plan') state.plan = control.value;
-        else if (key.startsWith('guidance:')) state.selectedGuidance[key.slice(9)] = control.value.split(/\\n/).map(x => x.trim()).filter(Boolean);
+        else if (key.startsWith('guidance:')) state.selectedGuidance[key.slice(9)] = control.value.split(/\n/).map(x => x.trim()).filter(Boolean);
         markDirty(); renderSideSummary(); renderChecks();
       });
       wrap.append(caption, control); parent.append(wrap);
@@ -949,7 +949,7 @@
     if (state.modelPreview) {
       const guidance = document.createElement('section'); guidance.className = 'dw-review-guidance';
       const guidanceTitle = document.createElement('h4'); guidanceTitle.textContent = 'Guidance for the report'; guidance.append(guidanceTitle);
-      for (const [key, label] of [['precautions','Precautions'],['medications','Medication'],['diet','Diet'],['workout','Exercise']]) makeEditor(guidance, label + ' (one item per line)', 'guidance:' + key, (state.selectedGuidance[key] || []).join('\\n'));
+      for (const [key, label] of [['precautions','Precautions'],['medications','Medication'],['diet','Diet'],['workout','Exercise']]) makeEditor(guidance, label + ' (one item per line)', 'guidance:' + key, (state.selectedGuidance[key] || []).join('\n'));
       record.append(guidance);
       const model = document.createElement('div'); model.className = 'dw-review-model';
       const heading = document.createElement('h4'); heading.textContent = 'Model suggestion';
