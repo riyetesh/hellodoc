@@ -83,3 +83,11 @@ body.hellodoc-story-page{background:var(--paper);color:var(--ink)}.hellodoc-stor
 .hs-playback__value{min-width:34px;color:var(--accent-dark);font-size:.78rem;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
 .hs-playback input[type="range"]:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:5px}
 @media(max-width:560px){.hs-playback{grid-column:1/-1;grid-template-columns:auto minmax(90px,1fr) auto;width:100%;order:3}}
+
+/* Closing section heading and copy are always high-contrast over the photograph. */
+.hs-closing .hs-closing__content h2,
+.hs-closing .hs-closing__content .hs-h2,
+.hs-closing .hs-closing__content #hs-closing-title{color:#fff!important;text-shadow:0 2px 18px rgba(0,0,0,.2)}
+.hs-closing .hs-closing__copy{color:#fff!important}
+.hs-closing .hs-cta-row a{color:#fff}
+.hs-closing .hs-cta-row .hs-btn--light{color:#17212b}
