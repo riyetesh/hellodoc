@@ -728,6 +728,18 @@
     resubmission_required: 'More information requested',
   };
 
+  function setWalkinAvailability(available, busy) {
+    const toggle = $('#walkinAvailabilityToggle');
+    const state = $('#walkinAvailabilityState');
+    const panel = $('#walkinAvailability');
+    if (!toggle || !state || !panel) return;
+    toggle.setAttribute('aria-checked', available ? 'true' : 'false');
+    toggle.classList.toggle('is-available', available);
+    toggle.disabled = Boolean(busy) || toggle.dataset.locked === 'true';
+    state.textContent = busy ? 'Updating…' : (available ? 'Available for walk-ins' : 'Not available');
+    panel.dataset.available = available ? 'true' : 'false';
+  }
+
   function showVerification(data) {
     const panel = $('#doctorVerification');
     const status = data.verificationStatus || 'pending';
@@ -764,6 +776,15 @@
       identity.textContent = facts.length
         ? facts.join(' · ')
         : 'Verification and appointment status for your practice.';
+    }
+
+    const availabilityPanel = $('#walkinAvailability');
+    const availabilityToggle = $('#walkinAvailabilityToggle');
+    if (availabilityPanel && availabilityToggle) {
+      const canToggle = data.approved && !demoDoctorId;
+      availabilityPanel.hidden = !canToggle;
+      availabilityToggle.dataset.locked = canToggle ? 'false' : 'true';
+      setWalkinAvailability(Boolean(data.acceptingWalkins), false);
     }
 
     const form = $('#resubmitForm');
@@ -994,6 +1015,27 @@
       } finally {
         button.disabled = false;
         button.textContent = button.dataset.originalText || 'Add 30-minute slot';
+      }
+    });
+  }
+
+  const walkinToggle = $('#walkinAvailabilityToggle');
+  if (walkinToggle) {
+    walkinToggle.addEventListener('click', async () => {
+      const next = walkinToggle.getAttribute('aria-checked') !== 'true';
+      setWalkinAvailability(next, true);
+      try {
+        const result = await request('/walkin-availability', {
+          method: 'PATCH',
+          body: JSON.stringify({ available: next })
+        });
+        setWalkinAvailability(Boolean(result.available), false);
+        message(next
+          ? 'You are now available for walk-in patients.'
+          : 'You are no longer accepting walk-in patients.');
+      } catch (error) {
+        setWalkinAvailability(!next, false);
+        message(error.message);
       }
     });
   }
