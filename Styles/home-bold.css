@@ -305,3 +305,58 @@ footer.site-footer .site-footer__col a:hover {
   .site-footer__grid { grid-template-columns:1fr 1fr; }
   .site-footer__bottom { align-items:flex-start; }
 }
+
+
+/* Simplify the patient and doctor steps: lighter type and no divider rules. */
+.lp-roles .lp-path__steps {
+  gap:.8rem;
+}
+.lp-roles .lp-path__steps li {
+  border:0 !important;
+  padding-block:0 !important;
+  font-size:.96rem;
+  font-weight:400;
+  line-height:1.55;
+}
+.lp-roles .lp-path__steps li .lp-path__step-text {
+  font-weight:400;
+}
+.lp-roles .lp-path__steps li .lp-path__number {
+  flex-basis:1.75rem;
+  width:1.75rem;
+  height:1.75rem;
+  border-radius:50%;
+  font-size:.7rem;
+  font-weight:600;
+}
+.lp-roles .lp-path__note {
+  border:0;
+  padding-top:0;
+}
+.lp-contact-panel {
+  display:block;
+  max-width:100%;
+}
+.lp-contact-panel__copy { max-width:48rem; }
+.lp-contact-panel .lp-final__title {
+  margin:0;
+  font-size:clamp(1.55rem,2.6vw,2.15rem);
+  font-weight:650;
+  letter-spacing:-.03em;
+}
+.lp-contact-panel__copy > p:last-child {
+  margin-top:.55rem;
+  font-size:.95rem;
+}
+.lp-contact-inline {
+  color:#185cc9;
+  font-weight:600;
+  text-decoration:underline;
+  text-decoration-color:rgba(24,92,201,.35);
+  text-underline-offset:3px;
+  transition:color .2s ease,text-decoration-color .2s ease;
+}
+.lp-contact-inline:hover {
+  color:#124ba8;
+  text-decoration-color:currentColor;
+}
