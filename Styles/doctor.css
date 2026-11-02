@@ -2648,3 +2648,153 @@
   .dw-head-tools { justify-content: flex-start; }
   .dw-walkin-availability { width: fit-content; }
 }
+
+
+/* Walk-in queue dialog — focused, spacious clinician view */
+.walkin-queue-pane {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--surface, #fff);
+}
+.walkin-queue-pane .walkin-head {
+  align-items: flex-start;
+  padding: 0 0 1.35rem;
+  border-bottom: 1px solid var(--border, #dce5f3);
+}
+.walkin-queue-pane .dw-eyebrow {
+  margin: 0 0 .55rem;
+  color: var(--brand, #185cc9);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.walkin-queue-pane .walkin-head h2 {
+  margin: 0;
+  color: var(--text, #233650);
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  line-height: 1.2;
+  letter-spacing: -.035em;
+}
+.walkin-queue-pane .walkin-sub {
+  max-width: 42ch;
+  margin: .55rem 0 0;
+  font-size: .9rem;
+  line-height: 1.6;
+}
+.walkin-queue-pane .walkin-close {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  font-size: 1.35rem;
+}
+.walkin-queue-pane .walkin-body {
+  min-height: 15rem;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.35rem 0;
+}
+.walkin-queue-pane .walkin-state {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  width: fit-content;
+  padding: .42rem .75rem;
+  border: 1px solid #cce8d8;
+  border-radius: 999px;
+  background: #f0faf4;
+  color: #216744;
+  font-size: .76rem;
+  font-weight: 750;
+}
+.walkin-queue-pane .walkin-state::before {
+  content: "";
+  width: .45rem;
+  height: .45rem;
+  border-radius: 50%;
+  background: #27965b;
+  box-shadow: 0 0 0 3px rgba(39,150,91,.12);
+}
+.walkin-queue-pane .walkin-empty {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: .7rem;
+  min-height: 11rem;
+  padding: 1.6rem;
+  border: 1px dashed #cbd8e8;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f8fbff 0%, #f3f7fd 100%);
+  color: #536780;
+  font-size: .9rem;
+  line-height: 1.6;
+  text-align: center;
+}
+.walkin-queue-pane .walkin-empty[hidden] { display: none !important; }
+.walkin-queue-pane .walkin-empty::before {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid #d7e5f5;
+  border-radius: 15px;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1.45rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d82b4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 6h13M8 12h13M8 18h13'/%3E%3Cpath d='M3 6h.01M3 12h.01M3 18h.01'/%3E%3C/svg%3E");
+}
+.walkin-queue-pane .walkin-actions {
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border, #dce5f3);
+}
+.walkin-queue-pane .walkin-actions__buttons {
+  width: 100%;
+  margin: 0;
+  justify-content: flex-end;
+  gap: .65rem;
+}
+.walkin-queue-pane .walkin-actions__buttons .btn {
+  min-height: 2.8rem;
+  padding: .7rem 1.05rem;
+  border-radius: 11px;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.walkin-queue-pane .walkin-queue-card {
+  grid-template-columns: 2.65rem minmax(0,1fr);
+  gap: .75rem 1rem;
+  padding: 1rem;
+  border-color: #dce5f0;
+  border-radius: 15px;
+  box-shadow: 0 3px 12px rgba(35,54,80,.045);
+}
+.walkin-queue-pane .walkin-queue-card__number {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: #eaf2ff;
+  color: #185cc9;
+}
+.walkin-queue-pane .walkin-queue-card__main h3 {
+  color: var(--text, #233650);
+  font-size: .98rem;
+  font-weight: 750;
+}
+.walkin-queue-pane .walkin-queue-card__main p {
+  margin-bottom: 0;
+  font-size: .82rem;
+}
+.walkin-queue-pane .walkin-queue-card__actions .btn {
+  min-height: 2.35rem;
+  border-radius: 9px;
+  font-weight: 650;
+}
+@media (max-width: 560px) {
+  .walkin-queue-pane { padding: 1.1rem; }
+  .walkin-queue-pane .walkin-body { min-height: 12rem; }
+  .walkin-queue-pane .walkin-actions__buttons { flex-direction: column-reverse; }
+  .walkin-queue-pane .walkin-actions__buttons .btn { width: 100%; }
+}
