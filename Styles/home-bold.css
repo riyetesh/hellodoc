@@ -681,3 +681,63 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     height: 2.35rem;
   }
 }
+
+
+/* Responsive role cards: prevent unnecessary wrapping and keep columns fluid */
+.lp-paths {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+.lp-path {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lp-path__heading {
+  max-width: none;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: balance;
+}
+.lp-path__steps { width: 100%; }
+.lp-path__steps li {
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.lp-path__steps li span { white-space: nowrap; }
+.lp-path__note { max-width: 60ch; }
+.lp-path .btn {
+  align-self: flex-start;
+  margin-top: 1.25rem;
+}
+.lp-privacy__mark {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.lp-privacy__point .lp-privacy__icon {
+  display: grid;
+  place-items: center;
+}
+@media (max-width: 900px) {
+  .lp-paths { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .lp-paths { grid-template-columns: 1fr; }
+  .lp-path { padding: clamp(1.25rem, 5vw, 1.75rem); }
+  .lp-path__heading { font-size: clamp(1.3rem, 5vw, 1.7rem); }
+  .lp-path .btn {
+    align-self: stretch;
+    width: 100%;
+  }
+}
+@media (max-width: 380px) {
+  .lp-path__steps li {
+    grid-template-columns: 1.8rem minmax(0, 1fr);
+    gap: .4rem;
+    font-size: .94rem;
+  }
+}
