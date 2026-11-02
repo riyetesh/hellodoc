@@ -253,6 +253,7 @@
       done.type = 'button';
       done.className = 'btn btn-outline visit-row__done';
       done.textContent = 'Mark as done';
+      done.title = 'Save this visit as completed';
       done.setAttribute('aria-label', `Mark appointment for ${appointment.firstName} as done`);
       done.addEventListener('click', async () => {
         done.disabled = true;
@@ -350,12 +351,14 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn btn-ghost';
-        button.textContent = `Mark ${(STATUS_LABEL[status] || status).toLowerCase()}`;
+        button.textContent = status === 'completed' ? 'Mark as done' : `Mark ${(STATUS_LABEL[status] || status).toLowerCase()}`;
         button.addEventListener('click', async () => {
           button.disabled = true;
           try {
             await request(`/appointments/${appointment.id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
-            message(`Appointment for ${appointment.firstName} on ${formatDate(appointment.startsAt)} marked ${STATUS_LABEL[status].toLowerCase()}.`);
+            message(status === 'completed'
+              ? `Appointment for ${appointment.firstName} marked as done. Status: Completed.`
+              : `Appointment for ${appointment.firstName} on ${formatDate(appointment.startsAt)} marked ${STATUS_LABEL[status].toLowerCase()}.`);
             await refreshSchedule({ quiet: true });
           } catch (error) {
             message(error.message);
