@@ -1416,3 +1416,14 @@ footer.site-footer .site-footer__col a:hover {
 .lp-dir__details { min-width:0; flex:1; }
 .lp-dir__details .lp-dir__name, .lp-dir__details .lp-dir__meta { margin-top:0; }
 .lp-dir__details .lp-dir__meta { margin-bottom:0; }
+
+
+/* Homepage hero illustration */
+.lp-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  object-position: center;
+}
