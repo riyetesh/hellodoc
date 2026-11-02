@@ -52,6 +52,7 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-journey__panel { background:#fff; }
 .lp-journey__copy h3, .lp-frame__heading { color:var(--lp-ink); }
 .lp-journey__copy p, .lp-frame__caption { color:var(--lp-muted); }
+.lp-journey__directory-button { display:inline-flex; margin-top:1.5rem; }
 .lp-figure, .lp-frame { background:#f8faff; border:1px solid var(--lp-border); border-radius:.9rem; }
 /* Shared layout for the four journey illustrations. */
 .lp-journey__visual {
