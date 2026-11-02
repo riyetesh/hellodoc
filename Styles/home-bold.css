@@ -520,3 +520,61 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     font-size: 1rem;
   }
 }
+
+
+/* Compact privacy section: illustration and two concise statements */
+.lp-privacy {
+  padding-block: clamp(2.5rem, 4vw, 3.75rem);
+}
+.lp-privacy__inner {
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+}
+.lp-privacy__image {
+  max-width: 30rem;
+  max-height: 24rem;
+}
+.lp-privacy__title {
+  margin: .55rem 0 1.2rem;
+  font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+}
+.lp-privacy__point {
+  padding-block: .85rem;
+  border-top: 1px solid #d6eae7;
+}
+.lp-privacy__point h3 {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  font-size: clamp(1rem, 1.35vw, 1.15rem);
+}
+.lp-privacy__icon {
+  flex: 0 0 2.65rem;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: .8rem;
+  font-size: 1rem;
+}
+@media (max-width: 900px) {
+  .lp-privacy__inner {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .lp-privacy__image {
+    max-width: 26rem;
+    max-height: 19rem;
+  }
+}
+@media (max-width: 560px) {
+  .lp-privacy {
+    padding-block: 2.25rem;
+  }
+  .lp-privacy__point h3 {
+    font-size: 1rem;
+  }
+  .lp-privacy__icon {
+    flex-basis: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
