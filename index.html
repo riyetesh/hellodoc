@@ -292,44 +292,54 @@
       </section>
 
       <!-- ============================================================
-           Safety and privacy: short, verifiable, no certifications
+           Privacy: clear statements about data handling
            ============================================================ -->
-      <section class="lp-section lp-section--tinted" aria-labelledby="trust-title">
-        <div class="container lp-trust">
-          <div class="lp-trust__head">
-            <p class="lp-eyebrow">Safety and privacy</p>
-            <h2 class="lp-section__title" id="trust-title">How HelloDoc guards the record</h2>
-            <p class="lp-section__lead">
-              These are properties of the current build, not certifications. An
-              independent security and privacy review is still an open item.
-            </p>
+      <section class="lp-privacy" aria-labelledby="privacy-title">
+        <div class="container lp-privacy__inner">
+          <div class="lp-privacy__visual">
+            <img
+              class="lp-privacy__image"
+              src="./Asset/Illustrations/privacy.svg"
+              alt="Illustration representing secure storage and privacy of health information"
+              width="720"
+              height="560"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
+          <div class="lp-privacy__content">
+            <p class="lp-eyebrow">Privacy matters</p>
+            <h2 class="lp-privacy__title" id="privacy-title">We respect your privacy.</h2>
 
-          <dl class="lp-trust__list">
-            <div>
-              <dt><span class="lp-trust__index">01</span> Approved clinicians only</dt>
-              <dd>
-                Doctor applications are reviewed by an administrator before access to
-                clinical tools is granted. Protected requests recheck the account
-                role, approval status and suspension state.
-              </dd>
-            </div>
-            <div>
-              <dt><span class="lp-trust__index">02</span> Your identity stays out of the model</dt>
-              <dd>
-                Patient identity and appointment details are kept separate from
-                model processing. Only the minimum required clinical inputs are used
-                by the private service.
-              </dd>
-            </div>
-            <div>
-              <dt><span class="lp-trust__index">03</span> Records that keep their history</dt>
-              <dd>
-                Assessments retain their revision history. When a record is corrected,
-                the earlier version remains available so changes can be traced over time.
-              </dd>
-            </div>
-          </dl>
+            <article class="lp-privacy__point">
+              <span class="lp-privacy__icon" aria-hidden="true">
+                <i class="fa-solid fa-eye-slash"></i>
+              </span>
+              <div>
+                <h3>Your identity stays out of the model.</h3>
+                <p>
+                  Personal identity and account details are kept separate from
+                  model processing. Only the clinical information needed for an
+                  assessment is sent to the model service.
+                </p>
+              </div>
+            </article>
+
+            <article class="lp-privacy__point">
+              <span class="lp-privacy__icon" aria-hidden="true">
+                <i class="fa-solid fa-shield-halved"></i>
+              </span>
+              <div>
+                <h3>Your data are protected by access controls.</h3>
+                <p>
+                  Health records are stored in the application's secured database
+                  and protected by account permissions and database access policies.
+                  Access is restricted; we do not claim that system operators are
+                  technically unable to access stored data.
+                </p>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
