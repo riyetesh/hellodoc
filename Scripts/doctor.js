@@ -112,7 +112,7 @@
   let appointments = [];
   let assessmentByAppointment = new Map();
   let searchTerm = '';
-  let dateRange = 'all';
+  let dateRange = 'pending';
   let approvedDoctor = false;
   let loading = false;
   const expanded = new Set();
@@ -150,15 +150,10 @@
     if (filters.status && filters.status !== appointment.status) return false;
     if (filters.date && dayKey(appointment.startsAt) !== filters.date) return false;
 
-    if (dateRange !== 'all') {
-      // Ranges follow calendar days, so a visit earlier this morning belongs to
-      // Today rather than appearing in both Today and Past.
-      const day = dayKey(appointment.startsAt);
-      const today = todayKey();
-      if (dateRange === 'today' && day !== today) return false;
-      if (dateRange === 'upcoming' && day <= today) return false;
-      if (dateRange === 'past' && day >= today) return false;
-    }
+    const startsAt = new Date(appointment.startsAt).getTime();
+    const isPast = Number.isFinite(startsAt) && startsAt < Date.now();
+    const group = isPast ? 'past' : appointment.status === 'pending' ? 'pending' : 'upcoming';
+    if (dateRange !== 'all' && group !== dateRange) return false;
 
     const term = searchTerm.trim().toLowerCase();
     if (term) {
@@ -357,6 +352,17 @@
     const rows = appointments.filter((appointment) => matchesFilters(appointment, filters));
     const count = $('#visitCount');
     const total = appointments.length;
+    const now = Date.now();
+    const groupsForCounts = {
+      pending: appointments.filter((a) => new Date(a.startsAt).getTime() >= now && a.status === 'pending').length,
+      upcoming: appointments.filter((a) => new Date(a.startsAt).getTime() >= now && a.status !== 'pending' && !['cancelled','no_show','completed'].includes(a.status)).length,
+      past: appointments.filter((a) => new Date(a.startsAt).getTime() < now || ['completed','cancelled','no_show'].includes(a.status)).length,
+      all: total,
+    };
+    ['pending','upcoming','past','all'].forEach((key) => {
+      const node = document.getElementById(key + 'Count');
+      if (node) node.textContent = String(groupsForCounts[key]);
+    });
 
     if (count) {
       count.textContent = total === 0
@@ -450,7 +456,7 @@
     const search = $('#visitSearch');
     if (search) search.value = '';
     for (const chip of document.querySelectorAll('.dw-ranges [data-range]')) {
-      const active = chip.dataset.range === 'all';
+      const active = chip.dataset.range === 'pending';
       chip.classList.toggle('is-active', active);
       chip.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
