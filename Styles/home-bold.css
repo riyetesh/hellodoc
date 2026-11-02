@@ -149,3 +149,159 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (prefers-reduced-motion:reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; }
 }
+
+
+/* Interaction polish: consistent, calm colour transitions for every button. */
+.btn,
+.lp-story__button,
+button.lp-stage {
+  transition:
+    color .24s ease,
+    background-color .24s ease,
+    border-color .24s ease,
+    box-shadow .24s ease,
+    transform .24s ease;
+}
+.btn:hover:not(:disabled),
+.lp-story__button:hover,
+button.lp-stage:hover {
+  transform: translateY(-1px);
+}
+.btn-primary:hover:not(:disabled) {
+  color:#fff;
+  background-color:#124ba8;
+  border-color:#124ba8;
+  box-shadow:0 8px 20px rgba(24,92,201,.2);
+}
+.btn-outline:hover:not(:disabled) {
+  color:#124ba8;
+  background-color:#eaf2ff;
+  border-color:#8eaddb;
+}
+.btn-ghost:hover:not(:disabled) {
+  color:#124ba8;
+  background-color:#eaf2ff;
+}
+.btn:active:not(:disabled),
+.lp-story__button:active,
+button.lp-stage:active {
+  transform:translateY(0);
+}
+@media (prefers-reduced-motion:reduce) {
+  .btn, .lp-story__button, button.lp-stage { transition:none; }
+  .btn:hover:not(:disabled), .lp-story__button:hover, button.lp-stage:hover { transform:none; }
+}
+
+/* A quieter contact invitation: use the site's light surfaces, not a second hero. */
+.lp-final.lp-final--contact {
+  padding-block:clamp(2.75rem,5vw,4rem);
+  background:#f2f6fc;
+  border-top:1px solid #dce5f3;
+}
+.lp-contact-panel {
+  grid-template-columns:minmax(0,1.35fr) minmax(14rem,.75fr);
+  gap:clamp(1.5rem,4vw,3.5rem);
+  padding:clamp(1.5rem,3.5vw,2.75rem);
+  color:#233650;
+  background:linear-gradient(115deg,#fff 0%,#f8fbff 100%);
+  border:1px solid #dce5f3;
+  border-radius:1rem;
+  box-shadow:0 10px 28px rgba(25,55,100,.055);
+}
+.lp-contact-panel::after { display:none; }
+.lp-contact-panel__eyebrow {
+  margin:0 0 .65rem;
+  color:#185cc9;
+  font-size:.7rem;
+  font-weight:750;
+  letter-spacing:.09em;
+}
+.lp-contact-panel .lp-final__title {
+  max-width:22ch;
+  color:#233650;
+  font-size:clamp(1.7rem,3vw,2.45rem);
+  line-height:1.15;
+  letter-spacing:-.035em;
+}
+.lp-contact-panel__copy > p:last-child {
+  max-width:54ch;
+  margin:.8rem 0 0;
+  color:#52647b;
+  font-size:.96rem;
+  line-height:1.65;
+}
+.lp-contact-panel__action {
+  align-items:flex-start;
+  gap:.65rem;
+  padding:1.2rem 1.3rem;
+  background:#f2f6fc;
+  border:1px solid #e0e8f4;
+  border-radius:.85rem;
+}
+.lp-contact-panel__hint {
+  color:#52647b;
+  font-size:.87rem;
+  font-weight:600;
+}
+.lp-contact-panel__action .btn {
+  min-height:2.8rem;
+  padding:.7rem 1.1rem;
+  color:#fff;
+  background:#185cc9;
+  border-color:#185cc9;
+  box-shadow:none;
+}
+.lp-contact-panel__action .btn:hover {
+  color:#fff;
+  background:#124ba8;
+  border-color:#124ba8;
+}
+.lp-contact-panel__email {
+  color:#52647b;
+  font-size:.82rem;
+}
+
+/* Footer returns to the same quiet, light surface used throughout the page. */
+footer.site-footer {
+  padding:2.75rem 0 1.35rem;
+  color:#233650;
+  background:#fff;
+  border-top:1px solid #dce5f3;
+}
+.site-footer__grid {
+  grid-template-columns:minmax(0,1.55fr) repeat(4,minmax(0,1fr));
+  gap:2rem 1.6rem;
+}
+.site-footer__brand p { color:#52647b; }
+.site-footer__col h2 {
+  color:#233650;
+  font-size:.75rem;
+  font-weight:750;
+  letter-spacing:.07em;
+}
+footer.site-footer .site-footer__col a {
+  color:#52647b;
+  transition:color .22s ease;
+}
+footer.site-footer .site-footer__col a:hover {
+  color:#185cc9;
+}
+.site-footer__bottom {
+  border-color:#dce5f3;
+}
+.site-footer__bottom p { color:#64748b; }
+@media (max-width:1080px) {
+  .site-footer__grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .site-footer__brand { grid-column:1/-1; }
+}
+@media (max-width:760px) {
+  .lp-contact-panel { grid-template-columns:1fr; gap:1.25rem; }
+  .lp-contact-panel__action { width:100%; box-sizing:border-box; }
+  .lp-contact-panel__action .btn { width:100%; }
+  .site-footer__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.6rem 1.2rem; }
+  .site-footer__brand { grid-column:1/-1; }
+}
+@media (max-width:420px) {
+  .site-footer__grid { grid-template-columns:1fr 1fr; }
+  .site-footer__bottom { align-items:flex-start; }
+}
