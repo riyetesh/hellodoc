@@ -152,7 +152,7 @@
 
     const startsAt = new Date(appointment.startsAt).getTime();
     const isPast = Number.isFinite(startsAt) && startsAt < Date.now();
-    const group = isPast ? 'past' : appointment.status === 'pending' ? 'pending' : 'upcoming';
+    const group = isPast || ['completed','cancelled','no_show'].includes(appointment.status) ? 'past' : appointment.status === 'pending' ? 'pending' : 'upcoming';
     if (dateRange !== 'all' && group !== dateRange) return false;
 
     const term = searchTerm.trim().toLowerCase();
