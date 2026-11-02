@@ -360,3 +360,23 @@ footer.site-footer .site-footer__col a:hover {
   color:#124ba8;
   text-decoration-color:currentColor;
 }
+
+
+/* Keep the contact message on the left and its action on the right. */
+.lp-contact-panel {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2rem;
+}
+.lp-contact-panel__copy { flex:1 1 auto; }
+.lp-contact-panel__button {
+  flex:0 0 auto;
+  min-width:9rem;
+  justify-content:center;
+  text-align:center;
+}
+@media (max-width:640px) {
+  .lp-contact-panel { align-items:flex-start; flex-direction:column; gap:1rem; }
+  .lp-contact-panel__button { width:100%; box-sizing:border-box; }
+}
