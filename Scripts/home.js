@@ -49,8 +49,57 @@
     });
   }
 
+  /* ---- Online-doctor illustration rotation -------------------- */
+  function initDoctorIllustrationRotation() {
+    const illustration = $(".lp-story__image");
+    if (!illustration || typeof illustration.animate !== "function") return;
+
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let rotation = null;
+
+    function syncRotation() {
+      if (motionPreference.matches) {
+        if (rotation) {
+          rotation.cancel();
+          rotation = null;
+        }
+        return;
+      }
+
+      if (!rotation) {
+        rotation = illustration.animate(
+          [
+            { transform: "rotate(0deg)" },
+            { transform: "rotate(360deg)" }
+          ],
+          {
+            duration: 60000,
+            iterations: Infinity,
+            easing: "linear"
+          }
+        );
+      }
+    }
+
+    syncRotation();
+
+    if (typeof motionPreference.addEventListener === "function") {
+      motionPreference.addEventListener("change", syncRotation);
+    } else if (typeof motionPreference.addListener === "function") {
+      motionPreference.addListener(syncRotation);
+    }
+
+    // Pause while the tab is hidden to avoid unnecessary background animation.
+    document.addEventListener("visibilitychange", () => {
+      if (!rotation) return;
+      if (document.hidden) rotation.pause();
+      else rotation.play();
+    });
+  }
+
   function init() {
     initTabGroups();
+    initDoctorIllustrationRotation();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
