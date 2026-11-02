@@ -49,21 +49,8 @@
     });
   }
 
-  /* ---- Online-doctor illustration rotation -------------------- */
-  function initDoctorIllustrationRotation() {
-    const illustrations = $(".lp-story__image, .lp-journey__doctor-image");
-    if (!illustrations.length) return;
-
-    // Apply the same continuous rotation to every doctor illustration.
-    illustrations.forEach((illustration) => {
-      illustration.style.animation = "lp-doctor-spin 3600s linear infinite";
-      illustration.style.transformOrigin = "50% 50%";
-    });
-  }
-
   function init() {
     initTabGroups();
-    initDoctorIllustrationRotation();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
