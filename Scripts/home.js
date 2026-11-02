@@ -49,25 +49,28 @@
     });
   }
 
-  /* ---- Online-doctor SVG rotation ----------------------------- */
-  function initDoctorIllustrationRotation() {
-    const rotator = $(".lp-journey__doctor-rotator");
-    if (!rotator || typeof rotator.animate !== "function") return;
+  /* ---- Journey illustration interactions ---------------------- */
+  function initJourneyIllustrations() {
+    const rotator = document.querySelector('[data-rotate="online-doctor"]');
 
-    // Rotate the wrapper so the image itself remains free to scale on hover.
-    rotator.animate(
-      [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
-      {
-        duration: 30000,
-        iterations: Infinity,
-        easing: "linear"
-      }
-    );
+    if (rotator && typeof rotator.animate === "function") {
+      rotator.animate(
+        [
+          { transform: "rotate(0turn)" },
+          { transform: "rotate(1turn)" }
+        ],
+        {
+          duration: 30000,
+          iterations: Infinity,
+          easing: "linear"
+        }
+      );
+    }
   }
 
   function init() {
     initTabGroups();
-    initDoctorIllustrationRotation();
+    initJourneyIllustrations();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
