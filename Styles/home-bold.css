@@ -82,22 +82,23 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
   object-fit:contain;
   object-position:center;
 }
-.lp-journey__doctor-image {
-  transform-box:border-box;
-  transform-origin:center center;
-  animation-name:online-doctor-rotate;
-  animation-duration:30s;
-  animation-timing-function:linear;
-  animation-iteration-count:infinite;
-  animation-delay:0s;
-  will-change:transform;
-  backface-visibility:hidden;
-  filter:drop-shadow(0 18px 30px rgba(35,54,80,.16));
-  transition:scale .35s ease, filter .35s ease;
+/* Interactive SVGs share one subtle hover treatment. */
+.lp-journey__doctor-image,
+.lp-journey__booking-image,
+.lp-figure--hero__image,
+.lp-figure--folder__image {
+  transition:scale .25s ease;
+  filter:none;
 }
-.lp-figure--doctor:hover .lp-journey__doctor-image {
+.lp-journey__doctor-image {
+  transform-origin:center center;
+  backface-visibility:hidden;
+}
+.lp-figure--doctor:hover .lp-journey__doctor-image,
+.lp-figure--booking:hover .lp-journey__booking-image,
+.lp-figure--hero:hover .lp-figure--hero__image,
+.lp-figure--folder:hover .lp-figure--folder__image {
   scale:1.05;
-  filter:drop-shadow(0 24px 36px rgba(35,54,80,.22));
 }
 
 .lp-bar { background:#8eaddb; }
@@ -518,16 +519,4 @@ footer.site-footer .site-footer__col a:hover {
 }
 
 
-/* The online-doctor SVG rotates through CSS only.
-   One complete revolution takes two hours; linear timing avoids easing
-   at the start/end of the loop. */
-@keyframes online-doctor-rotate {
-  from { transform:rotate(0deg); }
-  to { transform:rotate(360deg); }
-}
-@media (prefers-reduced-motion:reduce) {
-  .lp-journey__doctor-image {
-    animation:none;
-    will-change:auto;
-  }
-}
+
