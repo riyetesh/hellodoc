@@ -52,49 +52,13 @@
   /* ---- Online-doctor illustration rotation -------------------- */
   function initDoctorIllustrationRotation() {
     const illustration = $(".lp-story__image");
-    if (!illustration || typeof illustration.animate !== "function") return;
+    if (!illustration) return;
 
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let rotation = null;
-
-    function syncRotation() {
-      if (motionPreference.matches) {
-        if (rotation) {
-          rotation.cancel();
-          rotation = null;
-        }
-        return;
-      }
-
-      if (!rotation) {
-        rotation = illustration.animate(
-          [
-            { transform: "rotate(0deg)" },
-            { transform: "rotate(360deg)" }
-          ],
-          {
-            duration: 60000,
-            iterations: Infinity,
-            easing: "linear"
-          }
-        );
-      }
-    }
-
-    syncRotation();
-
-    if (typeof motionPreference.addEventListener === "function") {
-      motionPreference.addEventListener("change", syncRotation);
-    } else if (typeof motionPreference.addListener === "function") {
-      motionPreference.addListener(syncRotation);
-    }
-
-    // Pause while the tab is hidden to avoid unnecessary background animation.
-    document.addEventListener("visibilitychange", () => {
-      if (!rotation) return;
-      if (document.hidden) rotation.pause();
-      else rotation.play();
-    });
+    // Apply a native CSS animation directly to the image. This avoids
+    // relying on the Web Animations API and keeps rotation independent
+    // from the separate CSS hover-scale effect.
+    illustration.style.animation = "lp-doctor-spin 60s linear infinite";
+    illustration.style.transformOrigin = "50% 50%";
   }
 
   function init() {
