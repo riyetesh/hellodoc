@@ -1361,7 +1361,7 @@
     const next = $('wizardNext');
     if (controls) controls.hidden = activeWizardStep === 4;
     if (back) back.disabled = activeWizardStep === 0;
-    if (next) next.textContent = activeWizardStep === 3 ? 'Review →' : 'Continue →';
+    if (next) next.textContent = activeWizardStep === 3 ? 'Review' : 'Continue';
     $('assessmentSection')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
   function advanceWizard() {
