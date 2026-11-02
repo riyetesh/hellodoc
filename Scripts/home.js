@@ -49,8 +49,27 @@
     });
   }
 
+  /* ---- Online-doctor SVG rotation ----------------------------- */
+  function initDoctorIllustrationRotation() {
+    const illustration = $(".lp-journey__doctor-image");
+    if (!illustration || typeof illustration.animate !== "function") return;
+
+    // One smooth, continuous revolution every 30 seconds.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    illustration.animate(
+      [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+      {
+        duration: 30000,
+        iterations: Infinity,
+        easing: "linear"
+      }
+    );
+  }
+
   function init() {
     initTabGroups();
+    initDoctorIllustrationRotation();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
