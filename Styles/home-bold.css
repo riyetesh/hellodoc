@@ -741,3 +741,153 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     font-size: .94rem;
   }
 }
+
+
+/* Rebuilt patient / doctor cards — explicit text columns prevent character-level wrapping */
+.lp-roles {
+  background: #f4f7fb;
+}
+.lp-roles .lp-section__head {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+.lp-paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.2vw, 1.75rem);
+  align-items: stretch;
+}
+.lp-path {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: clamp(1.4rem, 3vw, 2.5rem);
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 34px rgba(22, 39, 66, .10);
+}
+.lp-path--patient {
+  color: #123b3a;
+  background: #e2f5f0;
+  border: 1px solid #a8d9cc;
+}
+.lp-path--clinic {
+  color: #fff;
+  background: #19365c;
+  border: 1px solid #19365c;
+}
+.lp-path__label {
+  margin: 0 0 .8rem;
+  font-size: .76rem;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+.lp-path--patient .lp-path__label { color: #087f70; }
+.lp-path--clinic .lp-path__label { color: #b9d2ff; }
+.lp-path__heading {
+  display: block;
+  max-width: none;
+  margin: 0 0 1.4rem;
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  line-height: 1.18;
+  letter-spacing: -.035em;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: pretty;
+}
+.lp-path__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-path__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1.55;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal;
+  hyphens: none;
+}
+.lp-path__number {
+  position: static !important;
+  display: inline-flex;
+  flex: 0 0 2.15rem;
+  width: 2.15rem;
+  height: 2.15rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: .7rem;
+  font-size: .78rem;
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.lp-path--patient .lp-path__number {
+  color: #075e55;
+  background: #c3e9df;
+}
+.lp-path--clinic .lp-path__number {
+  color: #fff;
+  background: #315987;
+}
+.lp-path__step-text {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal;
+  hyphens: none;
+}
+.lp-path__note {
+  margin: 1.4rem 0 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid currentColor;
+  font-size: .88rem;
+  line-height: 1.5;
+  opacity: .82;
+}
+.lp-path--patient .lp-path__note { border-color: #a8d9cc; }
+.lp-path--clinic .lp-path__note { border-color: #456486; }
+.lp-path__action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.lp-path--clinic .lp-path__action {
+  color: #19365c;
+  background: #fff;
+  border-color: #fff;
+}
+.lp-path--clinic .lp-path__action:hover {
+  color: #19365c;
+  background: #e8f0fc;
+  border-color: #e8f0fc;
+}
+@media (max-width: 760px) {
+  .lp-paths { grid-template-columns: minmax(0, 1fr); }
+  .lp-path { padding: clamp(1.35rem, 5vw, 2rem); }
+  .lp-path__heading { font-size: clamp(1.45rem, 5vw, 1.8rem); }
+  .lp-path__action {
+    align-self: stretch;
+    width: 100%;
+  }
+}
+@media (max-width: 360px) {
+  .lp-path__steps li { gap: .65rem; font-size: .95rem; }
+  .lp-path__number { flex-basis: 1.9rem; width: 1.9rem; height: 1.9rem; }
+}
