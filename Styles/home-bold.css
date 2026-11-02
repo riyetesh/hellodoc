@@ -1197,3 +1197,103 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     height: 1.85rem;
   }
 }
+
+/* Distinctive closing contact panel */
+.lp-final.lp-final--contact {
+  padding-block: clamp(3.25rem, 6vw, 5.5rem);
+  background: #f8fafc;
+  border-top: 0;
+}
+.lp-contact-panel {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(15rem, .8fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  overflow: hidden;
+  padding: clamp(2rem, 5vw, 4.25rem);
+  border: 1px solid #294b72;
+  border-radius: 1.5rem;
+  color: #f8fafc;
+  background: linear-gradient(120deg, #142d4b 0%, #1d4268 58%, #24557a 100%);
+  box-shadow: 0 22px 55px rgba(15, 35, 60, .16);
+}
+.lp-contact-panel::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 22rem;
+  height: 22rem;
+  right: -7rem;
+  top: -12rem;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5rem rgba(255,255,255,.035), 0 0 0 5rem rgba(255,255,255,.025);
+}
+.lp-contact-panel__copy,
+.lp-contact-panel__action { min-width: 0; }
+.lp-contact-panel__eyebrow {
+  margin: 0 0 1rem;
+  color: #ffb8a9;
+  font-size: .74rem;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+.lp-contact-panel .lp-final__title {
+  max-width: 13ch;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  line-height: 1.04;
+  letter-spacing: -.045em;
+}
+.lp-contact-panel__copy > p:last-child {
+  max-width: 48ch;
+  margin: 1.1rem 0 0;
+  color: #d6e3f1;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.lp-contact-panel__action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .8rem;
+  padding: clamp(1.25rem, 2.5vw, 1.8rem);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.075);
+}
+.lp-contact-panel__hint {
+  color: #d6e3f1;
+  font-size: .88rem;
+  font-weight: 650;
+}
+.lp-contact-panel__action .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  min-height: 3.1rem;
+  color: #172b48;
+  background: #fff;
+  border-color: #fff;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+.lp-contact-panel__action .btn:hover {
+  color: #172b48;
+  background: #ffe5df;
+  border-color: #ffe5df;
+  transform: translateY(-1px);
+}
+.lp-contact-panel__email {
+  color: #d6e3f1;
+  font-size: .82rem;
+}
+@media (max-width: 760px) {
+  .lp-contact-panel { grid-template-columns: 1fr; gap: 1.75rem; }
+  .lp-contact-panel__action { width: 100%; box-sizing: border-box; }
+  .lp-contact-panel__action .btn { width: 100%; }
+}
