@@ -51,13 +51,11 @@
 
   /* ---- Online-doctor SVG rotation ----------------------------- */
   function initDoctorIllustrationRotation() {
-    const illustration = $(".lp-journey__doctor-image");
-    if (!illustration || typeof illustration.animate !== "function") return;
+    const rotator = $(".lp-journey__doctor-rotator");
+    if (!rotator || typeof rotator.animate !== "function") return;
 
-    // One smooth, continuous revolution every 30 seconds.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    illustration.animate(
+    // Rotate the wrapper so the image itself remains free to scale on hover.
+    rotator.animate(
       [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
       {
         duration: 30000,
