@@ -96,6 +96,27 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
   height:auto;
   object-fit:contain;
 }
+.lp-figure--hero,
+.lp-figure--folder {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:18rem;
+  padding:1rem;
+  overflow:hidden;
+  background:transparent;
+  border:0;
+}
+.lp-figure--hero__image,
+.lp-figure--folder__image {
+  display:block;
+  width:100%;
+  max-width:27rem;
+  max-height:20rem;
+  height:auto;
+  object-fit:contain;
+}
+
 
 
 .lp-bar { background:#8eaddb; }
