@@ -51,14 +51,14 @@
 
   /* ---- Online-doctor illustration rotation -------------------- */
   function initDoctorIllustrationRotation() {
-    const illustration = $(".lp-story__image");
-    if (!illustration) return;
+    const illustrations = $(".lp-story__image, .lp-journey__doctor-image");
+    if (!illustrations.length) return;
 
-    // Apply a native CSS animation directly to the image. This avoids
-    // relying on the Web Animations API and keeps rotation independent
-    // from the separate CSS hover-scale effect.
-    illustration.style.animation = "lp-doctor-spin 60s linear infinite";
-    illustration.style.transformOrigin = "50% 50%";
+    // Apply the same continuous rotation to every doctor illustration.
+    illustrations.forEach((illustration) => {
+      illustration.style.animation = "lp-doctor-spin 60s linear infinite";
+      illustration.style.transformOrigin = "50% 50%";
+    });
   }
 
   function init() {
