@@ -260,8 +260,16 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       institution: verified.profile?.institution || application.data?.institution || null,
       application: application.data || null,
       canAttendConsultations: approved && Boolean(verified.profile?.is_accepting_appointments),
+      acceptingWalkins: approved && Boolean(verified.profile?.is_accepting_appointments),
       appointments: [],
     });
+  }));
+  router.patch('/doctor/walkin-availability', ...session(['doctor'], async (req, res, care) => {
+    if (care.demoMode) return res.status(403).json({ message: 'Walk-in availability cannot be changed in admin demo mode.' });
+    if (typeof req.body?.available !== 'boolean') return res.status(400).json({ message: 'Choose available or unavailable.' });
+    const result = await care.db.rpc('set_own_walkin_availability', { p_available: req.body.available });
+    if (result.error) return res.status(result.error.code === '42501' ? 403 : 503).json({ message: result.error.code === '42501' ? 'Only an approved doctor can change walk-in availability.' : 'Availability could not be updated. Please try again.' });
+    res.json({ available: result.data === true });
   }));
   // Own-profile updates only; the RPC controls which columns may change, so a
   // patient or doctor can never edit a role or verification status.
