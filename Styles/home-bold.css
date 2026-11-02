@@ -354,3 +354,72 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .lp-trust__list > div { min-height: 0; }
   .lp-trust__list dd { max-width: 68ch; }
 }
+
+
+/* Homepage story statement with online-doctor illustration */
+.lp-story__inner {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+.lp-story__visual {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-story__image {
+  display: block;
+  width: 100%;
+  max-width: 35rem;
+  max-height: 28rem;
+  height: auto;
+  object-fit: contain;
+}
+.lp-story__copy {
+  min-width: 0;
+}
+.lp-story__title {
+  max-width: 16ch;
+  margin: 0;
+}
+.lp-story__button {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  margin-top: 1.75rem;
+  background: #fff;
+  border-color: #fff;
+  color: #172b48;
+  box-shadow: none;
+}
+.lp-story__button:hover {
+  background: #eaf2ff;
+  border-color: #eaf2ff;
+  color: #172b48;
+}
+.lp-story__button i {
+  font-size: .85rem;
+}
+@media (max-width: 900px) {
+  .lp-story__inner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .lp-story__visual {
+    justify-content: flex-start;
+  }
+  .lp-story__image {
+    max-width: 30rem;
+    max-height: 22rem;
+  }
+  .lp-story__title {
+    max-width: 20ch;
+  }
+}
+@media (max-width: 640px) {
+  .lp-story__button {
+    width: 100%;
+    justify-content: center;
+  }
+}
