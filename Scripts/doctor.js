@@ -246,6 +246,31 @@
       actions.append(primary);
     }
 
+    // A saved assessment can be closed directly from the schedule. The backend
+    // verifies the saved record before allowing a pending visit to be completed.
+    if (record && appointment.status === 'pending') {
+      const done = document.createElement('button');
+      done.type = 'button';
+      done.className = 'btn btn-outline visit-row__done';
+      done.textContent = 'Mark as done';
+      done.setAttribute('aria-label', `Mark appointment for ${appointment.firstName} as done`);
+      done.addEventListener('click', async () => {
+        done.disabled = true;
+        try {
+          await request(`/appointments/${appointment.id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'completed' })
+          });
+          message(`Appointment for ${appointment.firstName} marked as done.`);
+          await refreshSchedule({ quiet: true });
+        } catch (error) {
+          message(error.message);
+          done.disabled = false;
+        }
+      });
+      actions.append(done);
+    }
+
     const detailId = `appointment-${appointment.id}-detail`;
     const toggle = document.createElement('button');
     toggle.type = 'button';
@@ -313,7 +338,7 @@
 
     detail.append(detailActions);
 
-    const transitions = { pending: ['confirmed', 'cancelled'], confirmed: ['completed', 'no_show', 'cancelled'] };
+    const transitions = { pending: ['confirmed', ...(record ? ['completed'] : []), 'cancelled'], confirmed: ['completed', 'no_show', 'cancelled'] };
     const allowed = transitions[appointment.status] || [];
     if (allowed.length) {
       const statusGroup = document.createElement('div');
