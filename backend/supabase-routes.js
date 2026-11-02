@@ -141,7 +141,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     } catch { res.status(503).json({ message: 'Service unavailable' }); }
   }];
   const verificationOf = async (db, userId) => {
-    const result = await db.from('doctor_profiles').select('verification_status,specialty,professional_bio,institution,years_experience,is_accepting_appointments').eq('user_id', userId).single();
+    const result = await db.from('doctor_profiles').select('verification_status,specialty,professional_bio,institution,years_experience,is_accepting_appointments,is_accepting_walkins').eq('user_id', userId).single();
     if (result.error || !result.data) return { status: 'pending', profile: null };
     return { status: result.data.verification_status, profile: result.data };
   };
@@ -260,7 +260,7 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       institution: verified.profile?.institution || application.data?.institution || null,
       application: application.data || null,
       canAttendConsultations: approved && Boolean(verified.profile?.is_accepting_appointments),
-      acceptingWalkins: approved && Boolean(verified.profile?.is_accepting_appointments),
+      acceptingWalkins: approved && Boolean(verified.profile?.is_accepting_walkins),
       appointments: [],
     });
   }));
