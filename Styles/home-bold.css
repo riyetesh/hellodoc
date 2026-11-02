@@ -578,3 +578,72 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     height: 2.5rem;
   }
 }
+
+
+/* Distinguish patient and doctor paths at a glance */
+.lp-roles .lp-section__head {
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+.lp-paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.15rem;
+}
+.lp-path {
+  padding: clamp(1.35rem, 2.3vw, 2rem);
+  border-radius: 1.2rem;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, .045);
+}
+.lp-path--patient {
+  background: #eaf8f5;
+  border: 1px solid #c5e9df;
+}
+.lp-path--clinic {
+  background: #edf2ff;
+  border: 1px solid #cbd8f5;
+}
+.lp-path--patient .lp-path__label {
+  color: #087f70;
+}
+.lp-path--clinic .lp-path__label {
+  color: #3459ad;
+}
+.lp-path__heading {
+  margin: .5rem 0 1rem;
+}
+.lp-path__steps {
+  display: grid;
+  gap: .75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-path__steps li {
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr);
+  gap: .55rem;
+  align-items: start;
+  color: #35445a;
+  line-height: 1.5;
+}
+.lp-path__steps li span {
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lp-path__note {
+  margin: 1rem 0 0;
+  color: #59677b;
+  font-size: .85rem;
+  line-height: 1.45;
+}
+.lp-path .btn {
+  margin-top: 1.1rem;
+}
+@media (max-width: 760px) {
+  .lp-paths {
+    grid-template-columns: 1fr;
+  }
+}
