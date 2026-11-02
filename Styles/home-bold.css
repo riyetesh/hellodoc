@@ -53,38 +53,29 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-journey__copy h3, .lp-frame__heading { color:var(--lp-ink); }
 .lp-journey__copy p, .lp-frame__caption { color:var(--lp-muted); }
 .lp-figure, .lp-frame { background:#f8faff; border:1px solid var(--lp-border); border-radius:.9rem; }
-/* Keep all four journey illustrations in identical display frames. */
-.lp-figure--doctor,
-.lp-figure--booking,
-.lp-figure--hero,
-.lp-figure--folder {
+/* Shared layout for the four journey illustrations. */
+.lp-journey__visual {
   display:flex;
   align-items:center;
   justify-content:center;
   width:100%;
   height:20rem;
   min-height:20rem;
-  box-sizing:border-box;
   padding:1rem;
+  box-sizing:border-box;
   overflow:hidden;
-  background:transparent;
-  border:0;
 }
-.lp-journey__doctor-rotator {
+.lp-journey__rotator {
   display:flex;
   align-items:center;
   justify-content:center;
-  width:100%;
-  height:100%;
-  max-width:27rem;
-  max-height:100%;
-  transform-origin:center center;
-  backface-visibility:hidden;
+  width:min(18rem,100%);
+  height:18rem;
+  flex:0 1 18rem;
+  transform-origin:50% 50%;
+  will-change:transform;
 }
-.lp-journey__doctor-image,
-.lp-journey__booking-image,
-.lp-figure--hero__image,
-.lp-figure--folder__image {
+.lp-journey__illustration {
   display:block;
   width:100%;
   height:100%;
@@ -92,19 +83,13 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
   max-height:100%;
   object-fit:contain;
   object-position:center;
-  filter:none;
-  transform:scale(1);
-  transform-origin:center center;
-  transition:transform .25s ease;
+  filter:none !important;
+  box-shadow:none !important;
+  scale:1;
+  transition:scale .25s ease;
 }
-.lp-journey__doctor-image {
-  backface-visibility:hidden;
-}
-.lp-figure--doctor:hover .lp-journey__doctor-image,
-.lp-figure--booking:hover .lp-journey__booking-image,
-.lp-figure--hero:hover .lp-figure--hero__image,
-.lp-figure--folder:hover .lp-figure--folder__image {
-  transform:scale(1.05);
+.lp-journey__visual:hover .lp-journey__illustration {
+  scale:1.05;
 }
 
 .lp-bar { background:#8eaddb; }
