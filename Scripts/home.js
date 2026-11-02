@@ -56,7 +56,7 @@
 
     // Apply the same continuous rotation to every doctor illustration.
     illustrations.forEach((illustration) => {
-      illustration.style.animation = "lp-doctor-spin 60s linear infinite";
+      illustration.style.animation = "lp-doctor-spin 180s linear infinite";
       illustration.style.transformOrigin = "50% 50%";
     });
   }
