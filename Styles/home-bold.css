@@ -53,6 +53,32 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-journey__copy h3, .lp-frame__heading { color:var(--lp-ink); }
 .lp-journey__copy p, .lp-frame__caption { color:var(--lp-muted); }
 .lp-figure, .lp-frame { background:#f8faff; border:1px solid var(--lp-border); border-radius:.9rem; }
+.lp-figure--doctor {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:15rem;
+  padding:1rem;
+  overflow:hidden;
+  background:transparent;
+  border:0;
+}
+.lp-journey__doctor-image {
+  display:block;
+  width:72%;
+  max-width:21rem;
+  height:auto;
+  object-fit:contain;
+  transform-origin:50% 50%;
+  animation:lp-doctor-spin 180s linear infinite;
+  filter:drop-shadow(0 18px 30px rgba(35,54,80,.16));
+  transition:scale .35s ease, filter .35s ease;
+}
+.lp-figure--doctor:hover .lp-journey__doctor-image {
+  scale:1.05;
+  filter:drop-shadow(0 24px 36px rgba(35,54,80,.22));
+}
+
 .lp-bar { background:#8eaddb; }
 .lp-bar--soft { background:#dce8fa; }
 .lp-wire--input { color:#43556e; background:#fff; border-color:var(--lp-border); }
@@ -60,17 +86,71 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-inline-link, .lp-dir__link { color:var(--lp-blue-dark); }
 .lp-inline-link:hover, .lp-dir__link:hover { color:var(--lp-blue); }
 .lp-story {
-  position:relative; overflow:hidden; padding-block:clamp(3.5rem,7vw,6rem);
-  color:var(--lp-ink); background:linear-gradient(115deg,#edf7fd 0%,#e4f2fb 55%,#f7fbff 100%);
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  min-height:clamp(28rem,48vw,40rem);
+  padding-block:clamp(4rem,8vw,7rem);
+  color:#fff;
+  background:#233650 url("../Asset/Images/nepalvillage.jpg") center 52% / cover no-repeat;
 }
-.lp-story::after { background:var(--lp-sky); opacity:.35; }
-.lp-story__inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:clamp(2rem,5vw,5rem); }
-.lp-story__visual { min-width:0; display:flex; align-items:center; justify-content:center; }
-.lp-story__image { display:block; width:100%; max-width:34rem; max-height:27rem; height:auto; object-fit:contain; filter:drop-shadow(0 14px 24px rgba(39,52,139,.07)); }
-.lp-story__copy { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:1.75rem; }
-.lp-story__title { max-width:16ch; margin:0; color:#27348b; font-size:clamp(2.1rem,4vw,3.55rem); line-height:1.08; letter-spacing:-.045em; text-wrap:balance; }
-.lp-story__button { margin:0; color:#fff; background:var(--lp-blue); border:1px solid var(--lp-blue); border-radius:.7rem; box-shadow:none; }
-.lp-story__button:hover { color:#fff; background:var(--lp-blue-dark); border-color:var(--lp-blue-dark); }
+.lp-story::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:
+    linear-gradient(90deg,rgba(20,48,82,.88) 0%,rgba(24,65,108,.72) 43%,rgba(24,65,108,.24) 100%),
+    linear-gradient(0deg,rgba(20,48,82,.28),rgba(20,48,82,.08));
+}
+.lp-story__inner {
+  display:flex;
+  align-items:center;
+  width:100%;
+}
+.lp-story__copy {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:1.75rem;
+  max-width:46rem;
+}
+.lp-story__title {
+  max-width:16ch;
+  margin:0;
+  color:#fff;
+  font-size:clamp(2.1rem,4.5vw,3.8rem);
+  font-weight:650;
+  line-height:1.08;
+  letter-spacing:-.045em;
+  text-wrap:balance;
+  text-shadow:0 2px 18px rgba(12,31,55,.2);
+}
+.lp-story__button {
+  margin:0;
+  color:var(--lp-blue-dark);
+  background:#fff;
+  border:1px solid #fff;
+  border-radius:.7rem;
+  box-shadow:0 8px 24px rgba(12,31,55,.18);
+}
+.lp-story__button:hover {
+  color:#fff;
+  background:var(--lp-blue);
+  border-color:var(--lp-blue);
+}
+@media (max-width:640px) {
+  .lp-story {
+    min-height:34rem;
+    background-position:58% center;
+  }
+  .lp-story::before {
+    background:linear-gradient(90deg,rgba(20,48,82,.84),rgba(20,48,82,.48));
+  }
+  .lp-story__title { max-width:14ch; }
+}
 .lp-roles { background:#f7f9fd; }
 .lp-roles .lp-section__head { margin-bottom:clamp(1.5rem,3vw,2.25rem); }
 .lp-roles .lp-paths { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:clamp(1rem,2vw,1.5rem); }
@@ -423,7 +503,7 @@ footer.site-footer .site-footer__col a:hover {
 .lp-story__image {
   display:block;
   transform-origin:50% 50%;
-  animation:lp-doctor-spin 60s linear infinite !important;
+  animation:lp-doctor-spin 180s linear infinite !important;
   filter:drop-shadow(0 18px 30px rgba(35,54,80,.2));
   transition:scale .35s ease, filter .35s ease;
 }
