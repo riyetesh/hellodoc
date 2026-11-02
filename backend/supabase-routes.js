@@ -1286,7 +1286,17 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const { db } = care;
     if (!isUuid(req.params.id) || !['confirmed','cancelled','completed','no_show'].includes(req.body?.status)) return res.status(400).json({ message:'Invalid status' });
     const result = care.demoMode ? await db.rpc('admin_demo_change_appointment_status', { p_id:req.params.id, p_status:req.body.status, p_doctor:care.demoDoctorId }) : await db.rpc('change_appointment_status',{p_id:req.params.id,p_status:req.body.status});
-    if (result.error) return res.status(409).json({ message:'Invalid status transition' });
+    if (result.error) {
+      report('doctor_appointment_status', result.error);
+      const code = result.error.code;
+      const status = code === 'P0002' ? 404 : code === '42501' ? 403 : 409;
+      return res.status(status).json({
+        code: code || 'STATUS_UPDATE_FAILED',
+        message: code === '42501'
+          ? 'This appointment cannot be completed yet. Confirm that an assessment is saved for this visit and that the database migration is applied.'
+          : code === 'P0002' ? 'Appointment not found.' : 'The appointment status could not be updated. Check the database migration and try again.'
+      });
+    }
     res.json({status:result.data.status});
   }));
   router.get('/doctor/analytics', ...guard('doctor', async (req, res, care) => {
