@@ -82,94 +82,15 @@
           </div>
 
           <div class="lp-hero__visual">
-            <div class="lp-preview" data-tabs data-tab-group="preview">
-              <div class="lp-preview__bar">
-                <p class="lp-preview__label" id="preview-label">Product preview</p>
-                <div class="lp-tabs" role="tablist" aria-labelledby="preview-label">
-                  <button
-                    type="button"
-                    class="lp-tab is-active"
-                    role="tab"
-                    id="preview-tab-patient"
-                    aria-controls="preview-patient"
-                    aria-selected="true"
-                  >Patient</button>
-                  <button
-                    type="button"
-                    class="lp-tab"
-                    role="tab"
-                    id="preview-tab-doctor"
-                    aria-controls="preview-doctor"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >Doctor</button>
-                </div>
-              </div>
-
-              <div class="lp-tabpanel is-active" role="tabpanel" id="preview-patient" aria-labelledby="preview-tab-patient" tabindex="0">
-                <div class="lp-frame">
-                  <div class="lp-frame__head">
-                    <span class="lp-frame__title">Find a doctor</span>
-                    <span class="lp-frame__meta">Approved doctors only</span>
-                  </div>
-                  <div class="lp-frame__toolbar">
-                    <span class="lp-wire lp-wire--input">
-                      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                      Search by name or specialty
-                    </span>
-                    <span class="lp-wire lp-wire--chip">All specialties</span>
-                  </div>
-                  <ul class="lp-wire-list lp-preview__rows" data-preview-rows aria-hidden="true">
-                    <li>
-                      <img src="./Asset/Illustrations/doctor.svg" alt="" width="32" height="32" />
-                      <span class="lp-wire__lines"><span class="lp-bar" style="width: 58%"></span><span class="lp-bar lp-bar--soft" style="width: 38%"></span></span>
-                    </li>
-                  </ul>
-                  <p class="lp-frame__caption" data-preview-caption>Approved doctors, their specialty and published fee come from the live directory.</p>
-                </div>
-                <p class="lp-preview__note">
-                  Compare specialty, consultation fee and open times before you book, then manage the visit as a patient.
-                </p>
-              </div>
-
-              <div class="lp-tabpanel" role="tabpanel" id="preview-doctor" aria-labelledby="preview-tab-doctor" tabindex="0">
-                <div class="lp-frame">
-                  <div class="lp-frame__head">
-                    <span class="lp-frame__title">Assessment</span>
-                    <span class="lp-frame__meta">Booked appointment</span>
-                  </div>
-                  <div class="lp-frame__context">
-                    <span class="lp-frame__context-label">Consultation context</span>
-                    <span class="lp-bar lp-bar--soft" style="width: 54%"></span>
-                  </div>
-                  <div class="lp-frame__split">
-                    <div>
-                      <p class="lp-frame__heading">Patient reported</p>
-                      <span class="lp-bar" style="width: 82%"></span>
-                      <span class="lp-bar" style="width: 64%"></span>
-                    </div>
-                    <div>
-                      <p class="lp-frame__heading">Clinician observed</p>
-                      <span class="lp-bar" style="width: 74%"></span>
-                      <span class="lp-bar" style="width: 58%"></span>
-                    </div>
-                  </div>
-                  <div class="lp-frame__model">
-                    <p class="lp-frame__heading">Model assistance, experimental</p>
-                    <span class="lp-bar lp-bar--soft" style="width: 66%"></span>
-                    <p class="lp-frame__caption">Candidate conditions only. Never a diagnosis, never the decision.</p>
-                  </div>
-                  <div class="lp-frame__own">
-                    <p class="lp-frame__heading">Doctor assessment and plan</p>
-                    <span class="lp-bar" style="width: 70%"></span>
-                  </div>
-                  <p class="lp-frame__caption">Layout illustration. A real record is written only by the doctor who saw the patient.</p>
-                </div>
-                <p class="lp-preview__note">
-                  The doctor records what the patient reports, adds their own findings, and keeps the clinical decision separate from the model.
-                </p>
-              </div>
-            </div>
+            <img
+              class="lp-hero__image"
+              src="./Asset/Illustrations/hero.svg"
+              alt="Illustration of a patient and doctor connected through a digital healthcare platform"
+              width="900"
+              height="600"
+              fetchpriority="high"
+              decoding="async"
+            />
           </div>
         </div>
       </section>
