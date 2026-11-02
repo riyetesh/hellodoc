@@ -2582,3 +2582,69 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Doctor walk-in availability control */
+.dw-head-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.dw-walkin-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+}
+.dw-walkin-availability__copy {
+  display: grid;
+  gap: 0.12rem;
+}
+.dw-walkin-availability__label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dw-walkin-availability__state {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.dw-availability-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 2.9rem;
+  height: 1.65rem;
+  padding: 0.18rem;
+  border: 0;
+  border-radius: 999px;
+  background: #9aa6b5;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.dw-availability-switch.is-available { background: #16845b; }
+.dw-availability-switch:disabled { cursor: wait; opacity: 0.7; }
+.dw-availability-switch:focus-visible { outline: 3px solid rgba(24,92,201,.28); outline-offset: 3px; }
+.dw-availability-switch__thumb {
+  display: block;
+  width: 1.28rem;
+  height: 1.28rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transform: translateX(0);
+  transition: transform 160ms ease;
+}
+.dw-availability-switch.is-available .dw-availability-switch__thumb { transform: translateX(1.25rem); }
+@media (max-width: 760px) {
+  .dw-head-tools { justify-content: flex-start; }
+  .dw-walkin-availability { width: fit-content; }
+}
