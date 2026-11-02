@@ -111,7 +111,7 @@
             <div>
               <p class="dw-eyebrow">Workspace</p>
               <h2 id="appointmentsTitle">Appointments</h2>
-              <p class="dw-section-sub">Every visit assigned to you, newest day first. Open a visit to see its details, or start the consultation from the row.</p>
+              <p class="dw-section-sub">Appointments are grouped by what needs attention: pending requests, confirmed upcoming visits, and past visits. Change a booking's status from its details.</p>
             </div>
             <div class="dw-head-actions">
               <button class="btn btn-outline" id="refreshSchedule" type="button">Refresh schedule</button>
@@ -127,11 +127,11 @@
                 <label for="visitSearch">Search your schedule</label>
                 <input id="visitSearch" type="search" placeholder="Patient name, reason or status" autocomplete="off" spellcheck="false" aria-describedby="visitCount" />
               </div>
-              <div class="dw-ranges" role="group" aria-label="Date range">
-                <button class="dw-chip is-active" type="button" data-range="all" aria-pressed="true">All dates</button>
-                <button class="dw-chip" type="button" data-range="today" aria-pressed="false">Today</button>
-                <button class="dw-chip" type="button" data-range="upcoming" aria-pressed="false">Upcoming</button>
-                <button class="dw-chip" type="button" data-range="past" aria-pressed="false">Past</button>
+              <div class="dw-ranges dw-ranges--status" role="group" aria-label="Appointment groups">
+                <button class="dw-chip is-active" type="button" data-range="pending" aria-pressed="true">Pending <span id="pendingCount">0</span></button>
+                <button class="dw-chip" type="button" data-range="upcoming" aria-pressed="false">Upcoming <span id="upcomingCount">0</span></button>
+                <button class="dw-chip" type="button" data-range="past" aria-pressed="false">Past <span id="pastCount">0</span></button>
+                <button class="dw-chip" type="button" data-range="all" aria-pressed="false">All <span id="allCount">0</span></button>
               </div>
             </div>
 
