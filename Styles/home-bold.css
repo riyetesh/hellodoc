@@ -382,30 +382,16 @@ footer.site-footer .site-footer__col a:hover {
 }
 
 
-/* Slow rotation for the online-doctor illustration.
-   Use the individual rotate property so hover scaling cannot cancel the animation. */
+/* Hover treatment remains in CSS; continuous rotation is controlled by home.js. */
 .lp-story__image {
   display:block;
-  transform-origin:50% 50%;
-  rotate:0deg;
-  animation:lp-doctor-slow-rotate 48s linear infinite;
   filter:drop-shadow(0 18px 30px rgba(35,54,80,.2));
   transition:scale .35s ease, filter .35s ease;
-  will-change:rotate;
 }
 .lp-story__visual:hover .lp-story__image {
   scale:1.06;
   filter:drop-shadow(0 24px 36px rgba(35,54,80,.25));
 }
-@keyframes lp-doctor-slow-rotate {
-  from { rotate:0deg; }
-  to { rotate:360deg; }
-}
 @media (prefers-reduced-motion:reduce) {
-  .lp-story__image {
-    animation:none;
-    rotate:0deg;
-    will-change:auto;
-  }
   .lp-story__visual:hover .lp-story__image { scale:1.02; }
 }
