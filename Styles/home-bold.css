@@ -97,7 +97,10 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-privacy__image { display:block; width:100%; max-width:30rem; max-height:25rem; height:auto; object-fit:contain; }
 .lp-privacy__content { min-width:0; max-width:44rem; }
 .lp-privacy__title { margin:.6rem 0 1.25rem; color:var(--lp-ink); font-size:clamp(2rem,3.4vw,3rem); line-height:1.08; letter-spacing:-.045em; }
-.lp-privacy__point { padding:.8rem 0; border-top:1px solid var(--lp-border); }
+.lp-privacy__point {
+  padding:.8rem 0;
+  border:0;
+}
 .lp-privacy__point h3 {
   display:flex;
   align-items:center;
@@ -130,6 +133,7 @@ body { color: var(--lp-ink); background: var(--lp-paper); }
 .lp-privacy__text {
   display:block;
   min-width:0;
+  color:var(--lp-ink);
   font-weight:400;
 }
 .lp-final.lp-final--contact { padding-block:clamp(3rem,5vw,5rem); background:#f7f9fd; }
