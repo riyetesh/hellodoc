@@ -77,10 +77,21 @@
           <h1>Appointments</h1>
           <p class="dw-head-sub" id="doctorIdentity">Checking your profile…</p>
         </div>
-        <p class="dw-verify-chip" id="verificationChip" data-state="pending" hidden>
-          <span class="dw-verify-chip__dot" aria-hidden="true"></span>
-          <span id="verificationChipText">Verification pending</span>
-        </p>
+        <div class="dw-head-tools">
+          <div class="dw-walkin-availability" id="walkinAvailability" hidden>
+            <div class="dw-walkin-availability__copy">
+              <span class="dw-walkin-availability__label">Walk-in status</span>
+              <span class="dw-walkin-availability__state" id="walkinAvailabilityState">Not available</span>
+            </div>
+            <button class="dw-availability-switch" id="walkinAvailabilityToggle" type="button" role="switch" aria-checked="false" aria-label="Accept walk-in patients">
+              <span class="dw-availability-switch__thumb"></span>
+            </button>
+          </div>
+          <p class="dw-verify-chip" id="verificationChip" data-state="pending" hidden>
+            <span class="dw-verify-chip__dot" aria-hidden="true"></span>
+            <span id="verificationChipText">Verification pending</span>
+          </p>
+        </div>
       </div>
     </header>
 
