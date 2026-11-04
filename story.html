@@ -388,24 +388,14 @@
           <div class="hs-subsection" id="architecture">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-arch-title">How a symptom check travels through the system</h3>
             <p class="hs-prose__intro">
-              This diagram describes the intended assessment flow in local development. The Flask model is not deployed with the current Vercel production build, so live prediction requires a separately configured model service.
+              Follow a doctor’s symptom assessment from entry to a stored record. Only symptom identifiers reach the private model—not patient details or clinical notes. This is an explanation, not a live prediction.
             </p>
 
             <div class="hs-diagram hs-diagram--interactive" data-diagram>
-              <div class="hs-diagram__controls">
-                <button class="hs-btn hs-btn--small" type="button" data-flow-play><i class="fa-solid fa-play" aria-hidden="true"></i> Play data flow</button>
-                <button class="hs-btn hs-btn--small hs-btn--ghost" type="button" data-flow-reset><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset</button>
-                <label class="hs-playback" for="hs-flow-speed">
-                  <span class="hs-playback__label"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Playback speed</span>
-                  <input id="hs-flow-speed" type="range" min="0.5" max="1.5" step="0.25" value="0.75" data-flow-speed aria-describedby="hs-flow-speed-value">
-                  <output id="hs-flow-speed-value" class="hs-playback__value" for="hs-flow-speed" data-flow-speed-value>1×</output>
-                </label>
-                <p class="hs-status" data-flow-status role="status" aria-live="polite">Select a step to explore the assessment path, or play the complete flow.</p>
-              </div>
               <div class="hs-diagram__layout">
                 <div class="hs-lane">
-                  <div class="hs-lane__heading"><span>ASSESSMENT PIPELINE</span><span>8 connected steps</span></div>
-                  <ol class="hs-flow hs-flow--cards">
+                  <div class="hs-lane__heading"><span>Assessment pathway</span><span>Select a step to explore</span></div>
+                  <ol class="hs-flow hs-flow--cards" id="hs-flow-steps" aria-label="Assessment pipeline steps">
                     <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-browser"><span class="hs-node__index">01</span><span class="hs-node__icon"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span><span class="hs-node__tag">BROWSER</span><span class="hs-node__name">Doctor assessment form</span><span class="hs-node__hint">Symptoms entered</span></button></li>
                     <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-routing"><span class="hs-node__index">02</span><span class="hs-node__icon"><i class="fa-solid fa-route" aria-hidden="true"></i></span><span class="hs-node__tag">ROUTING</span><span class="hs-node__name">Express API</span><span class="hs-node__hint">Secure request</span></button></li>
                     <li><button class="hs-node" type="button" data-node data-flow-step data-detail="flow-flask"><span class="hs-node__index">03</span><span class="hs-node__icon"><i class="fa-brands fa-python" aria-hidden="true"></i></span><span class="hs-node__tag">PYTHON</span><span class="hs-node__name">Private model service</span><span class="hs-node__hint">Internal endpoint</span></button></li>
@@ -422,7 +412,7 @@
               </div>
               <div hidden data-detail-source>
                 <div id="flow-browser"><h5>Doctor assessment form</h5><p>An approved doctor opens an appointment, then records patient reported symptoms, doctor observed symptoms and free text observations. Only the exact 132 symptom identifiers are sent for prediction; free text stays out of the model and stays in the clinical record.</p></div>
-                <div id="flow-routing"><h5>Routing · Express API</h5><p>Locally, <code>backend/server.js</code> serves the static site and the API, and starts the private Flask service on <code>127.0.0.1:5001</code>. The Vercel configuration routes <code>/api/*</code> to the Express service and everything else to a static build, but no Python model is deployed there, so prediction routes fail closed until an external model origin is configured.</p></div>
+                <div id="flow-routing"><h5>Routing · Express API</h5><p>Locally, <code>backend/server.js</code> serves the static site and the API. The doctor assessment request uses <code>/api/doctor/assessments</code>, while the private Flask service runs on <code>127.0.0.1:5001</code>. The Vercel configuration routes <code>/api/*</code> to the Express service and everything else to a static build, but no Python model is deployed there, so prediction routes fail closed until an external model origin is configured.</p></div>
                 <div id="flow-flask"><h5>Private model service</h5><p><code>Algo/main.py</code> accepts token protected <code>/internal/assess</code> requests. Its public <code>/predict</code> route returns 403, so the classifier is reachable only from the Express backend. The shared token is read from the environment and never reaches the browser.</p></div>
                 <div id="flow-vector"><h5>Binary feature vector</h5><p>A dictionary maps each known symptom name to a position. The service builds a zero-filled array of 132 positions and sets a 1 for every recognised symptom, so the model receives a sparse binary vector. Unknown names are rejected before prediction rather than silently ignored.</p></div>
                 <div id="flow-model"><h5>Saved linear SVC</h5><p>The vector is handed to a scikit learn Support Vector Classifier loaded from <code>Algo/models/svc.pkl</code>. The shipped model was trained with <code>kernel="linear"</code> and <code>C=1.0</code>, classifies 41 categories, and contains 267 support vectors.</p></div>
@@ -433,6 +423,7 @@
                 <div id="auth-supabase"><h5>Supabase Auth and profiles</h5><p>Supabase stores credentials and the <code>profiles</code> table, which carries the role, suspension flag and doctor verification status. Row level security scopes appointments, assessments and notes to the signed in patient, doctor or administrator.</p></div>
               </div>
             </div>
+          </div>
           <!-- ------------------- 5B. The algorithm, explained ------------------- -->
           <div class="hs-subsection" id="algorithm">
             <h3 class="hs-h3 hs-h3--spaced" id="hs-algo-title">

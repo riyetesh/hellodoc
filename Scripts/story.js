@@ -143,96 +143,47 @@
   /* Architecture diagram                                       */
   /* ---------------------------------------------------------- */
   function initDiagram() {
-    var diagram = $("[data-diagram]");
+    const diagram = document.querySelector('[data-diagram]');
     if (!diagram) return;
-    var nodes = $$("[data-node]", diagram);
-    var flowNodes = $$("[data-flow-step]", diagram);
-    var detail = $("[data-node-detail]", diagram);
-    var source = $("[data-detail-source]", diagram);
-    var status = $("[data-flow-status]", diagram);
-    var playButton = $("[data-flow-play]", diagram);
-    var resetButton = $("[data-flow-reset]", diagram);
-    var speedInput = $("[data-flow-speed]", diagram);
-    var speedValue = $("[data-flow-speed-value]", diagram);
-    var playbackRate = 0.75;
-    var initialDetail = detail ? detail.innerHTML : "";
-    var initialStatus = status ? status.textContent : "";
-    var timer = null, index = 0, complete = false;
+    const nodes = Array.from(diagram.querySelectorAll('[data-flow-step]'));
+    const detail = diagram.querySelector('[data-node-detail]');
+    const source = diagram.querySelector('[data-detail-source]');
+    if (!nodes.length || !detail || !source) return;
 
-    function stop() { if (timer !== null) { window.clearTimeout(timer); timer = null; } }
-    function clear() {
-      nodes.forEach(function (node) {
-        node.classList.remove("is-active");
-        var li = node.closest("li");
-        if (li) li.classList.remove("is-current", "is-done");
+    function select(index) {
+      const item = source.querySelector('#' + nodes[index].dataset.detail);
+      if (!item) return;
+      nodes.forEach((node, i) => {
+        node.classList.toggle('is-active', i === index);
+        node.setAttribute('aria-current', i === index ? 'step' : 'false');
       });
+      const label = document.createElement('span');
+      label.className = 'hs-detail-kicker';
+      label.textContent = 'Inside step ' + String(index + 1).padStart(2, '0');
+      detail.replaceChildren(label, ...Array.from(item.childNodes, child => child.cloneNode(true)));
     }
-    function detailFor(node) {
-      var id = node && node.getAttribute("data-detail");
-      var item = id && source ? source.querySelector("#" + id) : null;
-      if (detail && item) {
-        detail.innerHTML = '<span class="hs-detail-kicker">STEP DETAILS</span>' + item.innerHTML;
-      }
-    }
-    function mark(i) {
-      clear();
-      flowNodes.forEach(function (node, n) {
-        var li = node.closest("li");
-        if (li) {
-          li.classList.toggle("is-done", n < i);
-          li.classList.toggle("is-current", n === i);
-        }
+
+    detail.id = 'hs-flow-detail';
+    nodes.forEach((node, index) => {
+      node.setAttribute('aria-controls', detail.id);
+      node.addEventListener('click', () => select(index));
+      node.addEventListener('keydown', event => {
+        const columns = getComputedStyle(nodes[0].closest('ol')).gridTemplateColumns.split(' ').length;
+        let next = index;
+        if (event.key === 'ArrowRight') next++;
+        else if (event.key === 'ArrowLeft') next--;
+        else if (event.key === 'ArrowDown') next += columns;
+        else if (event.key === 'ArrowUp') next -= columns;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = nodes.length - 1;
+        else return;
+        event.preventDefault();
+        next = Math.max(0, Math.min(nodes.length - 1, next));
+        nodes[next].focus();
+        select(next);
       });
-      var active = flowNodes[i];
-      if (!active) return;
-      active.classList.add("is-active");
-      detailFor(active);
-      if (status) status.textContent = "Step " + (i + 1) + " of " + flowNodes.length + ": " + ($(".hs-node__name", active) || active).textContent.trim();
-      index = i + 1;
-    }
-    function choose(node) {
-      stop(); complete = false; clear();
-      var n = flowNodes.indexOf(node);
-      index = n >= 0 ? n + 1 : 0;
-      node.classList.add("is-active");
-      var li = node.closest("li");
-      if (li) li.classList.add("is-current");
-      detailFor(node);
-      if (status) status.textContent = "Selected: " + ($(".hs-node__name", node) || node).textContent.trim();
-    }
-    function play() {
-      if (!flowNodes.length) return;
-      stop();
-      if (complete || index >= flowNodes.length) index = 0;
-      function advance() {
-        if (index >= flowNodes.length) {
-          timer = null; complete = true;
-          if (status) status.textContent = "Flow complete: 8 steps from symptom input to the assessment record.";
-          return;
-        }
-        mark(index);
-        timer = window.setTimeout(advance, reduceMotion ? 100 : 4000 / playbackRate);
-      }
-      advance();
-    }
-    function reset() {
-      stop(); clear(); index = 0; complete = false;
-      if (detail) detail.innerHTML = initialDetail;
-      if (status) status.textContent = initialStatus;
-    }
-    nodes.forEach(function (node) {
-      node.addEventListener("click", function () { choose(node); });
     });
-    if (speedInput) {
-      function updateSpeed() {
-        playbackRate = Number(speedInput.value) || 1;
-        if (speedValue) speedValue.textContent = playbackRate.toFixed(2).replace(/0+$/, "").replace(/\\.$/, "") + "×";
-      }
-      speedInput.addEventListener("input", updateSpeed);
-      updateSpeed();
-    }
-    if (playButton) playButton.addEventListener("click", play);
-    if (resetButton) resetButton.addEventListener("click", reset);
+    select(0);
   }
 
   /* ---------------------------------------------------------- */
