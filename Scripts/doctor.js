@@ -112,7 +112,7 @@
   let appointments = [];
   let assessmentByAppointment = new Map();
   let searchTerm = '';
-  let dateRange = 'pending';
+  let dateRange = 'all';
   let approvedDoctor = false;
   let loading = false;
   const expanded = new Set();
@@ -153,7 +153,8 @@
     const startsAt = new Date(appointment.startsAt).getTime();
     const isPast = Number.isFinite(startsAt) && startsAt < Date.now();
     const group = isPast || ['completed','cancelled','no_show'].includes(appointment.status) ? 'past' : appointment.status === 'pending' ? 'pending' : 'upcoming';
-    if (dateRange !== 'all' && group !== dateRange) return false;
+    if (dateRange === 'today' && dayKey(appointment.startsAt) !== todayKey()) return false;
+    if (!['all', 'today'].includes(dateRange) && group !== dateRange) return false;
 
     const term = searchTerm.trim().toLowerCase();
     if (term) {
@@ -386,8 +387,17 @@
       upcoming: appointments.filter((a) => new Date(a.startsAt).getTime() >= now && a.status !== 'pending' && !['cancelled','no_show','completed'].includes(a.status)).length,
       past: appointments.filter((a) => new Date(a.startsAt).getTime() < now || ['completed','cancelled','no_show'].includes(a.status)).length,
       all: total,
+      today: appointments.filter(a => dayKey(a.startsAt) === todayKey()).length,
     };
-    ['pending','upcoming','past','all'].forEach((key) => {
+    const summary = $('#scheduleSummary');
+    if (summary) {
+      const next = appointments.filter(a => a.status === 'confirmed' && new Date(a.startsAt).getTime() >= now)
+        .sort((a,b) => new Date(a.startsAt) - new Date(b.startsAt))[0];
+      summary.textContent = next
+        ? `Next confirmed visit: ${next.firstName} · ${formatDate(next.startsAt)} at ${formatTime(next.startsAt)}`
+        : 'No upcoming confirmed visits. Review pending requests or manage your availability.';
+    }
+    ['today','pending','upcoming','past','all'].forEach((key) => {
       const node = document.getElementById(key + 'Count');
       if (node) node.textContent = String(groupsForCounts[key]);
     });
@@ -402,11 +412,11 @@
     if (!rows.length) {
       list.append(
         stateBlock(
-          total ? 'No appointments match these filters.' : 'No appointments yet.',
+          total ? (dateRange === 'today' ? 'No visits scheduled for today.' : dateRange === 'pending' ? 'No pending requests.' : 'No appointments match this view.') : 'Your schedule is ready.',
           total
-            ? 'Clear the search, date or status filter to see the rest of your schedule.'
+            ? 'Choose All appointments to return to your full schedule, or adjust your filters.'
             : 'New bookings appear here. Patients book from the availability in Practice settings.',
-          total ? { label: 'Clear filters', run: clearFilters } : null
+          total ? { label: 'Show all appointments', run: clearFilters } : null
         )
       );
       return;
@@ -484,7 +494,7 @@
     const search = $('#visitSearch');
     if (search) search.value = '';
     for (const chip of document.querySelectorAll('.dw-ranges [data-range]')) {
-      const active = chip.dataset.range === 'pending';
+      const active = chip.dataset.range === 'all';
       chip.classList.toggle('is-active', active);
       chip.setAttribute('aria-pressed', active ? 'true' : 'false');
     }

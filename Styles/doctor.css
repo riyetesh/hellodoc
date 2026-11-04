@@ -1,3 +1,34 @@
+/* Schedule workspace: quiet surfaces, strong task hierarchy. */
+.dw-page .dw-head { background:#fff; padding-block:2rem; }
+.dw-page .dw-head-copy h1 { font-size:clamp(1.8rem,3vw,2.5rem); letter-spacing:-.045em; }
+.dw-page .dw-eyebrow { text-transform:none; letter-spacing:0; color:#536170; }
+.dw-page #doctorAnalytics { display:block; border:1px solid #d9e1e9; border-radius:12px; background:#fff; padding:22px; margin:0 0 28px; }
+.dw-page #doctorAnalyticsTitle { font-size:1rem; margin:4px 0 20px; }
+.dw-page .dw-metric-list { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:18px; }
+.dw-page .dw-metric { border-left:2px solid #d9e1e9; padding-left:16px; }
+.dw-page .dw-metric dt { text-transform:none; letter-spacing:0; font-size:.82rem; color:#536170; }
+.dw-page .dw-metric dd { font-size:1.8rem; font-variant-numeric:tabular-nums; letter-spacing:-.04em; }
+.dw-page .dw-next-visit { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:20px 24px; margin:20px 0; background:#edf3fb; border:1px solid #cfdded; border-radius:10px; }
+.dw-page .dw-next-visit strong { font-size:.85rem; color:#174ea6; }
+.dw-page .dw-next-visit p { margin:6px 0 0; font-size:.95rem; color:#27394c; }
+.dw-page #doctorAppointments .dw-schedule { background:#fff; border:1px solid #d9e1e9; border-radius:12px; padding:20px; }
+.dw-page #doctorAppointments .dw-schedule__bar { display:flex; align-items:end; flex-wrap:wrap; gap:20px; }
+.dw-page #doctorAppointments .dw-search { flex:1 1 240px; }
+.dw-page #doctorAppointments .dw-ranges { display:flex; flex-wrap:wrap; gap:6px; }
+.dw-page #doctorAppointments .dw-chip { min-height:44px; border-radius:6px; }
+.dw-page #doctorAppointments .dw-chip.is-active { background:#174ea6; color:#fff; border-color:#174ea6; }
+.dw-page #doctorAppointments .dw-filters { background:#f7f9fc; border-radius:6px; padding:14px; margin-top:18px; }
+.dw-page #openWalkin { background:#174ea6; color:#fff; border-color:#174ea6; }
+.dw-page #openWalkin:hover { background:#123d82; }
+.dw-skip { position:fixed; top:-80px; left:16px; padding:12px; background:white; color:#174ea6; z-index:9999; }
+.dw-skip:focus { top:12px; }
+.dw-page :focus-visible { outline:3px solid #174ea6; outline-offset:3px; }
+@media(max-width:760px){
+ .dw-page .dw-metric-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .dw-page .dw-next-visit { align-items:start; flex-direction:column; padding:18px; }
+ .dw-page #doctorAppointments .dw-schedule { padding:14px; }
+ .dw-page #doctorAppointments .dw-head-actions { width:100%; flex-wrap:wrap; }
+}
 /* ============================================================
    HelloDoc - Doctor workspace
    Workspace (schedule) → Clinical records (assessment) → Practice

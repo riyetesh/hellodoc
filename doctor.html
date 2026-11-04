@@ -32,7 +32,7 @@
       .consultation-modal__actions{display:flex;justify-content:flex-end;gap:.6rem;flex-wrap:wrap;padding:1rem 1.25rem;border-top:1px solid var(--border)}
       .consultation-ended{margin:0 1.25rem 1rem;padding:.85rem 1rem;border:1px solid #a8d9bf;border-radius:10px;background:#f0fbf4;color:#175c37}
       @media(max-width:650px){.consultation-modal__body{grid-template-columns:1fr}.consultation-video,.consultation-video img{min-height:12rem}.consultation-clock__elapsed{font-size:1.7rem}.consultation-modal__actions>*{flex:1}.dw-page .dw-main{padding-bottom:8rem}}
-      @media(min-width:761px){.dw-page .dw-main{padding-right:20rem}}
+      /* The floating consultation tool must not reserve space when closed. */
 
       /* Non-modal consultation timer: stays visible without blocking the workspace or video call. */
       #consultationModal.consultation-float{display:none;position:fixed;z-index:120;right:1rem;bottom:1rem;width:min(22rem,calc(100vw - 2rem));max-height:min(70vh,34rem);overflow:auto;padding:0;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:0 16px 48px rgba(10,25,50,.25)}
@@ -52,6 +52,7 @@
 
   </head>
   <body class="dw-page">
+    <a class="dw-skip" href="#doctorAppointments">Skip to appointments</a>
     <nav class="navbar" id="navbar">
       <div class="container navbar-inner">
         <a href="index.html" class="navbar-brand"><img src="/Asset/Login/hello-doc.png" alt="HelloDoc" class="logo" /></a>
@@ -74,7 +75,7 @@
       <div class="container dw-head-inner">
         <div class="dw-head-copy">
           <p class="dw-eyebrow">Doctor workspace</p>
-          <h1>Appointments</h1>
+          <h1>Your practice, at a glance</h1>
           <p class="dw-head-sub" id="doctorIdentity">Checking your profile…</p>
         </div>
         <div class="dw-head-tools">
@@ -115,7 +116,7 @@
             <div>
               <p class="dw-eyebrow">Workspace</p>
               <h2 id="appointmentsTitle">Appointments</h2>
-              <p class="dw-section-sub">Appointments are grouped by what needs attention: pending requests, confirmed upcoming visits, and past visits. Change a booking's status from its details.</p>
+              <p class="dw-section-sub">Review requests, prepare for your next patient and continue a consultation from its appointment.</p>
             </div>
             <div class="dw-head-actions">
               <button class="btn btn-outline" id="refreshSchedule" type="button">Refresh schedule</button>
@@ -125,6 +126,7 @@
             </div>
           </div>
 
+          <div class="dw-next-visit"><div><strong>Your next visit</strong><p id="scheduleSummary" role="status">Loading your schedule…</p></div><a class="btn btn-outline" href="#practiceSettings" data-section-link="practiceSettings">Manage availability</a></div>
           <div class="dw-schedule">
             <div class="dw-schedule__bar">
               <div class="dw-search">
@@ -132,10 +134,11 @@
                 <input id="visitSearch" type="search" placeholder="Patient name, reason or status" autocomplete="off" spellcheck="false" aria-describedby="visitCount" />
               </div>
               <div class="dw-ranges dw-ranges--status" role="group" aria-label="Appointment groups">
-                <button class="dw-chip is-active" type="button" data-range="pending" aria-pressed="true">Pending <span id="pendingCount">0</span></button>
+                <button class="dw-chip" type="button" data-range="today" aria-pressed="false">Today <span id="todayCount">0</span></button>
+                <button class="dw-chip" type="button" data-range="pending" aria-pressed="false">Pending <span id="pendingCount">0</span></button>
                 <button class="dw-chip" type="button" data-range="upcoming" aria-pressed="false">Upcoming <span id="upcomingCount">0</span></button>
                 <button class="dw-chip" type="button" data-range="past" aria-pressed="false">Past <span id="pastCount">0</span></button>
-                <button class="dw-chip" type="button" data-range="all" aria-pressed="false">All <span id="allCount">0</span></button>
+                <button class="dw-chip is-active" type="button" data-range="all" aria-pressed="true">All <span id="allCount">0</span></button>
               </div>
             </div>
 
@@ -643,7 +646,7 @@
         <button class="btn btn-primary" type="button" id="consultationFinishClose" hidden>Close consultation</button>
       </div>
     </aside>
-    <footer><div class="container"><p>&copy; Hellodoc 2025. All Rights Reserved.</p></div></footer>
+    <footer><div class="container"><p>&copy; HelloDoc 2026. Doctor workspace.</p></div></footer>
     <script src="/Scripts/doctor.js?v=walkin-toggle1"></script>
     <script src="/Scripts/walkin.js?v=queue1"></script>
     <script src="/Scripts/doctor-walkin-queue.js?v=1"></script>

@@ -13,7 +13,11 @@ test('the schedule exposes search, a date range and the server-provided visit li
   assert.ok(html.includes('id="refreshSchedule"'));
   assert.ok(html.includes('id="appointments"'));
   const ranges = [...html.matchAll(/data-range="([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(ranges, ['all', 'today', 'upcoming', 'past']);
+  assert.deepEqual(ranges, ['today', 'pending', 'upcoming', 'past', 'all']);
+  assert.match(html, /data-range="all" aria-pressed="true"/);
+  assert.ok(script.includes("let dateRange = 'all'"));
+  assert.ok(script.includes("chip.dataset.range === 'all'"));
+  assert.ok(html.includes('id="scheduleSummary"'));
   // Day groups and rows are built from the authorised dashboard payload.
   assert.ok(script.includes("request('/dashboard')"));
   assert.ok(script.includes("'dw-day'"));
