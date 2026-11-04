@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: the navbar offers exactly Login and Sign Up, with no role-specific entry points
+ok 1 - the navbar offers exactly Login and Sign Up, with no role-specific entry points
+  ---
+  duration_ms: 13.7432
+  ...
+# Subtest: login page defaults to Patient and offers Patient, Doctor and Admin tabs
+ok 2 - login page defaults to Patient and offers Patient, Doctor and Admin tabs
+  ---
+  duration_ms: 1.4308
+  ...
+# Subtest: login script sends the chosen portal but never trusts it
+ok 3 - login script sends the chosen portal but never trusts it
+  ---
+  duration_ms: 1.0736
+  ...
+# Subtest: sign up offers Patient and Doctor only, with doctor fields revealed by the tab
+ok 4 - sign up offers Patient and Doctor only, with doctor fields revealed by the tab
+  ---
+  duration_ms: 1.9903
+  ...
+# Subtest: retired applicant pages redirect instead of offering a second registration form
+ok 5 - retired applicant pages redirect instead of offering a second registration form
+  ---
+  duration_ms: 2.5128
+  ...
+# Subtest: password recovery offers one request form, a confirmation field and a visibility toggle
+ok 6 - password recovery offers one request form, a confirmation field and a visibility toggle
+  ---
+  duration_ms: 1.1985
+  ...
+# Subtest: the doctor dashboard renders verification state before clinical tools
+ok 7 - the doctor dashboard renders verification state before clinical tools
+  ---
+  duration_ms: 1.1585
+  ...
+# Subtest: the static build contains required public files and no private source
+ok 8 - the static build contains required public files and no private source
+  ---
+  duration_ms: 415.5484
+  ...
+# Subtest: the home page does not advertise the withdrawn public symptom checker
+ok 9 - the home page does not advertise the withdrawn public symptom checker
+  ---
+  duration_ms: 1.7091
+  ...
+# Subtest: the story page describes the Supabase and doctor assessment architecture, not the retired stack
+ok 10 - the story page describes the Supabase and doctor assessment architecture, not the retired stack
+  ---
+  duration_ms: 0.9036
+  ...
+# Subtest: help copy does not promise features the application does not implement
+ok 11 - help copy does not promise features the application does not implement
+  ---
+  duration_ms: 0.532
+  ...
+# Subtest: the patient dashboard uses real appointment/profile routes and does not claim patient records exist
+ok 12 - the patient dashboard uses real appointment/profile routes and does not claim patient records exist
+  ---
+  duration_ms: 8.128
+  ...
+# Subtest: model output, dataset guidance and the doctor assessment stay distinct
+ok 13 - model output, dataset guidance and the doctor assessment stay distinct
+  ---
+  duration_ms: 2.3403
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 552.7037

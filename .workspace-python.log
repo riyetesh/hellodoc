@@ -1,0 +1,149 @@
+
+> hellodoc@1.0.0 test:python:current
+> node backend/scripts/python.js tests/test_clinical_model.py tests/test_design_contract.py tests/test_illustrations.py tests/test_pages_navigation.py tests/test_results_privacy.py -q
+
+......F.F.FF.F...FF......F.......F.....................                  [100%]
+================================== FAILURES ===================================
+_________________ test_home_hero_previews_the_working_product _________________
+
+    def test_home_hero_previews_the_working_product():
+        # The hero carries a labelled product preview with two selectable modes
+        # instead of the old decorative illustration collage.
+        html = read('index.html')
+>       assert 'class="lp-preview"' in html
+E       assert 'class="lp-preview"' in '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=d...e.js?v=journeyillustrations10"></script>\n    <script src="./Scripts/nav.js?v=docbot3"></script>\n  </body>\n</html>\n'
+
+tests\test_design_contract.py:41: AssertionError
+________________ test_consultation_demo_cannot_reach_the_model ________________
+
+    def test_consultation_demo_cannot_reach_the_model():
+        page = read('index.html')
+        script = read('Scripts/home.js')
+>       assert 'data-symptoms' in page
+E       assert 'data-symptoms' in '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=d...e.js?v=journeyillustrations10"></script>\n    <script src="./Scripts/nav.js?v=docbot3"></script>\n  </body>\n</html>\n'
+
+tests\test_design_contract.py:68: AssertionError
+__________________ test_visible_copy_has_no_dash_punctuation __________________
+
+    def test_visible_copy_has_no_dash_punctuation():
+        class Text(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.skip = 0
+                self.text = []
+            def handle_starttag(self, tag, attrs):
+                if tag in ('script', 'style'): self.skip += 1
+            def handle_endtag(self, tag):
+                if tag in ('script', 'style'): self.skip -= 1
+            def handle_data(self, data):
+                if not self.skip: self.text.append(data)
+        for page in PAGES:
+            parser = Text()
+            parser.feed(read(page))
+            text = ''.join(parser.text)
+>           assert not re.search(r'[—–]|\w-\w| - ', text), page
+E           AssertionError: story.html
+E           assert not <re.Match object; span=(2590, 2593), match='t-h'>
+E            +  where <re.Match object; span=(2590, 2593), match='t-h'> = <function search at 0x0000020A43E46700>('[—–]|\\w-\\w| - ', '\n\n  \n    \n    \n\n    HelloDoc | My Story\n    \n    \n    \n    \n    \n    \n    \n\n    \n    \n    \n    \n  ... 2026. Built to explore more accessible healthcare. Contact: hi@hellodoc.com\n      \n    \n\n    \n    \n    \n  \n\n')
+E            +    where <function search at 0x0000020A43E46700> = re.search
+
+tests\test_design_contract.py:96: AssertionError
+_________________ test_illustration_assets_are_safe_local_svg _________________
+
+    def test_illustration_assets_are_safe_local_svg():
+        assets = list((ROOT / 'Asset/Illustrations').glob('*.svg'))
+>       assert len(assets) == 11
+E       AssertionError: assert 15 == 11
+E        +  where 15 = len([WindowsPath('C:/Users/KIIT01/Documents/KIIT/Project/hellodoc/Asset/Illustrations/about.svg'), WindowsPath('C:/Users/K...ations/care.svg'), WindowsPath('C:/Users/KIIT01/Documents/KIIT/Project/hellodoc/Asset/Illustrations/contact.svg'), ...])
+
+tests\test_illustrations.py:10: AssertionError
+____________________ test_real_story_photos_are_preserved _____________________
+
+    def test_real_story_photos_are_preserved():
+        html = (ROOT / 'story.html').read_text(encoding='utf-8')
+        for photo in ['nepal-village-hero-1920.jpg', 'nepal-health-post-1280.jpg',
+                      'developer-at-work-1280.jpg', 'health-worker-patient-1280.jpg', 'Ritesh.png']:
+>           assert photo in html
+E           assert 'Ritesh.png' in '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=d...=docbot3"></script>\n    <script src="./Scripts/story.js?v=story-clean-20261030" defer></script>\n  </body>\n</html>\n'
+
+tests\test_illustrations.py:44: AssertionError
+______________ TestPageTitles.test_story_introduces_the_builder _______________
+
+self = <test_pages_navigation.TestPageTitles object at 0x0000020A47225350>
+
+    def test_story_introduces_the_builder(self):
+        story = _read("story.html")
+        assert "My Story" in _title(story)
+>       assert 'id="builder"' in story
+E       assert 'id="builder"' in '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=d...=docbot3"></script>\n    <script src="./Scripts/story.js?v=story-clean-20261030" defer></script>\n  </body>\n</html>\n'
+
+tests\test_pages_navigation.py:148: AssertionError
+_________ TestSharedNavigation.test_every_page_ships_the_same_navbar __________
+
+self = <test_pages_navigation.TestSharedNavigation object at 0x0000020A471FFB10>
+
+    def test_every_page_ships_the_same_navbar(self):
+        reference_page = ALL_PAGES[0]
+        reference = _normalize_nav(_nav(_read(reference_page)))
+        for page in ALL_PAGES[1:]:
+            expected = reference
+            if page == "appointments.html":
+                expected = expected.replace('<li><a href="/predict" class="nav-link">Check symptoms</a></li> ', '')
+>           assert _normalize_nav(_nav(_read(page))) == expected, (
+                f"{page} navbar has drifted from {reference_page}"
+            )
+E           AssertionError: Algo/templates/index.html navbar has drifted from index.html
+E           assert '<nav class="...</div> </nav>' == '<nav class="...</div> </nav>'
+E             
+E             Skipping 1127 identical leading characters in diff, use -v to show
+E             - t</span> </button> </div> </div> </nav>
+E             + t</span> <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: var(--muted)"></i> </button> </div> </div> </nav>
+
+tests\test_pages_navigation.py:161: AssertionError
+___ TestPageDistinctions.test_about_has_a_real_destination_on_the_home_page ___
+
+self = <test_pages_navigation.TestPageDistinctions object at 0x0000020A471FFED0>
+
+    def test_about_has_a_real_destination_on_the_home_page(self):
+        index = _read("index.html")
+>       assert 'id="about"' in index
+E       assert 'id="about"' in '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=d...e.js?v=journeyillustrations10"></script>\n    <script src="./Scripts/nav.js?v=docbot3"></script>\n  </body>\n</html>\n'
+
+tests\test_pages_navigation.py:219: AssertionError
+___ TestPageStructure.test_static_pages_are_structurally_valid[story.html] ____
+
+self = <test_pages_navigation.TestPageStructure object at 0x0000020A47245AE0>
+page = 'story.html'
+
+    @pytest.mark.parametrize("page", ROOT_PAGES)
+    def test_static_pages_are_structurally_valid(self, page):
+        parser = _Structure()
+        parser.feed(_read(page))
+        assert parser.stack == [], f"{page} has unclosed tags: {parser.stack}"
+>       assert parser.errors == [], f"{page} has mismatched tags: {parser.errors}"
+E       AssertionError: story.html has mismatched tags: ['expected </div>, found </main>']
+E       assert ['expected </...ound </main>'] == []
+E         
+E         Left contains one more item: 'expected </div>, found </main>'
+E         Use -v to get more diff
+
+tests\test_pages_navigation.py:242: AssertionError
+============================== warnings summary ===============================
+tests/test_clinical_model.py::test_order_and_supported_class
+tests/test_results_privacy.py::TestAnonymousFlow::test_anonymous_prediction_works_and_shows_no_patient_section
+  C:\Python\Lib\site-packages\sklearn\base.py:380: InconsistentVersionWarning: Trying to unpickle estimator SVC from version 1.5.1 when using version 1.6.1. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_design_contract.py::test_home_hero_previews_the_working_product
+FAILED tests/test_design_contract.py::test_consultation_demo_cannot_reach_the_model
+FAILED tests/test_design_contract.py::test_visible_copy_has_no_dash_punctuation
+FAILED tests/test_illustrations.py::test_illustration_assets_are_safe_local_svg
+FAILED tests/test_illustrations.py::test_real_story_photos_are_preserved - as...
+FAILED tests/test_pages_navigation.py::TestPageTitles::test_story_introduces_the_builder
+FAILED tests/test_pages_navigation.py::TestSharedNavigation::test_every_page_ships_the_same_navbar
+FAILED tests/test_pages_navigation.py::TestPageDistinctions::test_about_has_a_real_destination_on_the_home_page
+FAILED tests/test_pages_navigation.py::TestPageStructure::test_static_pages_are_structurally_valid[story.html]
+9 failed, 46 passed, 2 warnings in 14.45s

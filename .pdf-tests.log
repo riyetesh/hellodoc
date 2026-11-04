@@ -1,0 +1,199 @@
+TAP version 13
+# Subtest: report embeds branding and starts content inside A4 margins
+ok 1 - report embeds branding and starts content inside A4 margins
+  ---
+  duration_ms: 15.3329
+  ...
+# Subtest: multiline clinical text is preserved as separate printed lines
+ok 2 - multiline clinical text is preserved as separate printed lines
+  ---
+  duration_ms: 2.6607
+  ...
+# Subtest: report renders the same assessment the page shows
+ok 3 - report renders the same assessment the page shows
+  ---
+  duration_ms: 5.0316
+  ...
+# Subtest: no confidence figure is invented when the model supplies none
+ok 4 - no confidence figure is invented when the model supplies none
+  ---
+  duration_ms: 2.2591
+  ...
+# Subtest: guidance is labelled as dataset guidance needing clinician review
+ok 5 - guidance is labelled as dataset guidance needing clinician review
+  ---
+  duration_ms: 2.2506
+  ...
+# Subtest: a real confidence figure is shown when present
+ok 6 - a real confidence figure is shown when present
+  ---
+  duration_ms: 1.7181
+  ...
+# Subtest: missing fields are labelled rather than fabricated
+ok 7 - missing fields are labelled rather than fabricated
+  ---
+  duration_ms: 2.0255
+  ...
+# Subtest: long content paginates without dropping sections
+ok 8 - long content paginates without dropping sections
+  ---
+  duration_ms: 16.8243
+  ...
+# Subtest: a revision names the record it replaced without restating it as current
+ok 9 - a revision names the record it replaced without restating it as current
+  ---
+  duration_ms: 2.239
+  ...
+# Subtest: unsafe model guidance never reaches the page as raw injection text
+ok 10 - unsafe model guidance never reaches the page as raw injection text
+  ---
+  duration_ms: 3.2917
+  ...
+# Subtest: text with parentheses and backslashes is escaped, not corrupted
+ok 11 - text with parentheses and backslashes is escaped, not corrupted
+  ---
+  duration_ms: 3.1416
+  ...
+# {"event":"supabase_operation_failed","operation":"admin_action","code":"42501"}
+# Subtest: admin APIs enforce identity, role, validation and RPC authorization
+ok 12 - admin APIs enforce identity, role, validation and RPC authorization
+  ---
+  duration_ms: 136.4937
+  ...
+# Subtest: admin demo workspace requires an admin session and an explicit selected doctor
+ok 13 - admin demo workspace requires an admin session and an explicit selected doctor
+  ---
+  duration_ms: 7.7771
+  ...
+# Subtest: only patient registration; no password sent to application tables
+ok 14 - only patient registration; no password sent to application tables
+  ---
+  duration_ms: 9.626
+  ...
+# Subtest: resubmission is available to doctors only and never self-approves
+ok 15 - resubmission is available to doctors only and never self-approves
+  ---
+  duration_ms: 16.9499
+  ...
+# Subtest: own-profile updates go through column-scoped RPCs and cannot touch role or verification
+ok 16 - own-profile updates go through column-scoped RPCs and cannot touch role or verification
+  ---
+  duration_ms: 11.0462
+  ...
+# Subtest: symptom model endpoints require approved doctor before contacting model
+ok 17 - symptom model endpoints require approved doctor before contacting model
+  ---
+  duration_ms: 7.6203
+  ...
+# Subtest: public directory exposes approved profile details without private application data
+ok 18 - public directory exposes approved profile details without private application data
+  ---
+  duration_ms: 7.1289
+  ...
+# Subtest: patient overview includes only scoped server-side activity
+ok 19 - patient overview includes only scoped server-side activity
+  ---
+  duration_ms: 2.8934
+  ...
+# Subtest: patient profile includes only the authenticated user’s existing contact fields
+ok 20 - patient profile includes only the authenticated user’s existing contact fields
+  ---
+  duration_ms: 2.2944
+  ...
+# Subtest: protected booking verifies Auth identity and role; failed writes never succeed
+ok 21 - protected booking verifies Auth identity and role; failed writes never succeed
+  ---
+  duration_ms: 26.1122
+  ...
+# Subtest: doctor signup requests a doctor account with pending verification and rejects privilege input
+ok 22 - doctor signup requests a doctor account with pending verification and rejects privilege input
+  ---
+  duration_ms: 7.5268
+  ...
+# Subtest: patient signup accepts an optional phone but never a role
+ok 23 - patient signup accepts an optional phone but never a role
+  ---
+  duration_ms: 11.488
+  ...
+# Subtest: application status is doctor-only and exposes the verification state
+ok 24 - application status is doctor-only and exposes the verification state
+  ---
+  duration_ms: 8.5327
+  ...
+# Subtest: pending doctors reach their own dashboard but no clinical endpoint
+ok 25 - pending doctors reach their own dashboard but no clinical endpoint
+  ---
+  duration_ms: 8.7806
+  ...
+# Subtest: the doctor dashboard omits task and draft collections it cannot fill
+ok 26 - the doctor dashboard omits task and draft collections it cannot fill
+  ---
+  duration_ms: 1.9474
+  ...
+# Subtest: a patient context is scoped to the doctor who attends them
+ok 27 - a patient context is scoped to the doctor who attends them
+  ---
+  duration_ms: 8.547
+  ...
+# Subtest: login validates the selected portal against the database role and never grants it
+ok 28 - login validates the selected portal against the database role and never grants it
+  ---
+  duration_ms: 11.4598
+  ...
+# {"event":"supabase_operation_failed","operation":"refresh","status":503}
+# Subtest: a transient auth failure keeps the session instead of signing the doctor out
+ok 29 - a transient auth failure keeps the session instead of signing the doctor out
+  ---
+  duration_ms: 37.2944
+  ...
+# Subtest: concurrent requests share one refresh instead of racing for it
+ok 30 - concurrent requests share one refresh instead of racing for it
+  ---
+  duration_ms: 18.7983
+  ...
+# Subtest: pending doctors can sign in and are routed to the dashboard with their status
+ok 31 - pending doctors can sign in and are routed to the dashboard with their status
+  ---
+  duration_ms: 3.2621
+  ...
+# {"event":"supabase_operation_failed","operation":"assessment_create","code":"23505"}
+# Subtest: clinical assessments require an approved doctor and validated model symptoms
+ok 32 - clinical assessments require an approved doctor and validated model symptoms
+  ---
+  duration_ms: 54.0551
+  ...
+# {"event":"supabase_operation_failed","operation":"assessment_revision","code":"23505"}
+# Subtest: a symptom correction is appended as a revision and never rewrites the original prediction
+ok 33 - a symptom correction is appended as a revision and never rewrites the original prediction
+  ---
+  duration_ms: 26.535
+  ...
+# Subtest: a consultation exposes only the doctor own appointment and stored patient identity
+ok 34 - a consultation exposes only the doctor own appointment and stored patient identity
+  ---
+  duration_ms: 7.5911
+  ...
+# Subtest: an assessment can only be read or edited by its own doctor
+ok 35 - an assessment can only be read or edited by its own doctor
+  ---
+  duration_ms: 30.5209
+  ...
+# Subtest: a model-free clinical record produces a report without a fabricated prediction
+ok 36 - a model-free clinical record produces a report without a fabricated prediction
+  ---
+  duration_ms: 3.387
+  ...
+# Subtest: unauthorized callers never reach the private prediction service
+ok 37 - unauthorized callers never reach the private prediction service
+  ---
+  duration_ms: 16.0901
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 805.8086

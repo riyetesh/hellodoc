@@ -120,29 +120,53 @@
       plan: state.plan,
     };
   }
-  function persist() {
-    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot())); } catch { /* storage may be disabled */ }
+  let draftVersion = 0, draftReady = false, draftBusy = false, draftConflict = false;
+  let draftSequence = 0;
+  async function persist() {
+    if (!state.appointmentId || !draftReady || state.saved || draftBusy || draftConflict || demoDoctorId) return;
+    const appointmentId = state.appointmentId, sequence = draftSequence;
+    draftBusy = true;
+    setDraftState('Saving secure draft…', 'saving');
+    try {
+      const response = await fetchApi(`/api/doctor/drafts/${encodeURIComponent(appointmentId)}`, {
+        method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({version:draftVersion,payload:snapshot()})
+      });
+      const body=await response.json();
+      if(!response.ok) { if(response.status===409) draftConflict=true; throw new Error(body.message); }
+      if(appointmentId===state.appointmentId) draftVersion=body.version;
+      setDraftState('Secure draft saved · final report not saved', 'dirty');
+    } catch(error) { setDraftState(error.message || 'Draft save failed — keep this page open', 'error'); }
+    finally { draftBusy=false; if(sequence!==draftSequence&&!draftConflict) schedulePersist(); }
   }
   let persistTimer = 0;
   // Only this device's draft is written here, and only clinical identifiers and
   // the doctor's own text. No patient identity, email or appointment label.
   function schedulePersist() {
+    draftSequence++;
     window.clearTimeout(persistTimer);
     persistTimer = window.setTimeout(() => {
       persist();
-      setDraftState(`Unsaved changes · draft kept ${clock()}`, 'dirty');
     }, 400);
   }
   function clearDraft() {
     window.clearTimeout(persistTimer);
     try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
   }
-  function restoreDraft() {
+  async function restoreDraft() {
     let draft = null;
-    try { draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null'); } catch { draft = null; }
+    draftReady=false; draftVersion=0; draftConflict=false;
+    // Remove legacy clinical browser storage; never silently upload it.
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* Legacy storage may be unavailable. */ }
+    if(!state.appointmentId || demoDoctorId) return false;
+    try {
+      const response=await fetchApi(`/api/doctor/drafts/${encodeURIComponent(state.appointmentId)}`,{credentials:'same-origin',cache:'no-store'});
+      const body=await response.json();
+      if(!response.ok) throw new Error(body.message);
+      draftVersion=body.version; draftReady=true; draft=body.payload;
+    } catch(error) { setDraftState(error.message || 'Secure drafts unavailable — keep this page open','error'); return false; }
     if (!draft || typeof draft !== 'object') return false;
-    state.patientId = typeof draft.patientId === 'string' ? draft.patientId : '';
-    state.appointmentId = typeof draft.appointmentId === 'string' ? draft.appointmentId : '';
+    // Identity always comes from freshly authorised appointment context, never draft JSON.
     state.reported = Array.isArray(draft.reported) ? draft.reported : [];
     state.clinician = Array.isArray(draft.clinician) ? draft.clinician : [];
     state.observations = Array.isArray(draft.observations) ? draft.observations.filter((item) => typeof item === 'string') : [];
@@ -571,8 +595,12 @@
   function syncPatient() {
     const select = $('assessmentPatient');
     const option = select.selectedOptions[0];
+    if(window.HelloDocConsultation?.isActive()) {
+      select.value=state.patientId; showError('assessmentError','Finish the active consultation before switching patients.'); return;
+    }
     state.patientId = select.value;
     state.appointmentId = option ? (option.dataset.appointmentId || '') : '';
+    draftReady=false; draftVersion=0;
     markDirty();
     renderPatientContext();
     renderSideSummary();
@@ -627,7 +655,7 @@
     if (state.modelOutage || !state.modelAvailable) {
       status.textContent = (state.modelOutage?.message || outageMessage(state.modelError?.code))
         + ' No prediction will be stored for this consultation unless you retry the model later.';
-      run.disabled = state.saving || !state.modelAvailable;
+      run.disabled = state.saving;
       run.textContent = state.modelAvailable ? 'Retry prediction' : 'Model unavailable';
     } else if (!symptoms.length) {
       status.textContent = 'Add symptoms first.';
@@ -639,7 +667,7 @@
       status.textContent = 'Ready to predict.';
       run.disabled = state.saving;
     }
-    run.textContent = state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Predict');
+    run.textContent = !state.modelAvailable ? 'Retry model connection' : state.modelPreview ? 'Run again' : (state.modelOutage ? 'Retry prediction' : 'Run optional model');
 
     const resultsPanel = $('modelResultsPanel');
     if (resultsPanel) resultsPanel.hidden = !state.modelPreview;
@@ -657,14 +685,22 @@
     }
 
     if (fallback) {
-      fallback.hidden = !state.modelOutage;
+      fallback.hidden = false;
       const button = $('saveWithoutModel');
       if (button) button.disabled = state.saving;
     }
   }
 
   async function runModelPreview() {
-    if (state.saving || !state.modelAvailable) return;
+    if (state.saving) return;
+    if(!state.modelAvailable) {
+      try {
+        const response=await fetchApi('/api/doctor/symptoms',{credentials:'same-origin',cache:'no-store'});
+        if(!response.ok)throw new Error('Symptom service is still unavailable. Your documentation is preserved.');
+        state.vocabulary=await response.json();state.modelAvailable=true;state.modelOutage=null;
+        buildPickers();renderAll();
+      } catch(error) {showError('assessmentError',error.message);return;}
+    }
     const symptoms = modelSymptoms();
     if (!symptoms.length) { renderModelPanel(); return; }
     const button = $('runModel');
@@ -838,7 +874,7 @@
     const list = $('reviewChecks');
     if (!list) return;
     const symptoms = modelSymptoms().length;
-    const withoutModel = Boolean(state.modelOutage) && symptoms === 0;
+    const withoutModel = !state.modelPreview;
     const checks = [
       {
         ok: Boolean(state.patientId), optional: false,
@@ -851,10 +887,10 @@
         jump: state.appointmentId || state.revisingId ? null : ['Go to the schedule', 'doctorAppointments'],
       },
       {
-        ok: symptoms > 0 || withoutModel, optional: false,
+        ok: symptoms > 0 || hasClinicalText(), optional: false,
         text: withoutModel
           ? 'Will be saved as a clinical record without a model suggestion'
-          : symptoms > 0 ? `${symptoms} symptom${symptoms === 1 ? '' : 's'} will be sent to the model` : 'Add at least one model symptom',
+          : symptoms > 0 ? `${symptoms} symptom${symptoms === 1 ? '' : 's'} recorded with decision support` : 'Add at least one model symptom',
         jump: symptoms > 0 || withoutModel ? null : ['Add symptoms', 'areaSymptoms'],
       },
       {
@@ -975,7 +1011,7 @@
       setWizardStep(0);
       return;
     }
-    if (!modelSymptoms().length && !(state.modelOutage && hasClinicalText())) {
+    if (!modelSymptoms().length && !hasClinicalText()) {
       showError('assessmentError', 'Add at least one symptom to continue.');
       setWizardStep(1);
       reportedPicker?.focus();
@@ -998,7 +1034,7 @@
       button.textContent = value ? 'Generating report…' : 'Generate consultation report';
     }
     const run = $('runModel');
-    if (run) run.disabled = value || !state.modelAvailable || !modelSymptoms().length;
+    if (run) run.disabled = value || (state.modelAvailable && !modelSymptoms().length);
     for (const id of ['resetDraft', 'saveWithoutModel']) {
       const button = $(id);
       if (button) button.disabled = value;
@@ -1025,15 +1061,15 @@
 
   async function saveAssessment({ withoutModel = false, redirect = true } = {}) {
     if (state.saving) return;
-    if (withoutModel && !state.modelOutage) return;
-    if (!withoutModel && !state.modelPreview) {
-      if (state.modelAvailable) {
-        showError('assessmentError', 'Run the prediction and choose which suggestions to include before generating the report.');
-        await runModelPreview();
-      } else {
-        showError('assessmentError', 'The model is unavailable. Retry the prediction or use the explicit save-without-model option.');
-      }
-      return;
+    withoutModel = withoutModel || !state.modelPreview;
+    if (withoutModel && !hasClinicalText() && !modelSymptoms().length) {
+      showError('reviewError', 'Record symptoms, observations, an assessment or a plan before saving.'); return;
+    }
+    if (state.persistedThisSession && !state.saved) {
+      showError('reviewError', 'You changed a saved record. Open its report and create a revision before completing.'); return;
+    }
+    if (state.persistedThisSession) {
+      showError('reviewError', 'This record is already saved. Open its report to revise it.'); return state.savedRecord || null;
     }
     showError('sideError', '');
     if (!state.patientId) { showError('reviewError', 'Select a patient first.'); showError('sideError', 'Select a patient first.'); return; }
@@ -1046,7 +1082,7 @@
       showError('reviewError', message); showError('sideError', message);
       return;
     }
-    if (withoutModel) moveSymptomsToObservations();
+    // Preserve selected symptoms and their reported/observed provenance even when the model is skipped.
     if (!withoutModel && !modelSymptoms().length) return;
     persist();
 
@@ -1062,7 +1098,7 @@
       doctorAssessment: state.doctorAssessment,
       plan: state.plan,
       ...(state.modelPreview && !withoutModel ? { includeGuidance: state.selectedGuidance } : {}),
-      ...(withoutModel ? { modelUnavailable: true } : {}),
+      ...(withoutModel ? { modelUnavailable: true, modelSkipped: !state.modelOutage } : {}),
     };
     const url = state.revisingId
       ? `/api/doctor/assessments/${encodeURIComponent(state.revisingId)}/revision`
@@ -1112,6 +1148,7 @@
       }
       clearDraft();
       state.persistedThisSession = true;
+      state.savedRecord = { id: body.id, existing: false };
       markSaved();
       setDraftState('Saved', 'saved');
       announce('Assessment saved.');
@@ -1132,9 +1169,8 @@
   }
 
   function saveWithoutModel({ redirect = true } = {}) {
-    if (!state.modelOutage || state.saving) return;
-    const symptoms = modelSymptoms().length;
-    if (symptoms && !window.confirm(`Save without the model?\n\n${symptoms} selected model symptom${symptoms === 1 ? '' : 's'} will be kept as clinical observations and no prediction will be stored.`)) return;
+    if (state.saving) return;
+
     return saveAssessment({ withoutModel: true, redirect });
   }
 
@@ -1340,8 +1376,10 @@
   // Keep the consultation focused on one step at a time.
   const wizardSteps = ['#areaVisit', '#areaSymptoms', '.cw-model', '#areaDecision', '#reviewArea'];
   let activeWizardStep = 0;
+  let furthestWizardStep = 0;
   function setWizardStep(index) {
     activeWizardStep = Math.max(0, Math.min(4, index));
+    furthestWizardStep = Math.max(furthestWizardStep, activeWizardStep);
     wizardSteps.forEach((selector, step) => {
       const panel = document.querySelector(selector);
       if (panel) panel.hidden = step !== activeWizardStep;
@@ -1349,6 +1387,8 @@
     document.querySelectorAll('[data-wizard-go]').forEach((button) => {
       const active = Number(button.dataset.wizardGo) === activeWizardStep;
       button.classList.toggle('is-active', active);
+      button.classList.toggle('is-complete', Number(button.dataset.wizardGo) < furthestWizardStep);
+      button.disabled = Number(button.dataset.wizardGo) > furthestWizardStep;
       if (active) button.setAttribute('aria-current', 'step');
       else button.removeAttribute('aria-current');
     });
@@ -1356,19 +1396,26 @@
     // Show the patient video panel after Continue leaves Patient and visit.
     // Keep it open through the consultation steps, then close it on Review.
     if (consultationDock) consultationDock.hidden = !state.patientId || Boolean(window.HelloDocConsultation?.isActive());
-    if (activeWizardStep > 0 && state.patientId) window.dispatchEvent(new Event('hellodoc:consultation-start'));
+
     const controls = $('wizardControls');
     const back = $('wizardBack');
     const next = $('wizardNext');
     if (controls) controls.hidden = activeWizardStep === 4;
     if (back) back.disabled = activeWizardStep === 0;
     if (next) next.textContent = activeWizardStep === 3 ? 'Review' : 'Continue';
-    $('assessmentSection')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const visiblePanel = document.querySelector(wizardSteps[activeWizardStep]);
+    const heading = visiblePanel?.querySelector('h3, h4');
+    if (heading && document.activeElement?.closest('#assessmentSection')) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+      heading.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
   }
   function advanceWizard() {
-    if (activeWizardStep === 0 && !state.patientId) { showError("assessmentError", "Select a patient to continue."); return; }
-    if (activeWizardStep === 1 && !modelSymptoms().length) { showError("assessmentError", "Add at least one symptom to continue."); return; }
-    if (activeWizardStep === 2 && !state.modelPreview && !state.modelOutage && state.modelAvailable) { showError("assessmentError", "Run the prediction before continuing."); return; }
+    if (activeWizardStep === 0 && (!state.patientId || (!state.appointmentId && !state.revisingId))) {
+      showError('assessmentError', 'Open an appointment assigned to you before continuing.'); return;
+    }
+    // Documentation is independent of model symptoms and model availability.
     if (activeWizardStep === 3) { openReview(); return; }
     showError("assessmentError", "");
     setWizardStep(activeWizardStep + 1);
@@ -1376,7 +1423,7 @@
   $('wizardBack')?.addEventListener('click', () => setWizardStep(activeWizardStep - 1));
   $('wizardNext')?.addEventListener('click', advanceWizard);
   document.querySelectorAll('[data-wizard-go]').forEach((button) => {
-    button.addEventListener('click', () => { const target = Number(button.dataset.wizardGo); if (target <= activeWizardStep) setWizardStep(target); });
+    button.addEventListener('click', () => { const target = Number(button.dataset.wizardGo); if (target <= furthestWizardStep) { if (target === 4) openReview(); else setWizardStep(target); } });
   });
   // Delegate category clicks so the controls keep working after the result panel re-renders.
   document.addEventListener('click', (event) => {
@@ -1463,11 +1510,16 @@
           state.patientId = consultation.patientId;
           state.appointmentId = consultation.appointmentId;
         }
-        clearDraft();
+        const recovered = !consultation.previousAssessmentId && await restoreDraft();
         fillPatients();
+        if(recovered) {
+          for(const [id,value] of [['symptomDuration',state.duration],['clinicalNote',state.note],['doctorAssessment',state.doctorAssessment],['plan',state.plan]]) $(id).value=value;
+          state.saved=false; $('draftBanner').hidden=false;
+        }
         renderAll();
-        setDraftState('No changes yet', '');
+        if(draftReady) setDraftState(recovered?'Secure draft restored':'No changes yet', recovered?'dirty':'');
         $('reviewArea').hidden = true;
+        window.dispatchEvent(new Event('hellodoc:consultation-context-ready'));
         loadRecent();
         return;
       }
@@ -1494,7 +1546,7 @@
         return;
       }
 
-      const restored = restoreDraft();
+      const restored = await restoreDraft();
       setEditorVisible(restored);
       fillPatients();
       if (restored) {
@@ -1546,6 +1598,13 @@
     } catch { /* recent list is optional */ }
   }
 
+  document.addEventListener('keydown', event => {
+    const typing=event.target.closest('input,textarea,select,[contenteditable="true"]');
+    if(event.key==='/'&&!typing&&!$('assessmentSection').hidden) {event.preventDefault();setWizardStep(1);reportedPicker?.focus();}
+    if((event.ctrlKey||event.metaKey)&&event.key==='Enter'&&activeWizardStep===4&&!state.saving) {
+      event.preventDefault(); saveAssessment({redirect:false});
+    }
+  });
   setWizardStep(0);
   load();
   window.HelloDocAssessment = {
@@ -1562,6 +1621,8 @@
         modelOutage: Boolean(state.modelOutage),
         hasSymptoms: modelSymptoms().length > 0,
         patientSelected: Boolean(state.patientId),
+        unsavedChanges: !state.saved,
+        revising: Boolean(state.revisingId),
       };
     },
   };

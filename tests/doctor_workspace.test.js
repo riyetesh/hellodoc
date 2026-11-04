@@ -87,7 +87,10 @@ test('the consultation uses a simple symptom-to-prediction-to-report flow', () =
   assert.ok(html.includes('Generate consultation report'));
   assert.ok(script.includes("'/api/doctor/predict'"));
   assert.ok(script.includes('includeGuidance: state.selectedGuidance'));
-  assert.ok(script.includes('await runModelPreview()'));
+  assert.ok(script.includes('withoutModel = withoutModel || !state.modelPreview'));
+  assert.equal(script.includes("dispatchEvent(new Event('hellodoc:consultation-start'))"), false);
+  assert.match(html, /id="plan" rows="6" maxlength="4000"/);
+  assert.ok(script.includes('furthestWizardStep'));
 });
 
 test('the simplified form uses the model vocabulary and keeps clinical observations separate', () => {
@@ -129,7 +132,10 @@ test('the draft state never claims a save before the server confirms it', () => 
   assert.ok(script.includes("setDraftState('Save failed, your text is kept', 'error')"));
   assert.ok(script.includes("setDraftState('Saved', 'saved')"));
   // Local autosave is labelled as such and is separate from the server save.
-  assert.ok(script.includes('draft kept ${clock()}'));
+  assert.ok(script.includes('Secure draft saved · final report not saved'));
+  assert.equal(script.includes('sessionStorage.setItem'), false);
+  assert.ok(script.includes('version:draftVersion'));
+  assert.ok(script.includes('draftConflict=true'));
   // The server is only asked to persist through the assessment routes.
   assert.ok(script.includes('/api/doctor/assessments'));
   assert.ok(script.includes('if (state.saving) return;'));

@@ -723,6 +723,12 @@
       const when = document.createElement('span');
       when.textContent = `${formatDateTime(row.scheduled_start)} – ${formatTime(row.scheduled_end)}`;
       item.append(when, statusChip(row.status));
+      const copy=document.createElement('button');copy.type='button';copy.className='btn btn-ghost';copy.textContent='Copy to date';
+      copy.onclick=()=>{const local=new Date(row.scheduled_start);$('#slotTime').value=String(local.getHours()).padStart(2,'0')+':'+String(local.getMinutes()).padStart(2,'0');$('#slotDate').focus();message('Choose the destination date, then Add availability.');};item.append(copy);
+      if(row.status==='open') {
+        const remove=document.createElement('button');remove.type='button';remove.className='btn btn-ghost';remove.textContent='Remove';
+        remove.onclick=async()=>{if(!confirm('Remove this unbooked slot? Existing appointments cannot be removed here.'))return;remove.disabled=true;try{await request('/availability/bulk',{method:'POST',body:JSON.stringify({startsAt:[],removeId:row.id})});await availability();}catch(error){message(error.message);remove.disabled=false;}};item.append(remove);
+      }
       list.append(item);
     }
   }
@@ -991,6 +997,7 @@
       return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
     };
     if (dateInput) dateInput.min = localDateValue(new Date());
+    if($('#slotTimezone')) $('#slotTimezone').textContent='Times use '+Intl.DateTimeFormat().resolvedOptions().timeZone+'. Review local times before saving.';
     slotForm.querySelectorAll('[data-slot-preset]').forEach((preset) => {
       preset.addEventListener('click', () => {
         if (timeInput) timeInput.value = preset.dataset.slotPreset;
@@ -1019,10 +1026,23 @@
       button.dataset.originalText = button.textContent;
       button.textContent = 'Adding slot…';
       try {
-        await request('/availability', { method: 'POST', body: JSON.stringify({ startsAt: local.toISOString() }) });
+        const endTime = $('#slotEnd')?.value;
+        const weeks = Number($('#slotWeeks')?.value || 1);
+        const startsAt = [];
+        const end = endTime ? new Date(date+'T'+endTime) : new Date(local.getTime()+30*60000);
+        if(end<=local || end.getMinutes()%30!==0) throw new Error('End time must be after start time on a half-hour boundary.');
+        for(let week=0;week<weeks;week++) {
+          // Construct each local wall-clock date separately to respect DST offsets.
+          const startDay=new Date(local); startDay.setDate(startDay.getDate()+week*7);
+          const endDay=new Date(end); endDay.setDate(endDay.getDate()+week*7);
+          for(let time=new Date(startDay);time<endDay;time=new Date(time.getTime()+30*60000)) startsAt.push(time.toISOString());
+        }
+        if(startsAt.length>200) throw new Error('Choose a smaller window: maximum 200 slots per operation.');
+        if(startsAt.length===1) await request('/availability', {method:'POST',body:JSON.stringify({startsAt:startsAt[0]})});
+        else await request('/availability/bulk', {method:'POST',body:JSON.stringify({startsAt})});
         timeInput.value = '';
         await availability();
-        message('30-minute slot added.');
+        message('Availability saved. Existing bookings were not changed.');
       } catch (error) {
         message(error.message);
       } finally {

@@ -26,14 +26,17 @@
       const number = document.createElement('span'); number.className = 'walkin-queue-card__number'; number.textContent = String(row.position || index + 1);
       const main = document.createElement('div'); main.className = 'walkin-queue-card__main';
       const name = document.createElement('h3'); name.textContent = row.patientName || 'Walk-in patient';
-      const meta = document.createElement('p'); meta.textContent = (row.status === 'called' ? 'Called to consultation' : 'Waiting') + ' · Joined ' + time(row.joinedAt);
+      const meta = document.createElement('p'); meta.textContent = (row.status === 'called' ? 'Called to consultation' : 'Waiting') + ' · '+Math.max(0,Math.floor((Date.now()-Date.parse(row.joinedAt))/60000))+' min waiting · Joined ' + time(row.joinedAt);
       main.append(name, meta);
       if (row.reason) { const reason = document.createElement('p'); reason.className = 'walkin-queue-card__reason'; reason.textContent = row.reason; main.append(reason); }
       const actions = document.createElement('div'); actions.className = 'walkin-queue-card__actions';
       if (row.status === 'waiting') { const call = document.createElement('button'); call.type = 'button'; call.className = 'btn btn-primary'; call.textContent = index === 0 ? 'Call next' : 'Call patient'; call.addEventListener('click', () => advance(row.id, 'called')); actions.append(call); }
+      const open=document.createElement('button');open.type='button';open.className='btn btn-primary';open.textContent='Open consultation';
+      open.onclick=async()=>{if(busy)return;busy=true;open.disabled=true;try{const result=await request('/doctor/walkin/'+encodeURIComponent(row.id)+'/consultation',{method:'POST',body:'{}'});location.assign('/doctor.html?appointment='+encodeURIComponent(result.appointmentId)+'#assessmentSection');}catch(error){setError(error.message);busy=false;open.disabled=false;}};
+      actions.append(open);
       const seen = document.createElement('button'); seen.type = 'button'; seen.className = 'btn btn-outline'; seen.textContent = 'Mark seen'; seen.addEventListener('click', () => advance(row.id, 'seen'));
       const skip = document.createElement('button'); skip.type = 'button'; skip.className = 'btn btn-ghost'; skip.textContent = 'Skip'; skip.addEventListener('click', () => advance(row.id, 'left'));
-      actions.append(seen, skip); card.append(number, main, actions); list.append(card);
+      actions.append(skip); card.append(number, main, actions); list.append(card);
     });
     state.textContent = active.length ? active.length + ' patient' + (active.length === 1 ? '' : 's') + ' in the queue' : 'Queue checked';
   }
@@ -49,6 +52,9 @@
     catch (e) { setError(e.message || 'The queue could not be updated. Refresh and try again.'); state.textContent = 'Queue update failed'; }
     finally { busy = false; }
   }
+  // Poll only while the queue is visible; no background heartbeat or fake realtime.
+  window.setInterval(() => {if(dialog.open&&!document.hidden) refresh();},20000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&dialog.open)refresh();});
   $('walkinQueueRefresh').addEventListener('click', refresh);
   $('walkinQueueContinue').addEventListener('click', () => { const pane = $('walkinQueuePane'); if (pane) pane.hidden = true; $('walkinForm').hidden = false; $('walkinName').focus(); });
   dialog.addEventListener('close', () => { const pane = $('walkinQueuePane'); if (pane) pane.hidden = false; });

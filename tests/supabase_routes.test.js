@@ -562,8 +562,12 @@ test('clinical assessments require an approved doctor and validated model sympto
   assert.equal(modelCalls.some((call) => call.path === '/internal/assess'), false);
   modelFailure=null;
 
-  // The fallback cannot carry model symptoms, and cannot be an empty record.
-  assert.equal((await send({...body, modelUnavailable:true})).status, 400);
+  // Prediction is optional; preserve symptoms without invoking the model.
+  modelCalls=[];
+  assert.equal((await send({...body, modelUnavailable:true})).status, 201);
+  assert.deepEqual(insertedAssessment.payload.patient_reported, body.patientReported);
+  assert.equal(insertedAssessment.payload.predicted_disease, null);
+  assert.equal(modelCalls.some(call => call.path === '/internal/assess'), false);
   assert.equal((await send({ appointmentId: body.appointmentId, modelUnavailable:true, patientReported:[], clinicianAdded:[], observations:[] })).status, 400);
 
   profile={...profile,role:'patient'};

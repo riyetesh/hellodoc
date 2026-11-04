@@ -566,6 +566,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       pdf = renderAssessmentReport({
         id: row.id,
         patientName: profile.full_name || 'Patient',
+        patientId: user.id,
+        reason: visit?.reason || null,
         patientEmail: null,
         appointmentId: row.appointment_id || null,
         appointmentStart: visit?.scheduled_start || null,
@@ -671,6 +673,20 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     })));
   }));
 
+  router.post('/doctor/walkin/:id/consultation', ...guard('doctor',async(req,res,care)=>{
+    if(care.demoMode)return res.status(403).json({message:'Queue sessions are disabled in demo mode.'});
+    if(!isUuid(req.params.id))return res.status(400).json({message:'Invalid queue entry'});
+    const result=await care.db.rpc('start_queued_consultation',{p_entry:req.params.id});
+    if(result.error)return res.status(409).json({message:'Could not open this queue entry. It may be closed, overlap a booking, or require migration 026.'});
+    res.json({appointmentId:result.data});
+  }));
+  router.post('/doctor/appointments/:id/complete', ...guard('doctor',async(req,res,care)=>{
+    if(care.demoMode)return res.status(403).json({message:'Use the isolated demo status controls instead.'});
+    if(!isUuid(req.params.id))return res.status(400).json({message:'Invalid appointment'});
+    const result=await care.db.rpc('complete_documented_consultation',{p_appointment:req.params.id});
+    if(result.error)return res.status(409).json({message:'Report remains saved, but completion failed. Refresh the visit and retry; migration 026 may be required.'});
+    res.json({status:'completed'});
+  }));
   router.post('/doctor/walkin/:id/status', ...guard('doctor', async (req, res, { db }) => {
     if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid queue entry' });
     const status = req.body?.status;
@@ -729,8 +745,8 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const modelUnavailable = body.modelUnavailable === true;
     const symptoms = [...reported, ...added];
     if (modelUnavailable) {
-      if (symptoms.length) return { error: 'This consultation is being saved without the model, so it cannot store model symptoms. Remove them or retry the model.' };
-      const hasClinicalContent = observations.length || clinicalNote.trim() || doctorAssessment.trim() || plan.trim();
+      if (symptoms.length > 132 || symptoms.some(item => item.length > 120)) return { error: 'Symptom list is too long' };
+      const hasClinicalContent = symptoms.length || observations.length || clinicalNote.trim() || doctorAssessment.trim() || plan.trim();
       if (!hasClinicalContent) return { error: 'Record an observation, note, assessment or plan before saving without a model suggestion.' };
     } else if (!symptoms.length) {
       return { error: 'Add at least one model symptom, or save the consultation as a clinical record without the model.' };
@@ -1205,7 +1221,10 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
     const result = await db.rpc('assessment_view', { p_id: req.params.id });
     if (result.error) return res.status(result.error.code === '42501' ? 403 : result.error.code === 'P0002' ? 404 : 503).json({ message: 'Report unavailable' });
     let pdf;
-    try { pdf = renderAssessmentReport(result.data, { generatedAt: new Date() }); }
+    try {
+      const visit=await db.from('appointments').select('reason,walk_in').eq('id',result.data.appointmentId).eq('doctor_id',user.id).single();
+      pdf = renderAssessmentReport({...result.data,reason:visit.data?.reason || null,consultationType:visit.data ? (visit.data.walk_in ? 'Walk-in' : 'Scheduled appointment') : null}, { generatedAt: new Date() });
+    }
     catch (error) { report('assessment_report', error); return res.status(503).json({ message: 'Report generation failed. Please retry.' }); }
     // Report metadata only; the model verdict itself stays frozen. The new
     // updated_at is returned so the page's concurrency token stays current after
@@ -1238,6 +1257,31 @@ module.exports = function supabaseRoutes({ url = process.env.SUPABASE_URL, key =
       const code = ['INVALID_SYMPTOMS', 'MODEL_NOT_CONFIGURED'].includes(error.code) ? error.code : 'MODEL_UNAVAILABLE';
       res.status(code === 'INVALID_SYMPTOMS' ? 422 : 503).json({ code, message: code === 'MODEL_UNAVAILABLE' ? 'Model service unavailable. Please retry later.' : error.message });
     }
+  }));
+  router.get('/doctor/drafts/:id', ...guard('doctor', async (req,res,care) => {
+    if (care.demoMode) return res.status(403).json({message:'Drafts are disabled in demo mode.'});
+    if (!isUuid(req.params.id)) return res.status(400).json({message:'Invalid appointment'});
+    const access=await care.db.from('appointments').select('id').eq('id',req.params.id).eq('doctor_id',care.user.id).single();
+    if(access.error||!access.data)return res.status(404).json({message:'Appointment unavailable'});
+    const result=await care.db.from('consultation_drafts').select('payload,version,updated_at').eq('doctor_id',care.user.id).eq('appointment_id',req.params.id).maybeSingle();
+    if(result.error)return res.status(503).json({message:'Secure drafts unavailable. Migration 026 may be required. Keep this page open.'});
+    res.set('Cache-Control','private, no-store').json(result.data||{payload:null,version:0});
+  }));
+  router.put('/doctor/drafts/:id', ...guard('doctor', async(req,res,care)=>{
+    if(care.demoMode)return res.status(403).json({message:'Drafts are disabled in demo mode.'});
+    const {version,payload}=req.body||{};
+    if(!isUuid(req.params.id)||!Number.isInteger(version)||version<0||!payload||typeof payload!=='object'||Array.isArray(payload)||JSON.stringify(payload).length>40000)return res.status(400).json({message:'Invalid draft'});
+    const result=await care.db.rpc('save_consultation_draft',{p_appointment:req.params.id,p_version:version,p_payload:payload});
+    if(result.error)return res.status(result.error.code==='40001'?409:503).json({message:result.error.code==='40001'?'A newer draft exists in another tab. Your text is still here; do not overwrite it.':'Secure draft save failed. Keep this page open and retry.'});
+    res.set('Cache-Control','private, no-store').json(result.data);
+  }));
+  router.post('/doctor/availability/bulk', ...guard('doctor',async(req,res,care)=>{
+    const starts=req.body?.startsAt,remove=req.body?.removeId||null;
+    if(care.demoMode)return res.status(403).json({message:'Availability changes are disabled in demo mode.'});
+    if(!Array.isArray(starts)||starts.length>200||(!starts.length&&!remove)||remove&&!isUuid(remove)||starts.some(s=>typeof s!=='string'||Number.isNaN(Date.parse(s))||!/Z$|[+-]\d\d:\d\d$/.test(s)))return res.status(400).json({message:'Send up to 200 offset-aware slot times.'});
+    const result=await care.db.rpc('manage_doctor_slots',{p_starts:starts,p_remove:remove});
+    if(result.error)return res.status(409).json({message:'No changes saved. A slot overlaps, is booked, or migration 026 is missing.'});
+    res.status(201).json({added:result.data});
   }));
   router.post('/doctor/availability', ...guard('doctor', async (req, res, { db }) => {
     const start = req.body?.startsAt;

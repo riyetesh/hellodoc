@@ -30,6 +30,23 @@ const base = {
   disclaimer: 'Experimental decision support, not a confirmed diagnosis.',
 };
 
+test('report embeds branding and starts content inside A4 margins', () => {
+  const pdf = renderAssessmentReport(base).toString('latin1');
+  assert.ok(pdf.includes('/Subtype /Image'));
+  assert.ok(pdf.includes('/Logo Do'));
+  assert.ok(pdf.includes('/MediaBox [0 0 595.28 841.89]'));
+  assert.equal(pdf.includes('46.00 0.00 Tm (Clinical assessment)'), false);
+  const text = textOf(Buffer.from(pdf, 'latin1'));
+  assert.ok(text.indexOf("Doctor's assessment and plan") < text.indexOf('Model output'));
+  assert.ok(text.includes('Confidential patient information'));
+});
+
+test('multiline clinical text is preserved as separate printed lines', () => {
+  const raw = renderAssessmentReport({...base,plan:'First instruction\nSecond instruction'}).toString('latin1');
+  assert.ok(raw.includes('(First instruction) Tj'));
+  assert.ok(raw.includes('(Second instruction) Tj'));
+});
+
 function textOf(buffer) {
   const raw = buffer.toString('latin1');
   return [...raw.matchAll(/\(((?:\\.|[^\\()])*)\) Tj/g)]

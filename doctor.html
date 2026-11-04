@@ -228,14 +228,15 @@
 
           <div id="assessmentEditor">
             <form id="assessmentForm" novalidate>
+              <p class="muted">Shortcuts: / focuses symptom search; Ctrl/Cmd + Enter saves from Review without completing the appointment.</p>
               <p class="assessment-error" id="assessmentError" role="alert" hidden></p>
 
               <nav class="consultation-wizard" id="consultationWizard" aria-label="Consultation steps">
-                <button type="button" class="consultation-wizard__step is-active" data-wizard-go="0" aria-current="step"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span>Patient</span></button>
+                <button type="button" class="consultation-wizard__step is-active" data-wizard-go="0" aria-current="step"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span>Patient &amp; visit</span></button>
                 <button type="button" class="consultation-wizard__step" data-wizard-go="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m8 13 2 2 5-5"></path></svg><span>Symptoms</span></button>
-                <button type="button" class="consultation-wizard__step" data-wizard-go="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"></path><path d="m3 7 9 7 9-7"></path></svg><span>Prediction</span></button>
-                <button type="button" class="consultation-wizard__step" data-wizard-go="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v18H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>Assessment</span></button>
-                <button type="button" class="consultation-wizard__step" data-wizard-go="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v6h5M9 14l2 2 4-4"></path></svg><span>Review</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"></path><path d="m3 7 9 7 9-7"></path></svg><span>Decision support</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v18H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>Assessment &amp; plan</span></button>
+                <button type="button" class="consultation-wizard__step" data-wizard-go="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v6h5M9 14l2 2 4-4"></path></svg><span>Review &amp; save</span></button>
               </nav>
               <div class="cw-layout">
                 <div class="cw-main">
@@ -326,7 +327,7 @@
                       <section class="cw-model" aria-labelledby="modelPanelTitle">
                         <div class="cw-model__head">
                           <div>
-                            <h4 id="modelPanelTitle">Prediction</h4>
+                            <h4 id="modelPanelTitle">Optional decision support</h4><p>You can continue without running the model. Its suggestions are not a diagnosis.</p>
                           </div>
                           <button class="btn btn-outline" type="button" id="runModel" disabled>Predict</button>
                         </div>
@@ -364,7 +365,7 @@
                         </section>
                         <p class="cw-model__fallback" id="modelFallback" hidden>
                           <button class="btn btn-outline" type="button" id="saveWithoutModel">Save clinical record without the model</button>
-                          <span>Any selected model symptoms move into your observations, and no prediction is stored.</span>
+                          <span>Your symptoms and clinical text are preserved. No prediction is stored.</span>
                         </p>
                       </section>
 
@@ -385,7 +386,7 @@
                         <p class="dw-inline-note" id="assessmentHint" hidden></p>
                       </div>
 
-                      <textarea id="plan" hidden></textarea>
+                      <div class="form-grp"><label for="plan">Treatment and follow-up plan</label><textarea id="plan" rows="6" maxlength="4000" placeholder="Document your treatment decisions, instructions and follow-up. Do not copy model guidance without clinical review."></textarea><p class="muted">Include medication instructions only when clinically appropriate. Missing information is not a negative finding.</p></div>
                     </div>
                   </section>
 
@@ -493,12 +494,18 @@
                   <input id="slotTime" type="time" name="slotTime" step="1800" required />
                 </label>
               </div>
+              <div class="dw-slot-form__fields">
+                <label class="dw-filter">End time (optional)<input id="slotEnd" type="time" step="1800"></label>
+                <label class="dw-filter">Repeat weekly<select id="slotWeeks"><option value="1">This week only</option><option value="2">2 weeks</option><option value="4">4 weeks</option><option value="8">8 weeks</option></select></label>
+              </div>
+              <p id="slotTimezone" class="muted"></p>
+              <p class="muted">An end time creates consecutive 30-minute slots. Repeat copies this weekday and time window for the selected weeks. All changes succeed together or none are saved.</p>
               <div class="dw-slot-form__presets" aria-label="Quick start times">
                 <button type="button" class="dw-slot-preset" data-slot-preset="09:00">9:00 AM</button>
                 <button type="button" class="dw-slot-preset" data-slot-preset="12:00">12:00 PM</button>
                 <button type="button" class="dw-slot-preset" data-slot-preset="15:00">3:00 PM</button>
               </div>
-              <button class="btn btn-primary dw-slot-form__submit" type="submit"><span aria-hidden="true">＋</span> Add 30-minute slot</button>
+              <button class="btn btn-primary dw-slot-form__submit" type="submit"><span aria-hidden="true">＋</span> Add availability</button>
             </form>
             <div class="dw-slot-list__head"><h4>Upcoming slots</h4><span>Patients can book open times</span></div>
             <div id="slots" class="dw-slot-list"></div>
@@ -643,7 +650,7 @@
 
     <aside id="consultationDock" class="consultation-dock" aria-label="Consultation controls" hidden>
       <p class="consultation-dock__doctor" id="dockPatientName">Select a patient</p>
-      <p class="consultation-dock__meta">Your session timer starts when you continue to symptoms. You can also start it here.</p>
+      <p class="consultation-dock__meta">Start explicitly when you begin attending this patient. Saving a report does not complete the appointment.</p>
       <button class="btn btn-primary consultation-dock__start" type="button" id="consultationTimerStart">Start consultation</button>
     </aside>
     <aside id="consultationModal" class="consultation-float" aria-labelledby="consultationModalTitle">

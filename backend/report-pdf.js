@@ -10,9 +10,12 @@
  * report can be checked as text in tests.
  */
 
+const fs = require('node:fs');
+const path = require('node:path');
+const LOGO = fs.readFileSync(path.join(__dirname, 'report-logo.jpg'));
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
-const MARGIN = 56;
+const MARGIN = 46;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const BOTTOM_LIMIT = 72;
 
@@ -58,6 +61,7 @@ function measure(text, size, bold = false) {
 }
 
 function wrap(text, size, maxWidth, bold = false) {
+  if (String(text ?? '').includes('\n')) return String(text).split(/\r?\n/).flatMap(line => line.trim() ? wrap(line, size, maxWidth, bold) : ['']);
   const words = String(text ?? '').replace(/\s+/g, ' ').trim().split(' ');
   if (!words[0]) return [];
   const lines = [];
@@ -107,8 +111,10 @@ class Report {
     this.raw('0.09 0.35 0.42 rg');
     this.raw(`${MARGIN} ${PAGE_HEIGHT - 40} ${CONTENT_WIDTH} 3 re f`);
     this.raw('0 g');
-    this.drawText(MARGIN, PAGE_HEIGHT - 66, 'HelloDoc', 15, true);
-    this.drawText(PAGE_WIDTH - MARGIN - measure('Clinical assessment report', 9), PAGE_HEIGHT - 64, 'Clinical assessment report', 9);
+    this.raw(`q 100 0 0 40 ${MARGIN} ${PAGE_HEIGHT - 72} cm /Logo Do Q`);
+    this.drawText(PAGE_WIDTH - MARGIN - measure('Clinical assessment report', 9), PAGE_HEIGHT - 54, 'Clinical assessment report', 9, true);
+    const reference = 'Ref ' + String(this.meta.reference || '').slice(0, 8);
+    this.drawText(PAGE_WIDTH - MARGIN - measure(reference, 8), PAGE_HEIGHT - 68, reference, 8, false, .4);
     this.raw(`0.85 0.88 0.9 RG 0.7 w ${MARGIN} ${PAGE_HEIGHT - 74} m ${PAGE_WIDTH - MARGIN} ${PAGE_HEIGHT - 74} l S`);
   }
 
@@ -125,20 +131,24 @@ class Report {
   space(height) {
     this.ensurePage();
     this.y -= height;
-    if (this.y < BOTTOM_LIMIT) this.newPage();
   }
 
   heading(text) {
-    this.space(20);
-    if (this.y < BOTTOM_LIMIT + 20) this.newPage();
+    this.ensurePage();
+    if (this.y < BOTTOM_LIMIT + 72) this.newPage();
+    this.space(14);
     this.drawText(MARGIN, this.y, text, 11.5, true);
+    // A restrained navy section marker, kept on the same grid as body text.
+    this.raw(`0.09 0.26 0.48 rg ${MARGIN - 8} ${(this.y - 2).toFixed(2)} 2 11 re f`);
     this.space(6);
     this.raw(`0.8 0.84 0.87 RG 0.6 w ${MARGIN} ${this.y.toFixed(2)} m ${PAGE_WIDTH - MARGIN} ${this.y.toFixed(2)} l S`);
     this.space(10);
   }
 
   subheading(text) {
-    this.space(12);
+    this.ensurePage();
+    if(this.y < BOTTOM_LIMIT + 42) this.newPage();
+    this.space(10);
     this.drawText(MARGIN, this.y, text, 9.5, true, 0.25);
     this.space(12);
   }
@@ -148,19 +158,22 @@ class Report {
     for (const line of lines) {
       if (this.y < BOTTOM_LIMIT) this.newPage();
       this.drawText(MARGIN + indent, this.y, line, size, bold, gray);
-      this.space(14);
+      this.space(size <= 9 ? 11 : 13);
     }
   }
 
   keyValue(label, value) {
     if (value === null || value === undefined || value === '') return;
-    const labelWidth = 108;
-    const lines = wrap(value, 10, CONTENT_WIDTH - labelWidth);
+    this.ensurePage();
+    const labelWidth = 148;
+    const valueSize = /reference|ID|version/i.test(label) ? 8 : 10;
+    const lines = wrap(value, valueSize, CONTENT_WIDTH - labelWidth);
+    if(this.y < BOTTOM_LIMIT + Math.min(lines.length, 4) * 13) this.newPage();
     const firstLineY = this.y;
     this.drawText(MARGIN, firstLineY, label, 9.5, true, 0.35);
     for (const [index, line] of lines.entries()) {
       if (index > 0 && this.y < BOTTOM_LIMIT) this.newPage();
-      this.drawText(MARGIN + labelWidth, this.y, line, 10, false, 0.12);
+      this.drawText(MARGIN + labelWidth, this.y, line, valueSize, false, 0.12);
       this.space(13);
     }
     if (!lines.length) this.space(13);
@@ -212,19 +225,25 @@ function dateText(value) {
 
 function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
   const meta = {
-    footer: 'HelloDoc - experimental decision support, not a confirmed diagnosis.',
+    footer: 'Confidential patient information | HelloDoc',
+    reference: assessment.id,
   };
   const doc = new Report(meta);
 
+  doc.ensurePage();
   doc.drawText(MARGIN, doc.y, 'Clinical assessment', 20, true);
   doc.space(24);
   doc.paragraph(`Report generated ${dateText(generatedAt)}`, { size: 9, gray: 0.4 });
   if (assessment.demoMode) doc.paragraph('ADMIN DEMO MODE — this report was generated in an administrator demo workspace.', { size: 11, bold: true, gray: 0.2 });
-  doc.keyValue('Assessment', String(assessment.id || ''));
+  doc.paragraph(`Report reference: ${assessment.id || 'Not recorded'}`, {size:8,gray:.4});
 
   doc.heading('Patient and consultation');
   doc.keyValue('Patient', assessment.patientName || 'Not recorded');
+  doc.keyValue('Patient ID', assessment.patientId || 'Not recorded');
   doc.keyValue('Patient email', assessment.patientEmail || '');
+  if(assessment.age !== undefined && assessment.age !== null) doc.keyValue('Age',String(assessment.age));
+  if(assessment.sex) doc.keyValue('Sex',assessment.sex);
+  doc.keyValue('Consultation type', assessment.consultationType || 'Not recorded');
   doc.keyValue('Consultation', assessment.appointmentStart
     ? `${dateText(assessment.appointmentStart)}${assessment.appointmentStatus ? ` (${assessment.appointmentStatus})` : ''}`
     : 'Not linked to an appointment');
@@ -239,25 +258,38 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
       `${previous.predictedDisease ? ` (predicted then: ${previous.predictedDisease})` : ''}`);
   }
 
+  doc.heading('Presenting complaint');
+  doc.paragraph(assessment.reason || 'Presenting complaint not recorded.');
   doc.heading('Symptoms');
   doc.subheading('Reported by the patient');
-  doc.bullets((assessment.patientReported || []).map(humanize), 'None recorded.');
+  doc.paragraph((assessment.patientReported || []).map(humanize).join('; ') || 'No patient-reported symptoms recorded.');
   doc.subheading('Recorded by the doctor');
-  doc.bullets((assessment.clinicianAdded || []).map(humanize), 'None added.');
-  doc.subheading('Clinical observations (not interpreted by the model)');
+  doc.paragraph((assessment.clinicianAdded || []).map(humanize).join('; ') || 'No additional symptoms recorded.');
+  doc.heading('Clinical observations and examination');
+  doc.paragraph('Clinical observations (not interpreted by the model)',{size:9,gray:.4});
   doc.bullets(assessment.observations || [], 'None recorded.');
   doc.keyValue('Duration', assessment.symptomDuration || '');
-  doc.keyValue('Clinical note', assessment.clinicalNote || '');
+  doc.subheading('Clinical note');
+  doc.paragraph(assessment.clinicalNote || 'Examination findings and clinical notes not recorded.');
+  doc.heading("Doctor's assessment and plan");
+  doc.subheading('Clinical assessment — doctor authored');
+  doc.paragraph(assessment.doctorAssessment || 'Not recorded.');
+  doc.subheading('Treatment and follow-up plan — doctor authored');
+  doc.paragraph(assessment.plan || 'Treatment plan has not been documented.');
+  doc.paragraph('Structured medication, dosage and frequency information was not recorded in this assessment. Consult the doctor-authored plan for any instructions.',{size:9,gray:.4});
 
   const modelUnavailable = assessment.modelStatus === 'unavailable';
-  doc.heading('Model output');
+  doc.ensurePage();
+  if (doc.y < BOTTOM_LIMIT + (modelUnavailable ? 72 : 142)) doc.newPage();
+  if (!modelUnavailable) doc.heading('Model output');
   if (modelUnavailable) {
     // The record was saved while the service was down. Printing a blank
     // "predicted condition" would look like a missing result instead of an
     // explicit decision not to run the model.
-    doc.paragraph('The experimental model was not available when this consultation was saved. No condition was predicted and no model guidance is recorded. The clinical note and the doctor\'s assessment below are the record of this consultation.', { gray: 0.2 });
+    doc.paragraph('No condition was predicted. The model may have been skipped or unavailable. The doctor-authored assessment and plan are the clinical record.', { gray: 0.2 });
   } else {
-    doc.keyValue('Predicted condition', assessment.predictedDisease || '');
+    doc.paragraph('Experimental decision-support suggestion — not a confirmed diagnosis.',{size:9,bold:true});
+    doc.keyValue('Predicted condition', assessment.predictedDisease || 'Not recorded');
     doc.keyValue('Model version', assessment.modelVersion || '');
     const modelSymptoms = [...(assessment.patientReported || []), ...(assessment.clinicianAdded || [])];
     doc.keyValue('Symptoms used by the model', String(modelSymptoms.length));
@@ -281,14 +313,20 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
     doc.bullets(assessment.workout, 'No workout guidance was available.');
   }
 
-  doc.heading("Doctor's assessment and plan");
-  doc.keyValue('Assessment', assessment.doctorAssessment || 'Not recorded.');
-  doc.keyValue('Plan', assessment.plan || 'Not recorded.');
+  doc.ensurePage();
+  if(doc.y < BOTTOM_LIMIT + (modelUnavailable ? 70 : 110)) doc.newPage();
+  if(modelUnavailable) doc.subheading('Follow-up and recording clinician');
+  else doc.heading('Follow-up and recording clinician');
+  if(assessment.followUpDate) doc.keyValue('Follow-up date',dateText(assessment.followUpDate));
+  doc.paragraph(assessment.followUpInstructions || 'Separate follow-up instructions not recorded. See the doctor-authored plan.');
+  doc.paragraph(`Recorded by ${assessment.doctorName || 'clinician not recorded'}${assessment.doctorCredentials ? ', '+assessment.doctorCredentials : ''}. Report created ${dateText(generatedAt)}.`,{size:9,gray:.35});
 
-  doc.heading('Disclaimer');
-  doc.paragraph(assessment.disclaimer
+  if (!modelUnavailable) doc.heading('Disclaimer');
+  else doc.space(6);
+  if(!modelUnavailable) doc.paragraph(assessment.disclaimer
     || 'Experimental prototype: this output is decision support, not a confirmed diagnosis.', { size: 9, gray: 0.35 });
 
+  doc.paragraph('HelloDoc is an experimental decision support prototype. Dataset suggestions require clinician review and are not individualized prescriptions. Confidential: share this report only with the patient and authorized care providers.',{size:9,gray:.35});
   const pages = doc.finish();
   return buildPdfBuffer(pages);
 }
@@ -296,6 +334,7 @@ function renderAssessmentReport(assessment, { generatedAt = new Date() } = {}) {
 function buildPdfBuffer(pageContents) {
   const objects = [];
   const add = (body) => { objects.push(body); return objects.length; };
+  const logoIndex = add(`<< /Type /XObject /Subtype /Image /Width 445 /Height 180 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${LOGO.length} >>\nstream\n${LOGO.toString('latin1')}\nendstream`);
   const fontRegular = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
   const fontBold = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
   const catalogIndex = add(null); // reserved
@@ -307,7 +346,7 @@ function buildPdfBuffer(pageContents) {
     const contentIndex = add(`<< /Length ${Buffer.byteLength(stream, 'latin1')} >>\nstream\n${stream}\nendstream`);
     pageIndexes.push(add(
       `<< /Type /Page /Parent ${pagesIndex} 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] ` +
-      `/Resources << /Font << /F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R >> >> ` +
+      `/Resources << /XObject << /Logo ${logoIndex} 0 R >> /Font << /F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R >> >> ` +
       `/Contents ${contentIndex} 0 R >>`
     ));
   }

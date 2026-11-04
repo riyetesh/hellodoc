@@ -1,0 +1,527 @@
+
+> hellodoc@1.0.0 test:node
+> node --test "tests/*.test.js"
+
+TAP version 13
+# {"event":"configuration_invalid","problems":["SUPABASE_URL is missing","SUPABASE_PUBLISHABLE_KEY is missing","APP_ORIGIN is missing"]}
+# Subtest: only the public browser key is accepted; service-role credentials are refused
+ok 1 - only the public browser key is accepted; service-role credentials are refused
+  ---
+  duration_ms: 2.5796
+  ...
+# {"event":"configuration_invalid","problems":["SUPABASE_PUBLISHABLE_KEY is missing"]}
+# Subtest: unconfigured API fails closed with 503 instead of any fallback authentication
+ok 2 - unconfigured API fails closed with 503 instead of any fallback authentication
+  ---
+  duration_ms: 196.6582
+  ...
+# Subtest: configuration is rejected when only one Supabase variable is present
+ok 3 - configuration is rejected when only one Supabase variable is present
+  ---
+  duration_ms: 1.4476
+  ...
+# Subtest: cookie-authenticated mutations reject foreign origins and accept the trusted origin
+ok 4 - cookie-authenticated mutations reject foreign origins and accept the trusted origin
+  ---
+  duration_ms: 128.2092
+  ...
+# Subtest: same-host origin is trusted only for the local development entrypoint
+ok 5 - same-host origin is trusted only for the local development entrypoint
+  ---
+  duration_ms: 23.0898
+  ...
+# {"event":"configuration_invalid","problems":["SUPABASE_URL is missing","SUPABASE_PUBLISHABLE_KEY is missing","APP_ORIGIN is missing"]}
+# [config] Supabase is not configured. Pages are served, but every /api request returns 503.
+# [config] Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (public key only) in backend/.env.
+# Subtest: unknown API routes return JSON 404 and never HTML
+ok 6 - unknown API routes return JSON 404 and never HTML
+  ---
+  duration_ms: 11.3138
+  ...
+# Subtest: static dev server refuses to expose backend, tests and secret paths
+ok 7 - static dev server refuses to expose backend, tests and secret paths
+  ---
+  duration_ms: 32.5849
+  ...
+# Subtest: the navbar offers exactly Login and Sign Up, with no role-specific entry points
+ok 8 - the navbar offers exactly Login and Sign Up, with no role-specific entry points
+  ---
+  duration_ms: 7.6119
+  ...
+# Subtest: login page defaults to Patient and offers Patient, Doctor and Admin tabs
+ok 9 - login page defaults to Patient and offers Patient, Doctor and Admin tabs
+  ---
+  duration_ms: 2.1338
+  ...
+# Subtest: login script sends the chosen portal but never trusts it
+ok 10 - login script sends the chosen portal but never trusts it
+  ---
+  duration_ms: 0.8658
+  ...
+# Subtest: sign up offers Patient and Doctor only, with doctor fields revealed by the tab
+ok 11 - sign up offers Patient and Doctor only, with doctor fields revealed by the tab
+  ---
+  duration_ms: 1.2768
+  ...
+# Subtest: retired applicant pages redirect instead of offering a second registration form
+ok 12 - retired applicant pages redirect instead of offering a second registration form
+  ---
+  duration_ms: 0.7767
+  ...
+# Subtest: password recovery offers one request form, a confirmation field and a visibility toggle
+ok 13 - password recovery offers one request form, a confirmation field and a visibility toggle
+  ---
+  duration_ms: 0.7507
+  ...
+# Subtest: the doctor dashboard renders verification state before clinical tools
+ok 14 - the doctor dashboard renders verification state before clinical tools
+  ---
+  duration_ms: 1.4847
+  ...
+# Subtest: the static build contains required public files and no private source
+ok 15 - the static build contains required public files and no private source
+  ---
+  duration_ms: 553.368
+  ...
+# Subtest: wizard navigation never starts sessions and documentation does not require prediction
+ok 16 - wizard navigation never starts sessions and documentation does not require prediction
+  ---
+  duration_ms: 4.2337
+  ...
+# Subtest: session completion retains patient identity and separates report persistence from completion
+ok 17 - session completion retains patient identity and separates report persistence from completion
+  ---
+  duration_ms: 0.7721
+  ...
+# Subtest: clinical migration restricts drafts, versions and booked slot deletion
+ok 18 - clinical migration restricts drafts, versions and booked slot deletion
+  ---
+  duration_ms: 0.7444
+  ...
+# Subtest: every service points at a directory that exists in the repository
+ok 19 - every service points at a directory that exists in the repository
+  ---
+  duration_ms: 3.1669
+  ...
+# Subtest: the backend service has a real Express entrypoint and an installable lockfile
+ok 20 - the backend service has a real Express entrypoint and an installable lockfile
+  ---
+  duration_ms: 1.3238
+  ...
+# Subtest: the web service builds the static site into its own output directory
+ok 21 - the web service builds the static site into its own output directory
+  ---
+  duration_ms: 3.1919
+  ...
+# Subtest: routing sends /api to the backend, everything else to the static site, and never relies on a service path
+ok 22 - routing sends /api to the backend, everything else to the static site, and never relies on a service path
+  ---
+  duration_ms: 1.8439
+  ...
+# Subtest: the /admin URL resolves to a real public page
+ok 23 - the /admin URL resolves to a real public page
+  ---
+  duration_ms: 1.8907
+  ...
+# Subtest: build and runtime settings live inside services, not at the top level
+ok 24 - build and runtime settings live inside services, not at the top level
+  ---
+  duration_ms: 0.2918
+  ...
+# Subtest: the backend declares the Node runtime it is tested with
+ok 25 - the backend declares the Node runtime it is tested with
+  ---
+  duration_ms: 5.1372
+  ...
+# Subtest: the schedule exposes search, a date range and the server-provided visit list
+ok 26 - the schedule exposes search, a date range and the server-provided visit list
+  ---
+  duration_ms: 7.8954
+  ...
+# Subtest: the patient record is opened by an id the server resolved, not one typed by the browser
+ok 27 - the patient record is opened by an id the server resolved, not one typed by the browser
+  ---
+  duration_ms: 1.6771
+  ...
+# Subtest: the consultation uses a simple symptom-to-prediction-to-report flow
+ok 28 - the consultation uses a simple symptom-to-prediction-to-report flow
+  ---
+  duration_ms: 3.0148
+  ...
+# Subtest: the simplified form uses the model vocabulary and keeps clinical observations separate
+ok 29 - the simplified form uses the model vocabulary and keeps clinical observations separate
+  ---
+  duration_ms: 7.5977
+  ...
+# Subtest: note scaffolds insert headings only and never clinical text
+ok 30 - note scaffolds insert headings only and never clinical text
+  ---
+  duration_ms: 1.9134
+  ...
+# Subtest: the draft state never claims a save before the server confirms it
+ok 31 - the draft state never claims a save before the server confirms it
+  ---
+  duration_ms: 1.0381
+  ...
+# Subtest: the report preview is built from the saved record and links to empty sections
+ok 32 - the report preview is built from the saved record and links to empty sections
+  ---
+  duration_ms: 1.4971
+  ...
+# Subtest: walk-in matching runs while typing but only against the doctor endpoint
+ok 33 - walk-in matching runs while typing but only against the doctor endpoint
+  ---
+  duration_ms: 0.6556
+  ...
+# Subtest: live public pages and persisted directory are served
+ok 34 - live public pages and persisted directory are served # SKIP set TEST_ORIGIN to a disposable running server
+  ---
+  duration_ms: 1.9464
+  ...
+# Subtest: live admin API and private records fail closed without a session
+ok 35 - live admin API and private records fail closed without a session # SKIP set TEST_ORIGIN to a disposable running server
+  ---
+  duration_ms: 0.2617
+  ...
+# Subtest: live mutations reject foreign origins and elevated signup roles
+ok 36 - live mutations reject foreign origins and elevated signup roles # SKIP set TEST_ORIGIN to a disposable running server
+  ---
+  duration_ms: 0.1995
+  ...
+# Subtest: Supabase Data API grants no anonymous private access or bootstrap
+ok 37 - Supabase Data API grants no anonymous private access or bootstrap # SKIP set TEST_SUPABASE_URL and TEST_SUPABASE_PUBLISHABLE_KEY for a disposable project
+  ---
+  duration_ms: 0.1629
+  ...
+# Subtest: private model transport preserves validation failures and requires configuration
+ok 38 - private model transport preserves validation failures and requires configuration
+  ---
+  duration_ms: 64.966
+  ...
+# Subtest: the patient sidebar is gone from every patient page
+ok 39 - the patient sidebar is gone from every patient page
+  ---
+  duration_ms: 3.4134
+  ...
+# Subtest: patient destinations are defined once and rendered into the shared navbar
+ok 40 - patient destinations are defined once and rendered into the shared navbar
+  ---
+  duration_ms: 3.143
+  ...
+# Subtest: account settings and sign-out live in a keyboard-accessible account menu
+ok 41 - account settings and sign-out live in a keyboard-accessible account menu
+  ---
+  duration_ms: 2.757
+  ...
+# Subtest: the patient dashboard keeps its live data contract and links every destination
+ok 42 - the patient dashboard keeps its live data contract and links every destination
+  ---
+  duration_ms: 1.5741
+  ...
+# {"event":"configuration_invalid","problems":["SUPABASE_URL is missing","SUPABASE_PUBLISHABLE_KEY is missing","APP_ORIGIN is missing"]}
+# {"event":"configuration_invalid","problems":["SUPABASE_PUBLISHABLE_KEY must be the publishable/anon key; secret keys are rejected"]}
+# Subtest: missing configuration stays inspectable and never falls back to MySQL
+ok 43 - missing configuration stays inspectable and never falls back to MySQL
+  ---
+  duration_ms: 355.3361
+  ...
+# {"event":"configuration_invalid","problems":["APP_ORIGIN must be a bare origin with no path, e.g. https://example.com"]}
+# Subtest: privileged keys rejected by production configuration
+ok 44 - privileged keys rejected by production configuration
+  ---
+  duration_ms: 19.0599
+  ...
+# Subtest: an origin with a path is rejected instead of silently trusted
+ok 45 - an origin with a path is rejected instead of silently trusted
+  ---
+  duration_ms: 13.1275
+  ...
+# {"event":"supabase_readiness_failed","status":401,"providerCode":null}
+# Subtest: readiness distinguishes successful schema query and connectivity failure safely
+ok 46 - readiness distinguishes successful schema query and connectivity failure safely
+  ---
+  duration_ms: 126.6576
+  ...
+# Subtest: production retains full API paths and denies anonymous admin/foreign origin
+ok 47 - production retains full API paths and denies anonymous admin/foreign origin
+  ---
+  duration_ms: 59.1533
+  ...
+# Subtest: report renders the same assessment the page shows
+ok 48 - report renders the same assessment the page shows
+  ---
+  duration_ms: 17.2966
+  ...
+# Subtest: no confidence figure is invented when the model supplies none
+ok 49 - no confidence figure is invented when the model supplies none
+  ---
+  duration_ms: 5.6269
+  ...
+# Subtest: guidance is labelled as dataset guidance needing clinician review
+ok 50 - guidance is labelled as dataset guidance needing clinician review
+  ---
+  duration_ms: 2.3971
+  ...
+# Subtest: a real confidence figure is shown when present
+ok 51 - a real confidence figure is shown when present
+  ---
+  duration_ms: 3.0705
+  ...
+# Subtest: missing fields are labelled rather than fabricated
+ok 52 - missing fields are labelled rather than fabricated
+  ---
+  duration_ms: 3.0796
+  ...
+# Subtest: long content paginates without dropping sections
+ok 53 - long content paginates without dropping sections
+  ---
+  duration_ms: 24.8452
+  ...
+# Subtest: a revision names the record it replaced without restating it as current
+ok 54 - a revision names the record it replaced without restating it as current
+  ---
+  duration_ms: 2.1356
+  ...
+# Subtest: unsafe model guidance never reaches the page as raw injection text
+ok 55 - unsafe model guidance never reaches the page as raw injection text
+  ---
+  duration_ms: 1.8448
+  ...
+# Subtest: text with parentheses and backslashes is escaped, not corrupted
+ok 56 - text with parentheses and backslashes is escaped, not corrupted
+  ---
+  duration_ms: 3.0759
+  ...
+# {"event":"supabase_operation_failed","operation":"admin_action","code":"42501"}
+# Subtest: admin APIs enforce identity, role, validation and RPC authorization
+ok 57 - admin APIs enforce identity, role, validation and RPC authorization
+  ---
+  duration_ms: 178.1163
+  ...
+# Subtest: admin demo workspace requires an admin session and an explicit selected doctor
+ok 58 - admin demo workspace requires an admin session and an explicit selected doctor
+  ---
+  duration_ms: 7.5853
+  ...
+# Subtest: only patient registration; no password sent to application tables
+ok 59 - only patient registration; no password sent to application tables
+  ---
+  duration_ms: 8.8065
+  ...
+# Subtest: resubmission is available to doctors only and never self-approves
+ok 60 - resubmission is available to doctors only and never self-approves
+  ---
+  duration_ms: 19.4192
+  ...
+# Subtest: own-profile updates go through column-scoped RPCs and cannot touch role or verification
+ok 61 - own-profile updates go through column-scoped RPCs and cannot touch role or verification
+  ---
+  duration_ms: 11.2325
+  ...
+# Subtest: symptom model endpoints require approved doctor before contacting model
+ok 62 - symptom model endpoints require approved doctor before contacting model
+  ---
+  duration_ms: 14.1218
+  ...
+# Subtest: public directory exposes approved profile details without private application data
+ok 63 - public directory exposes approved profile details without private application data
+  ---
+  duration_ms: 2.6234
+  ...
+# Subtest: patient overview includes only scoped server-side activity
+ok 64 - patient overview includes only scoped server-side activity
+  ---
+  duration_ms: 3.0227
+  ...
+# Subtest: patient profile includes only the authenticated user’s existing contact fields
+ok 65 - patient profile includes only the authenticated user’s existing contact fields
+  ---
+  duration_ms: 5.4125
+  ...
+# Subtest: protected booking verifies Auth identity and role; failed writes never succeed
+ok 66 - protected booking verifies Auth identity and role; failed writes never succeed
+  ---
+  duration_ms: 22.8824
+  ...
+# Subtest: doctor signup requests a doctor account with pending verification and rejects privilege input
+ok 67 - doctor signup requests a doctor account with pending verification and rejects privilege input
+  ---
+  duration_ms: 13.9404
+  ...
+# Subtest: patient signup accepts an optional phone but never a role
+ok 68 - patient signup accepts an optional phone but never a role
+  ---
+  duration_ms: 13.5441
+  ...
+# Subtest: application status is doctor-only and exposes the verification state
+ok 69 - application status is doctor-only and exposes the verification state
+  ---
+  duration_ms: 8.3621
+  ...
+# Subtest: pending doctors reach their own dashboard but no clinical endpoint
+ok 70 - pending doctors reach their own dashboard but no clinical endpoint
+  ---
+  duration_ms: 10.5678
+  ...
+# Subtest: the doctor dashboard omits task and draft collections it cannot fill
+ok 71 - the doctor dashboard omits task and draft collections it cannot fill
+  ---
+  duration_ms: 2.6904
+  ...
+# Subtest: a patient context is scoped to the doctor who attends them
+ok 72 - a patient context is scoped to the doctor who attends them
+  ---
+  duration_ms: 13.2624
+  ...
+# Subtest: login validates the selected portal against the database role and never grants it
+ok 73 - login validates the selected portal against the database role and never grants it
+  ---
+  duration_ms: 21.0158
+  ...
+# {"event":"supabase_operation_failed","operation":"refresh","status":503}
+# Subtest: a transient auth failure keeps the session instead of signing the doctor out
+ok 74 - a transient auth failure keeps the session instead of signing the doctor out
+  ---
+  duration_ms: 25.6328
+  ...
+# Subtest: concurrent requests share one refresh instead of racing for it
+ok 75 - concurrent requests share one refresh instead of racing for it
+  ---
+  duration_ms: 16.861
+  ...
+# Subtest: pending doctors can sign in and are routed to the dashboard with their status
+ok 76 - pending doctors can sign in and are routed to the dashboard with their status
+  ---
+  duration_ms: 2.5937
+  ...
+# {"event":"supabase_operation_failed","operation":"assessment_create","code":"23505"}
+# Subtest: clinical assessments require an approved doctor and validated model symptoms
+ok 77 - clinical assessments require an approved doctor and validated model symptoms
+  ---
+  duration_ms: 41.5816
+  ...
+# {"event":"supabase_operation_failed","operation":"assessment_revision","code":"23505"}
+# Subtest: a symptom correction is appended as a revision and never rewrites the original prediction
+ok 78 - a symptom correction is appended as a revision and never rewrites the original prediction
+  ---
+  duration_ms: 24.2923
+  ...
+# Subtest: a consultation exposes only the doctor own appointment and stored patient identity
+ok 79 - a consultation exposes only the doctor own appointment and stored patient identity
+  ---
+  duration_ms: 9.9635
+  ...
+# Subtest: an assessment can only be read or edited by its own doctor
+ok 80 - an assessment can only be read or edited by its own doctor
+  ---
+  duration_ms: 22.6414
+  ...
+# Subtest: a model-free clinical record produces a report without a fabricated prediction
+ok 81 - a model-free clinical record produces a report without a fabricated prediction
+  ---
+  duration_ms: 4.1342
+  ...
+# Subtest: unauthorized callers never reach the private prediction service
+ok 82 - unauthorized callers never reach the private prediction service
+  ---
+  duration_ms: 13.1174
+  ...
+# Subtest: the home page does not advertise the withdrawn public symptom checker
+ok 83 - the home page does not advertise the withdrawn public symptom checker
+  ---
+  duration_ms: 3.9859
+  ...
+# Subtest: the story page describes the Supabase and doctor assessment architecture, not the retired stack
+ok 84 - the story page describes the Supabase and doctor assessment architecture, not the retired stack
+  ---
+  duration_ms: 1.3638
+  ...
+# Subtest: help copy does not promise features the application does not implement
+ok 85 - help copy does not promise features the application does not implement
+  ---
+  duration_ms: 0.7791
+  ...
+# Subtest: the patient dashboard uses real appointment/profile routes and does not claim patient records exist
+ok 86 - the patient dashboard uses real appointment/profile routes and does not claim patient records exist
+  ---
+  duration_ms: 2.0514
+  ...
+# Subtest: model output, dataset guidance and the doctor assessment stay distinct
+ok 87 - model output, dataset guidance and the doctor assessment stay distinct
+  ---
+  duration_ms: 1.4751
+  ...
+# Subtest: walk-in registration requires an approved doctor
+ok 88 - walk-in registration requires an approved doctor
+  ---
+  duration_ms: 121.5792
+  ...
+# Subtest: the form is validated on the server before anything is written
+ok 89 - the form is validated on the server before anything is written
+  ---
+  duration_ms: 62.7784
+  ...
+# Subtest: the contact email is optional, trimmed and normalised without creating an account
+ok 90 - the contact email is optional, trimmed and normalised without creating an account
+  ---
+  duration_ms: 9.7159
+  ...
+# {"event":"supabase_operation_failed","operation":"walkin_register","code":"23505"}
+# {"event":"supabase_operation_failed","operation":"walkin_register","code":"42501"}
+# Subtest: registration is idempotent and a duplicate identity is reported, never merged
+ok 91 - registration is idempotent and a duplicate identity is reported, never merged
+  ---
+  duration_ms: 14.3014
+  ...
+# Subtest: existing-record checks are scoped and require a term
+ok 92 - existing-record checks are scoped and require a term
+  ---
+  duration_ms: 23.1083
+  ...
+# {"event":"supabase_operation_failed","operation":"walkin_consultation","code":"P0002"}
+# {"event":"supabase_operation_failed","operation":"walkin_consultation","code":"42501"}
+# Subtest: a walk-in consultation is created server side and another doctor’s patient is not found
+ok 93 - a walk-in consultation is created server side and another doctor’s patient is not found
+  ---
+  duration_ms: 14.2522
+  ...
+# {"event":"supabase_operation_failed","operation":"walkin_booking","code":"23P01"}
+# Subtest: booking a scheduled visit validates the slot and reports conflicts
+ok 94 - booking a scheduled visit validates the slot and reports conflicts
+  ---
+  duration_ms: 13.614
+  ...
+# Subtest: the schedule shows walk-ins with the clinical name and no account
+ok 95 - the schedule shows walk-ins with the clinical name and no account
+  ---
+  duration_ms: 4.0951
+  ...
+# Subtest: a walk-in assessment is stored against the clinic patient, resolved by the server
+ok 96 - a walk-in assessment is stored against the clinic patient, resolved by the server
+  ---
+  duration_ms: 5.345
+  ...
+# Subtest: the workspace exposes walk-in registration as a dialog, not a permanent section
+ok 97 - the workspace exposes walk-in registration as a dialog, not a permanent section
+  ---
+  duration_ms: 1.783
+  ...
+# Subtest: the walk-in migration adds a nullable email and never touches Supabase Auth
+ok 98 - the walk-in migration adds a nullable email and never touches Supabase Auth
+  ---
+  duration_ms: 0.5968
+  ...
+# Subtest: the walk-in script never stores patient details and always uses the doctor API
+ok 99 - the walk-in script never stores patient details and always uses the doctor API
+  ---
+  duration_ms: 0.7727
+  ...
+1..99
+# tests 99
+# suites 0
+# pass 95
+# fail 0
+# cancelled 0
+# skipped 4
+# todo 0
+# duration_ms 1254.3117

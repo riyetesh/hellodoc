@@ -49,28 +49,8 @@
     });
   }
 
-  /* ---- Journey illustration interactions ---------------------- */
-  function initJourneyIllustrations() {
-    const rotator = document.querySelector('[data-rotate="online-doctor"]');
-
-    if (rotator && typeof rotator.animate === "function") {
-      rotator.animate(
-        [
-          { transform: "rotate(0turn)" },
-          { transform: "rotate(1turn)" }
-        ],
-        {
-          duration: 30000,
-          iterations: Infinity,
-          easing: "linear"
-        }
-      );
-    }
-  }
-
   function init() {
     initTabGroups();
-    initJourneyIllustrations();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
