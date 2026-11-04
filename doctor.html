@@ -47,7 +47,28 @@
       #consultationModal .consultation-modal__actions{padding:.75rem 1rem;display:grid;grid-template-columns:1fr}
       #consultationModal .consultation-modal__actions button{width:100%}
       #consultationModal .consultation-ended{margin:.5rem 1rem;padding:.65rem .75rem;font-size:.82rem}
-      @media(max-width:650px){#consultationModal.consultation-float{right:.5rem;bottom:.5rem;width:min(21rem,calc(100vw - 1rem));max-height:55vh}}
+      #consultationModal.consultation-float{width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - 100px);border-color:#d5dfeb;border-radius:18px;box-shadow:0 12px 48px #17212b29;background:#fff;color:#17212b;overflow:auto}
+      #consultationModal .consultation-modal__head{padding:16px;align-items:center;border-bottom:1px solid #e2e8f0}
+      #consultationModal .consultation-modal__head h2{font-size:.8rem;color:#536170;font-weight:500}
+      #consultationModal #consultationModalPatient{font-size:1rem;font-weight:650;color:#17212b;max-width:190px;overflow-wrap:anywhere;margin-top:4px}
+      #consultationModal #consultationMinimize{padding:7px 9px;min-height:36px;font-size:.75rem;border-radius:7px}
+      #consultationModal .consultation-video{display:flex;min-height:0;flex-direction:column;align-items:center;text-align:center;padding:20px 12px;background:#f0f4fa;gap:8px}
+      #consultationModal .consultation-video strong{font-size:.8rem}
+      #consultationModal .consultation-video p{font-size:.75rem;color:#536170;line-height:1.5;margin:0;max-width:28ch}
+      .consultation-avatar{width:56px;height:56px;display:grid;place-items:center;border-radius:50%;background:#dce7f8;color:#174ea6;font-weight:650;font-size:1.25rem}
+      #consultationModal .consultation-clock{background:white;border:0;padding:16px 0 0;gap:4px}
+      #consultationModal .consultation-clock>div:first-child{display:flex;justify-content:space-between;align-items:center;color:#536170;font-size:.8rem}
+      #consultationModal .consultation-clock__elapsed{font-size:1.65rem;color:#17212b;letter-spacing:-.03em}
+      #consultationModal .consultation-time-row{display:flex;justify-content:space-between;gap:10px}
+      #consultationModal .consultation-time-row strong{font-size:.72rem;text-align:right;max-width:65%}
+      #consultationModal #consultationEnd{background:#b42332;border-color:#b42332;color:white;border-radius:8px;min-height:44px}
+      #consultationModal.is-compact .consultation-video,#consultationModal.is-compact .consultation-time-row{display:none}
+      #consultationModal.is-compact .consultation-clock{padding:0}
+      #consultationModal.is-compact .consultation-modal__body{padding:10px 16px}
+      #consultationModal.is-compact .consultation-modal__actions{padding:10px 16px}
+      #consultationDock{box-shadow:0 8px 24px #17212b18;border-radius:12px}
+      @media(max-width:650px){#consultationModal.consultation-float{right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:65dvh}}
+      @media(prefers-reduced-motion:no-preference){#consultationModal[data-open="true"]{animation:consultation-enter .2s ease-out}@keyframes consultation-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}
     </style>
 
   </head>
@@ -622,18 +643,19 @@
 
     <aside id="consultationDock" class="consultation-dock" aria-label="Consultation controls" hidden>
       <p class="consultation-dock__doctor" id="dockPatientName">Select a patient</p>
-      <p class="consultation-dock__meta">Start the timer when you begin. It stays in a small floating panel while you continue the assessment or video call.</p>
+      <p class="consultation-dock__meta">Your session timer starts when you continue to symptoms. You can also start it here.</p>
       <button class="btn btn-primary consultation-dock__start" type="button" id="consultationTimerStart">Start consultation</button>
     </aside>
-    <aside id="consultationModal" class="consultation-float" aria-labelledby="consultationModalTitle" aria-live="polite">
+    <aside id="consultationModal" class="consultation-float" aria-labelledby="consultationModalTitle">
       <div class="consultation-modal__head">
         <div><h2 id="consultationModalTitle">Video consultation</h2><p id="consultationModalPatient">Patient consultation</p></div>
-        <button class="btn btn-outline" type="button" id="consultationModalClose" aria-label="Close consultation window" hidden>Close</button>
+        <button class="btn btn-outline" type="button" id="consultationMinimize" aria-expanded="true" aria-controls="consultationActiveView">Minimize</button>
+        <button type="button" id="consultationModalClose" hidden>Close</button>
       </div>
       <div class="consultation-modal__body" id="consultationActiveView">
-        <div class="consultation-video"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=1000&amp;q=80" alt="Illustrative patient preview, not a live video feed" loading="lazy"><span>PREVIEW ONLY · VIDEO NOT CONNECTED</span></div>
+        <div class="consultation-video"><div class="consultation-avatar" id="consultationAvatar" aria-hidden="true">P</div><strong>Patient video not connected</strong><p>This workspace tracks your consultation. A video service is not configured.</p></div>
         <div class="consultation-clock">
-          <div><span>Time elapsed</span><div class="consultation-clock__elapsed" id="consultationTimerDisplay">00:00:00</div></div>
+          <div><span>Time elapsed</span><div class="consultation-clock__elapsed" id="consultationTimerDisplay" role="timer" aria-live="off">00:00:00</div></div>
           <div class="consultation-time-row"><span>Start time</span><strong id="consultationStartTime">Not started</strong></div>
           <div class="consultation-time-row"><span>End time</span><strong id="consultationEndTime">In progress</strong></div>
           <div class="consultation-time-row"><span>Status</span><strong id="consultationSessionStatus">Ready to start</strong></div>

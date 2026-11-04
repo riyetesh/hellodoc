@@ -1355,7 +1355,8 @@
     const consultationDock = $('consultationDock');
     // Show the patient video panel after Continue leaves Patient and visit.
     // Keep it open through the consultation steps, then close it on Review.
-    if (consultationDock) consultationDock.hidden = activeWizardStep === 4 || !state.patientId;
+    if (consultationDock) consultationDock.hidden = !state.patientId || Boolean(window.HelloDocConsultation?.isActive());
+    if (activeWizardStep > 0 && state.patientId) window.dispatchEvent(new Event('hellodoc:consultation-start'));
     const controls = $('wizardControls');
     const back = $('wizardBack');
     const next = $('wizardNext');

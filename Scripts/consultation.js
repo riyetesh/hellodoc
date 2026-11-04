@@ -42,6 +42,7 @@
   };
 
   const openConsultation = () => {
+    if (startedAt) return;
     const context = window.HelloDocAssessment && window.HelloDocAssessment.getConsultationContext
       ? window.HelloDocAssessment.getConsultationContext() : null;
     if (!context || !context.appointmentId || !context.patientSelected) {
@@ -51,6 +52,8 @@
     startedAt = new Date();
     endedAt = null;
     $('consultationModalPatient').textContent = patientName();
+    $('consultationAvatar').textContent = patientName().split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
+    dock.hidden = true;
     startDisplay.textContent = formatMoment(startedAt);
     endDisplay.textContent = 'In progress';
     statusDisplay.textContent = 'In progress';
@@ -63,7 +66,7 @@
     finishClose.hidden = true;
     $('consultationModalClose').hidden = true;
     $('consultationCancel').hidden = true;
-    $('consultationModalTitle').textContent = 'Video consultation in progress';
+    $('consultationModalTitle').textContent = 'Consultation in progress';
     startButton.disabled = true;
     startButton.textContent = 'Consultation in progress';
     paintElapsed();
@@ -79,6 +82,13 @@
     if (!context || !context.appointmentId) {
       statusDisplay.textContent = 'Appointment missing';
       return;
+    }
+    if (!endedAt) {
+      endedAt = new Date();
+      if (interval) window.clearInterval(interval);
+      interval = null;
+      paintElapsed();
+      endDisplay.textContent = formatMoment(endedAt);
     }
     busy = true;
     endButton.disabled = true;
@@ -98,16 +108,11 @@
         statusDisplay.textContent = 'Report needs attention';
         endButton.disabled = false;
         endButton.textContent = 'Retry save & end';
-        showMessage('The report was not saved, so the consultation remains open. Resolve the report error and try again.');
+        showMessage('The session timer has stopped, but the report was not saved. Resolve the report error and retry saving.');
         return;
       }
 
-      endedAt = new Date();
-      if (interval) window.clearInterval(interval);
-      interval = null;
-      paintElapsed();
-      endDisplay.textContent = formatMoment(endedAt);
-      statusDisplay.textContent = 'Ended';
+      statusDisplay.textContent = 'Report saved';
 
       const updateStatus = async (status) => {
         const demoDoctorId = new URLSearchParams(window.location.search).get('demoDoctor');
@@ -126,7 +131,7 @@
       if (context.appointmentStatus === 'pending') await updateStatus('confirmed');
       if (context.appointmentStatus !== 'completed') await updateStatus('completed');
 
-      summary.textContent = 'Started: ' + formatMoment(startedAt) + ' · Ended: ' + formatMoment(endedAt) + ' · Duration: ' + elapsedDisplay.textContent + '. Report saved to the patient’s Health records.';
+      summary.textContent = 'Started: ' + formatMoment(startedAt) + ' · Ended: ' + formatMoment(endedAt) + ' · Duration: ' + elapsedDisplay.textContent + '. Assessment report saved for clinician review.';
       summary.hidden = false;
       activeView.hidden = true;
       endButton.hidden = true;
@@ -177,7 +182,7 @@
   const patientSelect = $('assessmentPatient');
   const syncDock = () => {
     const step = document.querySelector('.consultation-wizard__step.is-active');
-    dock.hidden = !patientSelect || !patientSelect.value || (step && ['4'].includes(step.dataset.wizardGo));
+    dock.hidden = Boolean(startedAt) || !patientSelect || !patientSelect.value;
     $('dockPatientName').textContent = patientName();
   };
   patientSelect && patientSelect.addEventListener('change', syncDock);
@@ -187,5 +192,16 @@
   if (patientSelect && window.MutationObserver) {
     new MutationObserver(syncDock).observe(patientSelect, { childList: true, subtree: true });
   }
+  window.HelloDocConsultation = { isActive: () => Boolean(startedAt) };
+  window.addEventListener('hellodoc:consultation-start', openConsultation);
+  const minimize = $('consultationMinimize');
+  minimize.addEventListener('click', () => {
+    const compact = panel.classList.toggle('is-compact');
+    minimize.setAttribute('aria-expanded', String(!compact));
+    minimize.textContent = compact ? 'Expand' : 'Minimize';
+  });
+  window.addEventListener('beforeunload', event => {
+    if (startedAt && !endedAt) { event.preventDefault(); event.returnValue = ''; }
+  });
   syncDock();
 })();
